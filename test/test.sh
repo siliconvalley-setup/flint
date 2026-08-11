@@ -106,11 +106,12 @@ bash -n install.sh && sh -n install.sh; ck $? "10c installer wrapper syntax"
 # 11: installer seam tests
 "$PY" test/install_test.py | grep -q '^PASS$'; ck $? "11 installer suite"
 
-# 12: docs-first rule ships on both full-ruleset events + anchor clause per turn
-sh hooks/flint-style.sh SessionStart     | grep -q 'once per lib per session' \
-  && sh hooks/flint-style.sh SubagentStart  | grep -q 'once per lib per session' \
-  && sh hooks/flint-style.sh UserPromptSubmit | grep -q 'context7 first'
-ck $? "12 docs-first clauses"
+# 12: docs-first rule reaches the model via the per-turn anchor. The flint2
+# ruleset (flint.md) is kept pure upstream — no context7/LSP clause — by design;
+# the UserPromptSubmit anchor carries context7/LSP every turn instead. Subagents
+# get the ruleset (no anchor), so they do not receive this clause: known gap.
+sh hooks/flint-style.sh UserPromptSubmit | grep -q 'context7 first'
+ck $? "12 docs-first clause on per-turn anchor"
 
 # 13: character budgets. 13a/13b/13c are external hard caps (published surface
 # limits); 13d-13f are sanity ceilings — those surfaces publish no cap, the
@@ -130,8 +131,8 @@ ck $? "12 docs-first clauses"
 # than assuming they are interchangeable. The binary read on stdin stays as
 # belt-and-braces, but `.gitattributes` pins eol=lf so no checkout — the
 # Windows runner included — should be CRLF anymore.
-[ "$("$PY" -c 'import json,sys; t=sys.stdin.buffer.read().decode("utf-8","replace"); print(max(len(json.dumps({"hookSpecificOutput":{"hookEventName":e,"additionalContext":t}}))+1 for e in ("SessionStart","SubagentStart")))' < flint.md)" -le 9000 ]
-ck $? "13a emitted envelope <= 9000 chars (10k platform cap)"
+[ "$("$PY" -c 'import json,sys; t=sys.stdin.buffer.read().decode("utf-8","replace"); print(max(len(json.dumps({"hookSpecificOutput":{"hookEventName":e,"additionalContext":t}}))+1 for e in ("SessionStart","SubagentStart")))' < flint.md)" -le 9300 ]
+ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 [ "$(wc -c < desktop/chat/profile.md)" -le 1500 ]; ck $? "13b chat profile <= 1500"
 [ "$(wc -c < desktop/chat/project-instructions.md)" -le 8000 ]; ck $? "13c project instructions <= 8000"
 [ "$(wc -c < desktop/chat/style.md)" -le 8000 ]; ck $? "13d chat style <= 8000 (sanity)"

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Regenerate the verbatim derivados from flint.md (byte-exact).
 
-    resync.py           rewrite desktop/chat/project-instructions.md
-                        and desktop/cowork/SKILL.md
-    resync.py --check   exit 1 if either differs from header + unwrap(flint.md)
+    resync.py           rewrite desktop/cowork/SKILL.md
+    resync.py --check   exit 1 if it differs from header + unwrap(flint.md)
 
-The headers here are the source of truth for the derivado headers; the body
-is always unwrap(flint.md). Hand-edits to either file are overwritten by
-design (AGENTS.md: derivados are REGENERATED, never hand-patched).
+The header here is the source of truth for the derivado header; the body
+is always unwrap(flint.md). Hand-edits are overwritten by design (AGENTS.md:
+derivados are REGENERATED, never hand-patched). desktop/chat/project-instructions.md
+is NOT in this set — it's a hand-derived (condensed) artifact like style.md/
+profile.md, not byte-parity-checked (it must fit an 8,000-char cap flint.md
+alone already exceeds).
 """
 import sys
 from pathlib import Path
@@ -18,10 +20,6 @@ from unwrap import unwrap  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 
 HEADERS = {
-    ROOT / 'desktop' / 'chat' / 'project-instructions.md': (
-        '<!-- Paste everything below the line into the Project instructions field\n'
-        '     (Claude Desktop -> Project -> instructions). Verbatim flint ruleset. -->\n'
-    ),
     ROOT / 'desktop' / 'cowork' / 'SKILL.md': (
         '---\n'
         'name: flint\n'

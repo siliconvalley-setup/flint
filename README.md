@@ -4,17 +4,21 @@ Terse prose. Minimal code. Always on.
 
 flint makes every Claude Code session answer in terse prose and produce
 minimal, lazy code. One plain-text ruleset ([`flint.md`](flint.md)), one
-POSIX-sh hook ([`hooks/flint-style.sh`](hooks/flint-style.sh)), zero state:
-no levels, no flag files, no config, no slash commands, no off-switch. Every
+POSIX-sh hook ([`hooks/flint-style.sh`](hooks/flint-style.sh)), zero state
+machinery: no flag files, no config, no slash commands, no off-switch. Every
 piece of state the ancestor plugins had produced real bugs
-([docs/flint.md §7](docs/flint.md)); flint deletes the class.
+([docs/flint.md §7](docs/flint.md)); flint deletes the class. Intensity
+tiers (lite/full/ultra) live in the ruleset TEXT as calibration examples,
+not switchable modes — the stateless hook cannot hold a tier, so the model
+self-selects one per turn (default ultra).
 
-Distilled from forensic audits of the full commit histories of
+A near-verbatim merge of the current
 [caveman](https://github.com/JuliusBrussee/caveman) (terse prose) and
-[ponytail](https://github.com/DietrichGebert/ponytail) (lazy code) — 450+
-commits of benchmark-validated wording and fixed bugs, merged, deduplicated,
-and pinned. The [provenance table](docs/flint.md) maps each load-bearing rule
-to the upstream bug that produced it.
+[ponytail](https://github.com/DietrichGebert/ponytail) (lazy code) SKILL.md
+rulesets — benchmark-validated wording and fixed bugs, kept full, delivered
+through the one stateless hook instead of two competing plugins. The
+[provenance table](docs/flint.md) maps each load-bearing rule to its
+upstream origin.
 
 ## Install
 

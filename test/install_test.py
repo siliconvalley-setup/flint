@@ -130,7 +130,7 @@ def test_registered_command_executes_end_to_end():
             if event == 'UserPromptSubmit':
                 assert ctx.startswith('FLINT ACTIVE')
             else:
-                assert ctx.lstrip().startswith('# flint')
+                assert ctx.lstrip().startswith('# CAVEMAN')
 
 
 def test_uninstall_py_wrapper_removes_entries():

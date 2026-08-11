@@ -11,13 +11,17 @@ stripped where unambiguous, one word when enough, each fact once) and produce
 **minimal, lazy code**. It replaced two third-party plugins — `caveman`
 (terse prose) and `ponytail` (lazy code) — with:
 
-- **one plain-text ruleset** — [flint.md](../flint.md)
+- **one plain-text ruleset** — [flint.md](../flint.md), a near-verbatim merge
+  of the current caveman + ponytail SKILL.md rulesets
 - **one POSIX-sh hook** — [hooks/flint-style.sh](../hooks/flint-style.sh)
 
-There is **no state**: no intensity levels, no flag files, no config files,
-no slash commands, no statusline badge, no on/off switch. flint is always on.
-This is a design decision, not an omission — every piece of state the old
-plugins had produced real bugs (see §7). Do not add state back.
+There is **no state machinery**: no flag files, no config files, no slash
+commands, no statusline badge, no on/off switch. flint is always on. This is
+a design decision, not an omission — every piece of state the old plugins had
+produced real bugs (see §7). Do not add state back. The ruleset TEXT does
+carry intensity tiers (lite/full/ultra, §4) as calibration examples — that is
+prose the model reads and self-selects from, not state the hook holds; see §7
+for why that distinction matters.
 
 ## 2. File map
 
@@ -86,10 +90,14 @@ Python, Claude Code) reads unambiguously.
 
 ## 4. The ruleset (flint.md) — structure and provenance
 
-Four sections. The wording of many rules is **load-bearing**: it was
-benchmark-validated or bug-fixed upstream. The table maps each rule to the
-upstream bug that produced it. **Do not paraphrase, "tighten", or merge the
-rules in the left column** — the exact phrasing is the fix.
+flint.md is a **near-verbatim merge** of the current caveman + ponytail
+SKILL.md rulesets, not a flint re-prose of them — the table below now
+documents each rule's upstream origin, not a restoration-from-paraphrase
+history. The wording of many rules is still **load-bearing**: it was
+benchmark-validated or bug-fixed upstream, and merging in the current
+upstream text is exactly what keeps that validation intact. **Do not
+paraphrase, "tighten", or merge the rules in the left column** — the exact
+phrasing is the fix.
 
 | flint.md rule | Upstream origin | The bug it fixed |
 |---|---|---|
@@ -106,14 +114,25 @@ rules in the left column** — the exact phrasing is the fix.
 | "Never simplify away: input validation at trust boundaries, error handling that prevents data loss, security measures, accessibility basics, anything explicitly requested" | ponytail `99139a2` | upstream pinned these in a drift canary because they "could drift silently" |
 | Auto-Clarity list ("Write full, unabbreviated prose for: …"), incl. the `"migrate table drop column backup first"` example | caveman `d84127c` + #239 | fragments in security/irreversible/multi-step content caused real ambiguity; the trigger list must stay a LIST |
 | Hardware/calibration carve-out | ponytail SKILL.md | kept because flint drives real containers and I/O |
-| "External lib in the change? Docs first: context7… once per lib per session — even libs you know… docs the user pasted count as checked." | maintainer decision 2026-07-17 | model wrote code against external libs from stale training memory; the old skip clause "APIs you know" was removed deliberately. "once per lib per session" is a drift-canary token (§8) |
-| "An LSP covers the file? Navigate symbols through it — definition and references beat grep across re-exports — and after edits read its diagnostics…" | maintainer decision 2026-07-17 | grep missed callers behind re-exports; type errors surfaced at the next build instead of in-session |
 
-Deliberately absent (cut with their machinery — do not reintroduce):
-intensity tables, Persistence/Boundaries sections, any sentence implying an
-off-switch or command (`ponytail #161/#162`: "an ordinary request like 'add a
-normal mode toggle' silently turned ponytail off" — flint avoids the whole
-class by never advertising a switch).
+The context7-first and LSP-navigation clauses ("Docs first: context7… once
+per lib per session"; "An LSP covers the file? Navigate symbols through
+it…") are a maintainer decision (2026-07-17: model wrote code against
+external libs from stale training memory, and grep missed callers behind
+re-exports). They live in the **`UserPromptSubmit` anchor** hardcoded in
+`hooks/flint-style.sh`, not in `flint.md` — kept out of the near-verbatim
+merge so the merged body stays pure upstream text; test 12 (§8) asserts the
+anchor carries them.
+
+Present, not absent (retired claim — see below): **intensity tiers**
+(lite/full/ultra, one per section) and a **Persistence** assertion
+("ACTIVE EVERY RESPONSE… NEVER OFF. Default: ultra"). Both are calibration
+TEXT the model reads and self-selects from — not state the hook holds, and
+not a mechanism a request can flip (§7). Still absent, and still do not
+reintroduce: flag files, config files, slash commands, statusline badges, or
+any sentence phrasing an off-switch as a command (`ponytail #161/#162`: "an
+ordinary request like 'add a normal mode toggle' silently turned ponytail
+off" — flint avoids the whole class by never advertising a switch).
 
 **Editing rule of thumb:** adding a new rule is cheap; changing an existing
 one requires checking this table first.
@@ -199,17 +218,27 @@ four weeks apart), slash-command arg parsing that clobbered state on a typo.
 flint's fixed point deletes these classes. The only "off" is the user asking
 for full prose in plain language — which the ruleset itself honors.
 
+flint.md's intensity tiers and Persistence line (§4) are calibration TEXT,
+not a re-addition of state: the hook is stateless and injects the same
+ruleset every time regardless of tier, so there is no flag, file, or
+external signal a request could flip — the model reads the tier
+descriptions and self-selects one per turn from the ruleset text itself,
+same as it self-selects word choice. Nothing outside the model's own
+per-turn read holds or persists a tier.
+
 ## 8. Test matrix
 
 `sh test/test.sh` from the repo root — hook stdout contract (JSON per event,
 loud markers, empty/unreadable ruleset markers, argv whitelist, symlink refusal, 64 KB cap, EPIPE, stdin-open
 termination, shell syntax), the installer suite (`test/install_test.py`: registration,
 idempotency, re-pointing, foreign-hook preservation, no-clobber on invalid
-JSON, end-to-end execution of the registered command through bash), character budgets (emitted envelope ≤9,000 · profile ≤1,500 · project
-instructions ≤8,000), and byte parity of the verbatim derivados against
-`header + unwrap(flint.md)` (`tools/resync.py --check`). CI runs the matrix
-on ubuntu/macos/windows + shellcheck; the Windows runner exercises the Git
-Bash path.
+JSON, end-to-end execution of the registered command through bash), character budgets (emitted envelope ≤9,300 · profile ≤1,500 · project
+instructions ≤8,000 · chat style ≤8,000 sanity · cowork skill ≤64 KB sanity),
+and byte parity of the one verbatim derivado (`desktop/cowork/SKILL.md`)
+against `header + unwrap(flint.md)` (`tools/resync.py --check`).
+`desktop/chat/project-instructions.md` is hand-derived (condensed), not
+byte-checked. CI runs the matrix on ubuntu/macos/windows + shellcheck; the
+Windows runner exercises the Git Bash path.
 
 ## 9. Hard don'ts
 
@@ -218,16 +247,18 @@ Bash path.
 - Don't add a matcher to any registration — compact re-injection dies. (§3)
 - Don't let any path exit non-zero. (§5.1)
 - Don't paraphrase rules listed in §4's provenance table.
-- Don't add levels, flags, config files, slash commands, or badges. (§7)
-- Don't mention an off-switch in flint.md. (§4)
+- Don't add state machinery: flags, config files, slash commands, or badges.
+  Intensity tiers and Persistence are calibration TEXT inside flint.md, not
+  state — see §7's clarifying note; do not build a mechanism to switch them. (§7)
+- Don't mention an off-switch (a command or flag that turns flint off) in
+  flint.md. (§4)
 - Don't grow the hook's stdout past 10,000 characters — the platform's cap,
   and the real ceiling on `flint.md`. Over it, the ruleset is replaced by a
   preview + file path and reaches the model as a pointer, silently, with no
   loud marker (official docs `/en/hooks`). Test 13a guards the JSON envelope at
-  9,000: 8,089 on every checkout now that `.gitattributes` pins `eol=lf` (the
-  8,405 CRLF figure was the pre-pin Windows number, when each escaped `\r\n`
-  cost double), so quote **~911 characters** of headroom. (`head -c 65536` in
-  the hook is a different guard — §5.6.)
+  9,300: 9,107 on every checkout now that `.gitattributes` pins `eol=lf`
+  (flint.md is 8,802 raw bytes), so quote **~193 characters** of headroom.
+  (`head -c 65536` in the hook is a different guard — §5.6.)
 - Don't use bashisms — macOS `/bin/sh`, Debian dash, and Git Bash must all
   run it. (§5.8)
 - Don't edit a derivado by hand without the re-sync checklist — the verbatim

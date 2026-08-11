@@ -34,8 +34,10 @@ when a path is gone, the artifact still applies — find the equivalent field.
    `Create style`. A Style applies to the chat you select it in — every new
    chat starts back on `Normal`. Account-wide coverage comes from step 1.
 3. **Projects** (dev work): inside the Project → `Set project instructions` →
-   paste [`chat/project-instructions.md`](chat/project-instructions.md) — the
-   ruleset verbatim (fits the ~8,000-char budget).
+   paste [`chat/project-instructions.md`](chat/project-instructions.md) — a
+   condensed, hand-derived ruleset (flint.md itself exceeds the ~8,000-char
+   budget; every rule survives, only exposition and duplicate examples are
+   cut).
 
 ## Cowork
 
@@ -65,13 +67,16 @@ Claude for Mac: the Cowork session itself reported running in the VM).
 Derivados do not update themselves. After ANY edit to `flint.md`:
 
 The paste-in artifacts carry no hard wrap — a GUI textarea keeps the newlines
-verbatim, so a wrapped paragraph reaches the model as ragged lines. The two
-verbatim derivados regenerate from `flint.md` via `python3 tools/resync.py`;
-the hand-derived artifacts (style.md, profile.md) are re-derived by copying
-the ruleset in, then `python3 tools/unwrap.py <file>`.
+verbatim, so a wrapped paragraph reaches the model as ragged lines. The one
+verbatim derivado (`cowork/SKILL.md`) regenerates from `flint.md` via
+`python3 tools/resync.py`; the hand-derived artifacts
+(`chat/project-instructions.md`, `chat/style.md`, `chat/profile.md`) are
+re-derived by copying the ruleset in, condensing/paraphrasing to fit each
+budget, then `python3 tools/unwrap.py <file>`.
 
 
-- [ ] `python3 tools/resync.py` — regenerates both verbatim derivados
+- [ ] `python3 tools/resync.py` — regenerates `cowork/SKILL.md`
+- [ ] `chat/project-instructions.md` — re-derive (condensed); keep ≤ 8,000 chars
 - [ ] `chat/style.md` — re-derive if a PROSE rule changed
 - [ ] `chat/profile.md` — re-derive if a core rule changed; keep ≤ 1,500 chars
 - [ ] `sh test/test.sh` — budget guards + canary tokens must pass
