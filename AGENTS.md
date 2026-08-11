@@ -19,19 +19,21 @@ shipped somewhere — upstream, or in this repo's own CI history.
 
 ## Hard don'ts
 
-- **No state. Ever.** No levels, flags, config files, slash commands, badges,
-  or any sentence in `flint.md` implying an off-switch. Upstream's state
-  machinery (~1,141 lines of JS) was the bug factory (`docs/flint.md` §7).
+- **No state machinery.** No flag files, config files, slash commands, badges,
+  or any sentence in `flint.md` phrasing an off-switch as a command. Intensity
+  tiers (lite/full/ultra) and Persistence are calibration TEXT the model
+  self-selects from, not state (`docs/flint.md` §7). Upstream's state machinery
+  (~1,141 lines of JS) was the bug factory.
 - **The ruleset's real ceiling is 10,000 CHARACTERS, not 64 KB.** Claude Code
   caps hook output strings there and past it swaps the text for a preview +
   file path — the ruleset arrives as a pointer, no error, no loud marker
   (official docs `/en/hooks`; `docs/hook-engineering.md`). Budget the JSON
-  envelope, not `flint.md`: 7,731 chars of ruleset emit 8,089 on LF. NEUTRALIZED
+  envelope, not `flint.md`: 8,802 chars of ruleset emit 9,107 on LF. NEUTRALIZED
   — `.gitattributes` pins `eol=lf` on every checkout, the Windows runner
-  included, so the CRLF double-cost (8,405; each escaped `\r\n` counts twice) is
-  dead as long as the pin stays; delete `.gitattributes` and ~316 chars of
-  Windows-only spend reopen, which no local LF run will catch. Against test
-  13a's 9,000 guard a new rule now spends from **~911 characters**, not 58 KB.
+  included, so the CRLF double-cost (each escaped `\r\n` counts twice) is
+  dead as long as the pin stays; delete `.gitattributes` and Windows-only
+  spend reopens, which no local LF run will catch. Against test 13a's 9,300
+  guard a new rule now spends from **~193 characters**, not 58 KB.
 - **No matcher on any hook registration** — the empty matcher is what re-fires
   the ruleset after compact; a matcher kills the style mid-session silently.
 - **No raw stdout on SubagentStart** — silently dropped. All three events emit
@@ -43,11 +45,12 @@ shipped somewhere — upstream, or in this repo's own CI history.
   `install.ps1` stays a thin validator. A PowerShell port duplicates every
   invariant — the drift between two copies is the bug class flint exists to
   kill.
-- **No hand-edits to derivados.** `desktop/chat/project-instructions.md` and
-  `desktop/cowork/SKILL.md` are REGENERATED (header + verbatim ruleset);
-  the others are re-derived via the checklist in `desktop/README.md`. Ruleset
-  changed → run the whole checklist, then `sh test/test.sh` (budget guards +
-  test 14's byte parity via `tools/resync.py --check` enforce the verbatim ones).
+- **No hand-edits to derivados.** `desktop/cowork/SKILL.md` is REGENERATED
+  (header + verbatim ruleset); `desktop/chat/project-instructions.md`,
+  `chat/style.md`, and `chat/profile.md` are re-derived (condensed/paraphrased)
+  via the checklist in `desktop/README.md`. Ruleset changed → run the whole
+  checklist, then `sh test/test.sh` (budget guards + test 14's byte parity via
+  `tools/resync.py --check` enforces the one verbatim file).
 
 ## CI traps already hit in this repo (don't re-learn them)
 
