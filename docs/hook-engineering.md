@@ -39,7 +39,7 @@ flint-specific invariant list is [`docs/flint.md`](flint.md) §5. Companion:
 - **One-shot injection loses attention to per-turn injections.** "Recency and
   repetition win in LLM attention — a one-shot injection loses to per-turn
   reinforcement" (caveman `3ed7b73`). Pattern: full ruleset at
-  SessionStart/SubagentStart + ONE short static line at UserPromptSubmit (an
+  SessionStart/SubagentStart + ONE short static anchor at UserPromptSubmit (an
   attention anchor, not the ruleset).
 - **Full rules WITH examples anchor better than summaries** (caveman
   `80a317e`: "The old 2-sentence summary was too weak — models drifted back").

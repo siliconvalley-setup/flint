@@ -89,7 +89,7 @@ wording, not shrinking it; contradictions between the two source rulesets
 (one banned `→`, the other used it in its Pattern) are resolved by adopting
 one wording, not by re-prosing either.
 
-## Per-turn anchor line (companion to the ruleset)
+## Per-turn anchor (companion to the ruleset)
 
 Short, static, hardcoded in the hook — never read from the ruleset file (a
 file problem must not kill the anchor). Content = the most-violated rules +

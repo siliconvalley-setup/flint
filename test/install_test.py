@@ -128,7 +128,7 @@ def test_registered_command_executes_end_to_end():
             ctx = out['hookSpecificOutput']['additionalContext']
             assert 'FLINT HOOK ERROR' not in ctx
             if event == 'UserPromptSubmit':
-                assert ctx.startswith('FLINT ACTIVE')
+                assert ctx.startswith('**FLINT ULTRA ACTIVE**')
             else:
                 assert ctx.lstrip().startswith('# CAVEMAN')
 

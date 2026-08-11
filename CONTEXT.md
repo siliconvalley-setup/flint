@@ -20,7 +20,7 @@ Glossary only. No implementation details.
   a ruleset change.
 - **loud marker** — the in-session `FLINT HOOK ERROR` text emitted on any
   delivery failure; the opposite of a silent stale fallback.
-- **anchor** — the one static line injected per turn; reinforcement, not the
+- **anchor** — the short static block injected per turn; reinforcement, not the
   ruleset.
 - **canonical home** — this repo. Consumers vendor pinned copies and never
   edit them in place.

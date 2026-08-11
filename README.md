@@ -40,7 +40,7 @@ after moving the clone re-points the paths.
 |---|---|
 | `SessionStart` | full ruleset (re-fires on compact — matcher deliberately empty) |
 | `SubagentStart` | full ruleset (subagents never see parent SessionStart context) |
-| `UserPromptSubmit` | one static anchor line (recency beats one-shot injection) |
+| `UserPromptSubmit` | static anchor block (recency beats one-shot injection) |
 
 - **Update**: `git pull`. Nothing else.
 - **Uninstall**: `./install.sh --uninstall` (or `python3 uninstall.py`) —

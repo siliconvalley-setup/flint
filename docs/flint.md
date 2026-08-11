@@ -51,7 +51,7 @@ One script, three Claude Code hook events. The **event name arrives as `$1`**
 |---|---|---|
 | `SessionStart` | full ruleset (flint.md; emitted envelope ≤10,000 chars — §8) | loads the rules once per session |
 | `SubagentStart` | full ruleset (same) | SessionStart context is parent-thread only — Task-spawned subagents NEVER see it |
-| `UserPromptSubmit` | one static line (hardcoded in the script) | attention anchor: "recency and repetition win in LLM attention" — a one-shot injection loses to competing per-turn injections |
+| `UserPromptSubmit` | static anchor block (hardcoded in the script) | attention anchor: "recency and repetition win in LLM attention" — a one-shot injection loses to competing per-turn injections |
 
 Output for **all three** events is this exact JSON shape on stdout:
 
@@ -179,7 +179,7 @@ Every invariant is a fixed upstream bug. Breaking one reintroduces it.
    No `[[ ]]`, no arrays, no `${var:0:5}`, no GNU-only flags. Syntax-checked
    by `bash -n`, `sh -n`, `zsh -n` (where present) + shellcheck in CI.
 
-The UserPromptSubmit line is **hardcoded in the script** (not read from
+The UserPromptSubmit anchor is **hardcoded in the script** (not read from
 flint.md) so a ruleset-file problem cannot break the per-turn anchor. If you
 change the ruleset's core rules, check whether the line still summarizes them.
 
@@ -197,9 +197,10 @@ change the ruleset's core rules, check whether the line still summarizes them.
 2. Edit `hooks/flint-style.sh`, run `sh test/test.sh`.
 3. Effective immediately on this device (settings.json points at the clone).
 
-### Change the per-turn reminder line
-Edit the `printf` inside the `UserPromptSubmit` branch. One line, static,
-end-to-end quoted. Never dynamic, never read from a file.
+### Change the per-turn reminder
+Edit the `printf` inside the `UserPromptSubmit` branch. Static block, one
+JSON string (`\n`-separated lines), end-to-end quoted. Never dynamic, never
+read from a file.
 
 ### Add/remove a hook event
 1. `EVENTS` in `install.py`.
