@@ -1,14 +1,14 @@
 ---
 name: toolchain-installed
-description: "Index of the installed macOS toolchain. Use to drive or screenshot a browser, check a render, make mockups or icons, run wrangler dev, or fix pnpm, node_modules, ESM/CJS."
+description: "Index of the installed macOS toolchain. Use to drive or screenshot a browser, check a render, make mockups or icons, measure video quality (VMAF), run wrangler dev, or fix pnpm, node_modules, ESM/CJS."
 ---
 
 # macOS toolchain
 
-Everything here is installed and on PATH on the silicon-valley agent account (Nix packages plus npm CLIs in `~/.npm-global`). On another Mac, check with `command -v <tool>` first. Read the one slice the task needs:
+Read only the file the task needs:
 
-- **Browser** (playwright-cli, agent-browser, firecrawl, CDP, dev servers) → [browser.md](browser.md) — drive a browser: verify interactive UI, HMR dev servers, render checks, cross-engine checks; the auth split.
-- **Media** (images, icons, animated icons, color) → [media.md](media.md) — author mockups and SVG icons, extract color and diffs from a render instead of eyeballing.
-- **Cloudflare** (wrangler-dev) → [cloudflare.md](cloudflare.md) — atomic-teardown local `wrangler dev`, rebuild cycle, deploy auth. The `cf` API CLI → **cloudflare-cf** skill.
-- **Node** (npm CLIs, node_modules, pnpm, ESM/CJS) → [node.md](node.md) — the `~/.npm-global` bins, pnpm, ESM/CJS resolution.
-- **System** (packages, recipes) → [system.md](system.md) — CLI/image packages + Lighthouse/screenshot recipes.
+- [browser.md](browser.md): pick browser tool, firecrawl fallbacks, CDP login, WebKit, dev servers.
+- [media.md](media.md): mockups, icons, color, image diff, PDF, video quality.
+- [cloudflare.md](cloudflare.md): local `wrangler dev` with `wrangler-dev`, deploy auth.
+- [node.md](node.md): global npm CLIs, pnpm, ESM/CJS.
+- [system.md](system.md): installed packages, Lighthouse and screenshot recipes.
