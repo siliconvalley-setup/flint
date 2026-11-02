@@ -1,0 +1,10 @@
+# Cloudflare stack — workers-sdk lockstep
+
+*Reached from `SKILL.md` when gate holds: `wrangler` or `@cloudflare/*` in lockfile.*
+
+`wrangler` and `@cloudflare/vite-plugin` (often transitive, via a framework adapter) ship from the same workers-sdk monorepo release train, pin each other **exactly**. Both embed a workerd runtime, both write `.wrangler/state` — two workerd versions in the tree: newer one migrates the SQLite schema, older one dies (`SQLITE_ERROR: table _cf_ALARM has 3 columns but 2 values were supplied`). Transitive deps invisible to Phase 1's depth-0 listing, so this check runs on every sweep where the gate holds.
+
+1. **Detect** — lockfile is source of truth: must resolve **exactly one** version each of `miniflare` and `workerd` (pnpm: `grep -E '^  (miniflare|workerd)@' pnpm-lock.yaml | sort -u`; other PMs: search the lockfile for those package entries). Two+ of either = AFFECTED finding before any changelog work. A project may also wire an alignment gate into its own `check`/CI — present and red = same finding; absent = **not** a finding.
+2. **Fix ladder** — (a) `<pm> update @cloudflare/vite-plugin`: pnpm 10 updates a *named transitive* within the parent's declared range (verified empirically 2026-07; docs don't promise it). (b) Parent range excludes the aligned version (major jump) → `<pm> add -D @cloudflare/vite-plugin@^<aligned>` to force dedupe. (c) Last resort: PM-level overrides (`pnpm.overrides`/`overrides`/`resolutions`) — invisible to outdated listings, so must carry a removal note.
+3. **Bump rule** — never bump `wrangler` alone. vite-plugin pins wrangler exactly, so a lone wrangler bump installs two wranglers → two miniflares → drift returns. Pick the release train by newest `@cloudflare/vite-plugin`, then match direct `wrangler` to its exact pin. Bump in bloc until the detect check passes.
+4. **After any Cloudflare bump** — wipe `.wrangler/state` (plus any `state.corrupt.*` leftovers); if project has a seed script, run it. State written by old runtime can mask or trigger schema errors during verification.

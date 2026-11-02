@@ -1,0 +1,6 @@
+# Skills that live in other repos. install.sh fetches each into .cache/ (git
+# clone/pull, or npm pack) and links every skills/<name>/SKILL.md it finds.
+# Format: <git|npm> <github owner/repo | npm package>
+git realroboto/bing-webmaster-cli
+git realroboto/google-apis-cli
+npm @reallroboto/qb

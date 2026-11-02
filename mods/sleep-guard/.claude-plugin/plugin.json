@@ -1,0 +1,8 @@
+{
+  "name": "sleep-guard",
+  "version": "1.0.0",
+  "description": "Blocks a foreground Bash call that starts with sleep of 25 s or more (as Claude Code's own flag-gated block does), a poll of a live agent's transcript, and a pkill -f or looped pgrep -f that matches its own shell",
+  "author": {
+    "name": "realroboto"
+  }
+}

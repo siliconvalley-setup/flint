@@ -102,6 +102,8 @@ chmod 644 "$FX/flint.md" 2>/dev/null
 bash -n hooks/flint-style.sh && sh -n hooks/flint-style.sh; ck $? "10 bash/sh syntax"
 if command -v zsh >/dev/null 2>&1; then zsh -n hooks/flint-style.sh; ck $? "10b zsh syntax"; fi
 bash -n install.sh && sh -n install.sh; ck $? "10c installer wrapper syntax"
+sh -n env.sh && sh -c '. ./env.sh' ; ck $? "10d env.sh sources in sh"
+bash -n statusline/statusline-usage.sh; ck $? "10e statusline syntax"
 
 # 11: installer seam tests
 "$PY" test/install_test.py | grep -q '^PASS$'; ck $? "11 installer suite"
