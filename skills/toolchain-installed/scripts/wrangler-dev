@@ -1,0 +1,133 @@
+#!/bin/bash
+# wrangler-dev — the ONE path to run a local `wrangler dev` so teardown is atomic.
+#
+# Why this exists: `wrangler dev` forks a `workerd` child that is what actually
+# binds the port. Two traps waste minutes every time the LLM does it by hand:
+#   1. `pkill -f "wrangler dev"` kills the node supervisor but MISSES workerd
+#      (its argv is "workerd serve …", not "wrangler dev") → port stays bound.
+#   2. killing workerd alone, while the supervisor is alive, lets it RESPAWN
+#      workerd → "remaining: <new pids>", repeat forever.
+# Fix: run the whole thing in its own process group (bash job control), record the PGID,
+# and tear the GROUP down with `kill -- -PGID` — reaps supervisor AND workerd
+# together, no orphan, no respawn. No hook enforces this: use this script for each start and stop.
+#   3. `pkill -f 'workerd|miniflare'` kills EVERY project's workerd on the machine
+#      (also ones a live supervisor owns), plus any shell whose cmdline holds the word.
+# Orphan reap is scoped: only a workerd/miniflare with PPID 1 (its supervisor is
+# gone) whose cwd is inside THIS project (the cwd, where the pidfile lives).
+# Never $$ or $PPID. Other projects' runtimes are never touched.
+#
+# bash 3.2-safe (macOS /bin/bash), set -u, dependency-free: ps, plus lsof on macOS
+# (/proc on Linux) to read a process cwd.
+set -u
+
+PIDFILE=${WRANGLER_DEV_PIDFILE:-.wrangler-dev.pid}
+LOGFILE=${WRANGLER_DEV_LOG:-.wrangler-dev.log}
+ROOT=$(pwd -P)
+
+# project_runtime [orphans] — print "pid ppid" of each workerd/miniflare process
+# whose cwd is inside $ROOT. With "orphans": PPID 1 only. Match on argv[0]
+# (workerd binary, or a node process that runs miniflare), not on the whole cmdline.
+project_runtime() {
+  local pid ppid arg0 rest cwd
+  ps -eo pid=,ppid=,args= 2>/dev/null | while read -r pid ppid arg0 rest; do
+    case ${arg0##*/} in
+      workerd*|miniflare*) ;;
+      node*) case $rest in *miniflare*) ;; *) continue ;; esac ;;
+      *) continue ;;
+    esac
+    [ "$pid" = "$$" ] || [ "$pid" = "$PPID" ] && continue
+    [ "${1:-}" = orphans ] && [ "$ppid" != 1 ] && continue
+    if [ -d /proc ]; then cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null) || continue
+    else cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); [ -n "$cwd" ] || continue
+    fi
+    case $cwd/ in "$ROOT"/*) echo "$pid $ppid" ;; esac
+  done
+}
+
+cmd=${1:-}
+[ $# -gt 0 ] && shift
+
+case $cmd in
+  start)
+    if [ -f "$PIDFILE" ] && kill -0 -"$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+      echo "wrangler-dev already running (pgid $(cat "$PIDFILE")) — 'wrangler-dev stop' first" >&2
+      exit 1
+    fi
+    if [ -x node_modules/.bin/wrangler ]; then WR=node_modules/.bin/wrangler
+    elif command -v wrangler >/dev/null 2>&1; then WR=wrangler
+    else echo "wrangler not found (no node_modules/.bin/wrangler, none on PATH)" >&2; exit 1; fi
+
+    # Job control on (`set -m`): bash puts the background job in its own process
+    # group, PID==PGID (macOS has no setsid). Wait until `ps` shows that group
+    # before recording it, else `stop` could kill the caller's whole group.
+    set -m
+    "$WR" dev "$@" </dev/null >"$LOGFILE" 2>&1 &
+    child=$!
+    set +m
+    pgid=$child
+    for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+      [ "$(ps -o pgid= -p "$child" 2>/dev/null | tr -d ' ')" = "$child" ] && break
+      sleep 0.1
+    done
+    echo "$pgid" > "$PIDFILE"
+    echo "wrangler-dev started (pgid $pgid) → log: $LOGFILE"
+    echo "  wait ready: tail -f $LOGFILE   |   stop: wrangler-dev stop"
+    ;;
+
+  stop)
+    killed=
+    if [ -f "$PIDFILE" ]; then
+      pgid=$(cat "$PIDFILE" 2>/dev/null)
+      own=$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')
+      caller=$(ps -o pgid= -p "$PPID" 2>/dev/null | tr -d ' ')
+      case $pgid in
+        ''|*[!0-9]*|0|1|"$own"|"$caller")
+          echo "wrangler-dev: refusing pidfile pgid '$pgid' (invalid, or our own/caller's group)" >&2
+          pgid= ;;
+      esac
+      if [ -n "$pgid" ] && kill -0 -"$pgid" 2>/dev/null; then
+        kill -TERM -"$pgid" 2>/dev/null
+        for _ in 1 2 3 4 5; do kill -0 -"$pgid" 2>/dev/null || break; sleep 1; done
+        kill -KILL -"$pgid" 2>/dev/null
+        killed="pgid $pgid"
+      fi
+      rm -f "$PIDFILE"
+    fi
+    # Reap THIS project's orphaned runtime (trap 3). An orphan has no supervisor
+    # to respawn it. A workerd that a live supervisor owns is not an orphan: skip it.
+    orphans=$(project_runtime orphans | cut -d' ' -f1 | tr '\n' ' ')
+    if [ -n "${orphans// /}" ]; then
+      # shellcheck disable=SC2086  # word-split the pid list on purpose
+      kill -TERM $orphans 2>/dev/null
+      for _ in 1 2 3; do
+        alive=
+        for p in $orphans; do kill -0 "$p" 2>/dev/null && alive="$alive $p"; done
+        [ -z "$alive" ] && break
+        sleep 1
+      done
+      # shellcheck disable=SC2086
+      [ -n "$alive" ] && kill -KILL $alive 2>/dev/null
+      killed="${killed:+$killed + }orphan workerd ${orphans% }"
+    fi
+    echo "wrangler-dev stopped${killed:+ ($killed)}"
+    ;;
+
+  status)
+    if [ -f "$PIDFILE" ] && kill -0 -"$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+      echo "running (pgid $(cat "$PIDFILE"))"
+    else
+      echo "not running"
+    fi
+    stray=$(project_runtime | while read -r pid ppid; do
+      if [ "$ppid" = 1 ]; then printf '%s(orphan) ' "$pid"; else printf '%s ' "$pid"; fi
+    done)
+    [ -n "$stray" ] && echo "workerd/miniflare pids in $ROOT: $stray"
+    exit 0
+    ;;
+
+  *)
+    echo "usage: wrangler-dev {start|stop|status} [wrangler dev flags…]" >&2
+    echo "  start forwards its args to 'wrangler dev' (e.g. --config … --persist-to … --port …)" >&2
+    exit 2
+    ;;
+esac

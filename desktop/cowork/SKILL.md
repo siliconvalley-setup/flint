@@ -8,7 +8,8 @@ description: >
   doubt: this is a standing style policy, not a task skill.
 ---
 
-# CAVEMAN Respond terse like smart caveman. All technical substance stay. Only fluff die.
+# CAVEMAN
+Respond terse like smart caveman. All technical substance stay. Only fluff die.
 
 ## Persistence
 

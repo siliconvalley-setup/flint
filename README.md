@@ -1,51 +1,73 @@
 # flint
 
-Terse prose. Minimal code. Always on.
+The operator's Claude Code configuration, in one repo: skills, agents, rules,
+output style, settings policy, plugins, mods, statusline and env — laid out
+like `~/.claude`, applied by one idempotent `./install.sh`. Works on any
+Claude Code CLI or Desktop Code tab on macOS or Linux; Windows gets the
+style core only.
 
-flint makes every Claude Code session answer in terse prose and produce
-minimal, lazy code. One plain-text ruleset ([`flint.md`](flint.md)), one
-POSIX-sh hook ([`hooks/flint-style.sh`](hooks/flint-style.sh)), zero state
-machinery: no flag files, no config, no slash commands, no off-switch. Every
-piece of state the ancestor plugins had produced real bugs
-([docs/flint.md §7](docs/flint.md)); flint deletes the class. Intensity
-tiers (lite/full/ultra) live in the ruleset TEXT as calibration examples,
-not switchable modes — the stateless hook cannot hold a tier, so the model
-self-selects one per turn (default ultra).
-
-A near-verbatim merge of the current
-[caveman](https://github.com/JuliusBrussee/caveman) (terse prose) and
-[ponytail](https://github.com/DietrichGebert/ponytail) (lazy code) SKILL.md
-rulesets — benchmark-validated wording and fixed bugs, kept full, delivered
-through the one stateless hook instead of two competing plugins. The
-[provenance table](docs/flint.md) maps each load-bearing rule to its
-upstream origin.
+It also carries the original flint **style core**: terse prose, minimal code,
+always on. One plain-text ruleset ([`flint.md`](flint.md)), one POSIX-sh hook
+([`hooks/flint-style.sh`](hooks/flint-style.sh)) with zero state machinery —
+a near-verbatim merge of [caveman](https://github.com/JuliusBrussee/caveman)
+(terse prose) and [ponytail](https://github.com/DietrichGebert/ponytail) (lazy
+code); the [provenance table](docs/flint.md) maps each rule to its origin.
 
 ## Install
 
-Requires Python 3 on PATH. Windows additionally requires
-[Git for Windows](https://gitforwindows.org) (Claude Code runs shell-form
-hooks via Git Bash).
+Requires Python 3 and git on PATH (npm for the `@reallroboto/qb` skill,
+`claude` for plugins — both optional, the run warns and a re-run completes).
 
 ```sh
-git clone https://github.com/realroboto/flint.git
-cd flint
-./install.sh          # Windows (PowerShell): .\install.ps1
+git clone https://github.com/realroboto/flint.git ~/flint
+cd ~/flint
+./install.sh          # Windows (PowerShell): .\install.ps1 — style core only
 ```
 
-Registers 3 hooks in `~/.claude/settings.json` (`$CLAUDE_CONFIG_DIR`
-honored), pointing at THIS clone — don't delete it. Idempotent; re-running
-after moving the clone re-points the paths.
+`$CLAUDE_CONFIG_DIR` is honored (default `~/.claude`). Don't delete the
+clone: everything points at it.
 
-| Event | Payload |
+| Repo | Lands in the config dir as |
 |---|---|
-| `SessionStart` | full ruleset (re-fires on compact — matcher deliberately empty) |
-| `SubagentStart` | full ruleset (subagents never see parent SessionStart context) |
-| `UserPromptSubmit` | static anchor block (recency beats one-shot injection) |
+| `skills/<name>/`, `agents/*.md`, `rules/*.md`, `output-styles/*.md` | one symlink each, to the clone |
+| `external-skills.txt` | each source fetched into `.cache/` (git or `npm pack`), its `skills/*/` linked |
+| `settings.json` | **forced** keys; a dict merges per sub-key, so your other sub-keys stay |
+| `settings.defaults.json` | set only where absent — your `/model` pick or statusline wins; `enabledPlugins` per entry |
+| `env.sh` | every `export` copied into `settings.json` `env` |
+| `mods/<name>/` | appended to `env.CLAUDE_CODE_PLUGIN_DIRS` |
+| `statusline/` | the default `statusLine` command |
+| `hooks/flint-style.sh` | 3 style hooks (`SessionStart`, `SubagentStart`, `UserPromptSubmit`) |
 
-- **Update**: `git pull`. Nothing else.
+Plus: `claude plugin install` for each plugin `settings.defaults.json`
+enables that is missing (a warning names a missing machine binary —
+`typescript-language-server`, `pyright`, `ai-memory`), the ai-memory plugin
+updated while older than the `ai-memory` binary, one cached version per
+flint plugin, and a link
+`~/.local/share/ai-memory/auth-token` → `~/.config/ai-memory-auth-token`
+when that secret file exists. `"${FLINT}"` in a settings string = the clone
+path.
+
+### Edit loop
+
+- Skill, agent, rule, output style, mod, statusline: edit the file. Live at
+  once (it is a link).
+- `settings.json`, `settings.defaults.json`, `env.sh`, `external-skills.txt`:
+  edit, then `./install.sh`.
+- Another machine: `git pull && ./install.sh`.
+- Shell tools outside Claude: `. ~/flint/env.sh` in your shell rc.
+
+### What is yours
+
+`<config dir>/.flint-state.json` records what flint wrote. The next run
+removes what flint stopped shipping; your own files, keys, hooks (e.g. herdr's)
+and links are never touched. A default you changed stays yours. A file of
+yours where flint wants a link stays — the run warns.
+
 - **Uninstall**: `./install.sh --uninstall` (or `python3 uninstall.py`) —
-  removes exactly the 3 flint entries, touches nothing else.
-- **Verify**: `sh test/test.sh` (also run by CI on Linux/macOS/Windows).
+  removes exactly what flint added. Installed plugins stay.
+- **Verify**: `sh test/test.sh` (CI on Linux/macOS/Windows).
+
+### Style hook failures
 
 Failures are loud by design, never a silent stale ruleset — but they have
 two surfaces. `FLINT HOOK ERROR: …` in-session means the hook ran and could

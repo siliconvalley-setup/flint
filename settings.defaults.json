@@ -1,0 +1,18 @@
+{
+  "model": "opus",
+  "fallbackModel": [
+    "opus",
+    "sonnet"
+  ],
+  "outputStyle": "caveman",
+  "statusLine": {
+    "type": "command",
+    "command": "\"${FLINT}/statusline/statusline-usage.sh\"",
+    "refreshInterval": 30
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "ai-memory@ai-memory": true
+  }
+}

@@ -19,7 +19,9 @@ shipped somewhere — upstream, or in this repo's own CI history.
 
 ## Hard don'ts
 
-- **No state machinery.** No flag files, config files, slash commands, badges,
+- **No state machinery in the style core** (`flint.md` + the hook). The
+  installer is the only place state lives (`.flint-state.json`, see below).
+  No flag files, config files, slash commands, badges,
   or any sentence in `flint.md` phrasing an off-switch as a command. Intensity
   tiers (lite/full/ultra) and Persistence are calibration TEXT the model
   self-selects from, not state (`docs/flint.md` §7). Upstream's state machinery
@@ -82,10 +84,37 @@ shipped somewhere — upstream, or in this repo's own CI history.
   both `HOME` and `USERPROFILE`; the real default branch (no
   `CLAUDE_CONFIG_DIR`) has its own test — keep it.
 
+## Installer (`install.py`) — the config half
+
+- **Ownership comes from `.flint-state.json` only.** Forced keys/sub-keys,
+  defaults flint set (with the value), env and plugin dirs, links. Prune and
+  `--uninstall` touch nothing outside it — that is what keeps the user's
+  keys, a herdr hook and their own files safe. Never prune by guessing.
+- **Settings are written before the network/CLI steps, and the state right
+  after them.** A crash in a fetch or `claude plugin` must not leave
+  settings written without the state that names them.
+- **A default is flint's only while it holds flint's value.** A user edit
+  makes it theirs; never overwrite it.
+- **Tests fake HOME as well as CLAUDE_CONFIG_DIR, and set FLINT_OFFLINE +
+  FLINT_CLAUDE_BIN** (test seams, not user switches: `--uninstall` is the
+  only switch). The installer writes under HOME (ai-memory link), fetches
+  into the repo's `.cache/` and calls `claude`; a test without the fakes
+  touches the real machine. A test that checks a machine binary also sets
+  PATH, or this machine's tools decide the result.
+- **Plugins: install what is missing, never a blanket update.** ai-memory
+  alone is updated, and only while older than the machine's `ai-memory`
+  binary — the plugin must not run ahead of its server client. The cache
+  dedupe touches flint's plugins only, and only with an install record.
+- **Windows = style core only** (`FULL` gate). No links there: `ln -s` and
+  Python symlinks need developer mode.
+
 ## Consumers — edits here propagate
 
-vmCODE (and possibly other consumers) vendor `hooks/flint-style.sh` and
-`flint.md` byte-for-byte at a pinned tag, with a parity check on their side.
+Two kinds. vmCODE vendors `hooks/flint-style.sh` and `flint.md`
+byte-for-byte at a pinned tag, with a parity check on its side.
+silicon-valley clones flint on its agent account and runs
+`git pull && ./install.sh` on `update`, so it takes `main` — the whole config,
+not only the style core. The repo is private: a consumer needs read access.
 - Keep the hook's THREE-geometry ruleset resolution (`/etc/claude-docs` →
   `../flint.md` → `../container-docs/flint.md`) — dropping the last one
   breaks the vmCODE vendored layout.

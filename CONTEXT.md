@@ -24,5 +24,19 @@ Glossary only. No implementation details.
   ruleset.
 - **canonical home** — this repo. Consumers vendor pinned copies and never
   edit them in place.
-- **consumer** — a repo/system that vendors the ruleset + hook at a pinned
-  ref (e.g. vmCODE, which bakes them into a container).
+- **consumer** — a repo/system that uses flint: either vendors the ruleset +
+  hook at a pinned ref (vmCODE, baked into a container), or clones flint and
+  runs the installer (silicon-valley, on its agent account).
+- **config** — everything besides the style core: skills, agents, rules,
+  output styles, settings policy, plugins, mods, statusline, env.
+- **installer** — `install.py` (via `install.sh`): applies the config and the
+  style hooks to a Claude config dir.
+- **forced key** — a `settings.json` key flint owns; rewritten every run.
+- **default** — a `settings.defaults.json` key set only where absent; the
+  user's value wins.
+- **state file** — `.flint-state.json` in the config dir: what flint wrote,
+  the only input to prune and uninstall.
+- **env file** — `env.sh`: the one source for environment values, read by the
+  installer and sourceable by a shell.
+- **external skill** — a skill fetched from another repo or npm package
+  (`external-skills.txt`) into `.cache/`.

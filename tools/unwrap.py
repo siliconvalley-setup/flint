@@ -39,13 +39,16 @@ def unwrap(text):
         joinable = (not fence and not comment and stripped
                     and not BREAK.match(stripped)
                     and out and out[-1].strip()
-                    and not out[-1].strip().startswith("```"))
+                    and not out[-1].strip().startswith("```")
+                    # a heading ends at its own line: never append to one
+                    and not re.match(r"#{1,6} ", out[-1].strip()))
         if "-->" in line:
             comment = False
         if joinable:
             out[-1] = out[-1].rstrip() + " " + stripped
         else:
-            out.append(line)
+            # outside a fence, trailing blanks carry nothing into a textarea
+            out.append(line if fence else line.rstrip())
     return "\n".join(out)
 
 
