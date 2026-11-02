@@ -36,7 +36,7 @@ case "$EVENT" in
 esac
 
 if [ "$EVENT" = "UserPromptSubmit" ]; then
-    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"**FLINT ULTRA ACTIVE**\n- Caveman-ultra: Drop articles/filler/hedging. Code/symbols/paths exact, backticked.\n- YAGNI-ultra-ladder: reuse, stdlib, native, one line, shortest working diff, root cause not symptom.\n- External lib: context7 first; LSP navigation + diagnostics when available."}}' 2>/dev/null || :
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"**FLINT ULTRA ACTIVE**\n- ASD-STE100: answer first, no ceremony, one idea per sentence. Payload verbatim. User language.\n- YAGNI-ultra-ladder: reuse, stdlib, native, one line, shortest working diff, root cause not symptom.\n- External lib: context7 first; LSP navigation + diagnostics when available."}}' 2>/dev/null || :
     exit 0
 fi
 
