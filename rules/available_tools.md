@@ -1,31 +1,53 @@
-# Mac env — silicon-valley agent account
-You run on macOS (Apple silicon) as the `agent` user of the silicon-valley setup: no sudo, no Homebrew, no GUI session. Every tool below is on PATH there; on another Mac, check with `command -v <tool>` first. Claude config is global in `~/.claude/`, linked from the flint repo; never create per-project config.
+# Mac env: silicon-valley agent account
+- macOS, Apple silicon, user `agent`. No sudo, no Homebrew, no GUI.
+- Every tool below is on PATH. Other Mac: check `command -v <tool>` first.
+- Claude config: global `~/.claude/`, linked from flint repo. Never create per-project config.
+
 ## Paths
-Nix tools: /etc/profiles/per-user/agent/bin (Node 26, Python 3.15, uv, git, gh, rg, fd, jq, ffmpeg, imagemagick and more).
-npm CLIs: ~/.npm-global/bin. Node libraries: ~/.npm-global/lib/node_modules (`NODE_PATH`) — `require` them by bare name from any project; ESM `import` does not see them.
-Browsers: `agent-browser` has its own Chrome for Testing (~/.agent-browser/browsers); Playwright's browsers are in ~/Library/Caches/ms-playwright. The operator's Chromium is reachable over CDP on 127.0.0.1:9222.
-Skills: ~/.claude/skills/
+- Nix tools: `/etc/profiles/per-user/agent/bin` (Node 26, Python 3.15, uv, git, gh, rg, fd, jq, ffmpeg, imagemagick, more).
+- npm CLIs: `~/.npm-global/bin`. `ai-memory`: `~/.local/bin`.
+- Node libraries: `~/.npm-global/lib/node_modules` (`NODE_PATH`). `require('<name>')` works from any project. ESM `import` fails.
+- Browsers: `agent-browser` own Chrome for Testing (`~/.agent-browser/browsers`). Playwright: `~/Library/Caches/ms-playwright`. Operator Chromium: CDP `127.0.0.1:9222`.
+- Skills: `~/.claude/skills/`.
+
+## Installs
+- Blocked: `npx`, `npm install`, global `pnpm add`, `pip install`.
+- Project package: `pnpm add` inside project.
+- `pnpm dlx`: ask human first. Official CLI only (example: `pnpm dlx @astrojs/upgrade`).
+
 ## CLIs
-Run each CLI with the Bash tool. Its login is already set up (env vars from silicon-valley secrets), unless its line says otherwise.
-Package installs are blocked: `npx`, `npm install`, global `pnpm add`, `pip install`. To add a package to a project, run `pnpm add` inside the project. `pnpm dlx` asks the human first; use it only for an official CLI, for example `pnpm dlx @astrojs/upgrade`.
-`rg` — ripgrep, the search tool; use it instead of `grep`, it is 2.4–3.5x faster. It skips hidden files and `.gitignore` matches by default; add `--hidden` (and `-g '!.git'`) for dotfiles.
-`firecrawl` — default tool to read a web page or online docs as markdown; it runs the page's JavaScript and keeps the links. Read a page: `firecrawl scrape <url> --only-main-content`. Get named fields as JSON: `firecrawl scrape <url> --format json --schema '<json>'`. Read a whole site: `firecrawl crawl <url> --wait --limit <n>`. List a site's URLs: `firecrawl map <url>`. Output is a loading message or empty: retry once with `--wait-for 5000`; still empty, or firecrawl cannot do the job: load the **toolchain-installed** skill and read its browser section. "Connection refused": ask the human to run `fireup up` on r1 (`ssh r1`). A site blocks bots: stop and tell the human. More options: `firecrawl --help`.
-`agent-browser` — controls a real browser. Read a docs page as text, with no browser window (prefers markdown and `llms.txt`): `agent-browser read <url>`; add `--filter "<text>"`, `--outline` or `--llms index` to narrow it. `read` output stops at 50,000 characters and then ends with a `[truncated…]` marker; for a large page run `agent-browser read <url> --max-output 1000000 | rg -n -i '<term>'`; a truncated read never proves a term is absent. Click through a page: `agent-browser open <url>`, then `agent-browser snapshot -i` to get `@ref` ids, then `agent-browser click @ref` or `agent-browser fill @ref "text"`; run `snapshot -i` again after every page change. Screenshot: `agent-browser screenshot [path]`. To use the human's own Chromium (logins, 2FA, cookies), load the **agent-browser** skill first.
-`playwright-cli` — Playwright browser for render checks, WebKit and Playwright tests. Load the **playwright-cli** skill before the first call.
-`gh` — GitHub CLI: repos, issues, PRs, releases, Actions, and any GitHub API call with `gh api`. List commands: `gh --help`. Wait for a CI run: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`, and tell the human how long that run usually takes.
-`ctx7` — official docs of any library, API, framework or vendor (Google, Meta, SEO, others). Find the library id: `ctx7 library <name>`. Ask its docs: `ctx7 docs <id> "<question>" --json`. More: `ctx7 --help`.
-`bwt` — Bing Webmaster Tools API. Call: `bwt <Method> [--flags]`. List methods and flags: `bwt schema`.
-`gapi` — Google Ads, Google Tag Manager (GTM), Google Analytics 4 (GA4), Search Console and Indexing API. Call: `gapi <api> <resource...> <method> --params '<json>'`. Load the **gapi** skill before the first call. Login error: `gapi auth status`, then the skill's Setup section.
-`gcloud` — Google Cloud CLI. List commands: `gcloud --help`.
-`cf` — Cloudflare API: DNS, zones, Workers, R2, KV, D1, Zero Trust. Call: `cf <group> <cmd>`. Find the command for a task: `cf cli search "<task>"` (describe the action and resource type; leave out names, domains and IDs), then `<command> --help`. API details of a command: `cf schema <cmd...>`. Cloudflare docs: `cf docs search "<question>"`. Auth, IDs, errors: load the **cloudflare-cf** skill.
-`fbg` — Meta Graph API: Business Manager, Facebook Pages, Instagram, audiences, webhooks. Call: `fbg <VERB> <path> [--k=v] [--paginate]`. More: `fbg --help`.
-`vultr-cli` — Vultr cloud: servers, DNS, block storage, Kubernetes. Call: `vultr-cli <resource> <verb>`. List commands: `vultr-cli --help`.
-`qb` — QuickBooks CLI: QuickBooks Online (QBO), QuickBooks Desktop (QBD), QBD-to-QBO migration. Before any QuickBooks task, load the **quickbooks-epic** skill; it tells which `qb` command to run. List commands: `qb --help --json`. First use: `qb auth login`. Exit code 2, 4 or 7: stop and show the output to the human. Exit 7: ask the human for the 6-digit code from the e-mail, then run the `qb crm approve` command that the output prints.
-## More help — read only when the task needs it
-Image, video and VMAF quality (ffmpeg), mockups, icons, Lighthouse, `wrangler dev`, pnpm, other installed CLIs: load the **toolchain-installed** skill.
-## Search Rules
-- Use the Bash tool for file work: read with `cat`, `head` or `sed -n`, search with `rg`, change files with `sed`, heredocs or short scripts. Use the Read, Edit or Write tool only when Bash cannot do the job.
-- Search with `rg` first. Use `ast-grep` only for a code shape that a regex cannot match.
-- Find files with `rg -l`, then search only those files.
-- Leave out `--vimgrep` (it costs more tokens). Add `-C N` only when you need the lines around a match.
-- Read a line range when you know it; read a whole large file only when you need all of it.
+Run with Bash. Login ready (env vars from secrets), unless line says otherwise. Skill named first: load it before first call.
+
+- `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
+- `firecrawl`: default to read web page or docs as markdown.
+  - Page: `firecrawl scrape <url> --only-main-content`
+  - JSON fields: `firecrawl scrape <url> --format json --schema '<json>'`
+  - Site: `firecrawl crawl <url> --wait --limit <n>`
+  - URL list: `firecrawl map <url>`
+  - Empty or loading output: retry once with `--wait-for 5000`. Still empty: skill **toolchain-installed**, browser section.
+  - "Connection refused": ask human to run `fireup up` on r1 (`ssh r1`).
+  - Site blocks bots: stop, tell human.
+- `agent-browser`: real browser.
+  - Read page as text: `agent-browser read <url>`. Narrow: `--filter "<text>"`, `--outline`, `--llms index`.
+  - Output stops at 50,000 chars, ends `[truncated…]`. Large page: `agent-browser read <url> --max-output 1000000 | rg -n -i '<term>'`. Truncated read never proves term absent.
+  - Interact: `open <url>`, `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
+  - Screenshot: `agent-browser screenshot [path]`.
+  - Human's Chromium (logins, 2FA, cookies): skill **agent-browser** first.
+- `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
+- `gh`: GitHub repos, issues, PRs, releases, Actions, `gh api`. Wait for CI: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`; tell human usual run time.
+- `ctx7`: official docs of any library, API, vendor. Id: `ctx7 library <name>`. Ask: `ctx7 docs <id> "<question>" --json`.
+- `bwt`: Bing Webmaster API. `bwt <Method> [--flags]`. Methods: `bwt schema`.
+- `gapi`: Google Ads, GTM, GA4, Search Console, Indexing API. Skill **gapi** first. `gapi <api> <resource...> <method> --params '<json>'`. Login error: `gapi auth status`, then skill Setup section.
+- `gcloud`: Google Cloud. `gcloud --help`.
+- `cf`: Cloudflare API (DNS, zones, Workers, R2, KV, D1, Zero Trust). `cf <group> <cmd>`. Find command: `cf cli search "<task>"` (action + resource type; no names, domains, IDs), then `<command> --help`. API detail: `cf schema <cmd...>`. Docs: `cf docs search "<question>"`. Auth, IDs, errors: skill **cloudflare-cf**.
+- `fbg`: Meta Graph API (Business Manager, Pages, Instagram, audiences, webhooks). `fbg <VERB> <path> [--k=v] [--paginate]`.
+- `vultr-cli`: Vultr (servers, DNS, block storage, Kubernetes). `vultr-cli <resource> <verb>`.
+- `qb`: QuickBooks (QBO, QBD, QBD-to-QBO migration). Skill **quickbooks-epic** first; it picks the command. `qb --help --json`. First use: `qb auth login`. Exit 2, 4 or 7: stop, show output to human. Exit 7: ask human for 6-digit e-mail code, run printed `qb crm approve` command.
+- Other CLIs, image/video/VMAF (ffmpeg), mockups, icons, Lighthouse, `wrangler dev`, pnpm: skill **toolchain-installed**.
+
+## Search rules
+- File work in Bash: read `cat`/`head`/`sed -n`, search `rg`, edit `sed`/heredoc/short script. Read/Edit/Write tools only when Bash cannot.
+- `rg` first. `ast-grep` only for code shape regex cannot match.
+- Find files: `rg -l`, then search only those.
+- No `--vimgrep`. `-C N` only when you need context.
+- Known line range: read only it. Whole large file only when you need all of it.
