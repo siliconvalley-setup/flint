@@ -590,7 +590,7 @@ def test_registered_command_executes_end_to_end():
             if event == 'UserPromptSubmit':
                 assert ctx.startswith('**FLINT ULTRA ACTIVE**')
             else:
-                assert ctx.lstrip().startswith('# CAVEMAN')
+                assert ctx.lstrip().startswith('## Respond concise')
 
 
 def test_uninstall_py_wrapper_removes_entries():
