@@ -97,6 +97,7 @@ def test_install_forces_policy_and_keeps_user_choices():
         assert perms['allow'] == ['Bash(make *)']               # user key in a forced dict
         assert cfg['autoUpdatesChannel'] == 'stable'
         assert cfg['disableBundledSkills'] is True
+        assert cfg['syncClaudeAiSkills'] is False
         assert cfg['enabledPlugins']['agents-md@builtin'] is False
         assert cfg['model'] == 'sonnet'                          # default, user wins
         assert cfg['fallbackModel'] == ['opus', 'sonnet']        # default, absent before

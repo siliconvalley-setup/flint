@@ -115,6 +115,8 @@
   "disableRemoteControl": true,
   "disableClaudeAiConnectors": true,
   "disableBundledSkills": true,
+  "syncClaudeAiSkills": false,
+  "syncClaudeAiPlugins": false,
   "disableWorkflows": true,
   "enableArtifact": false,
   "autoUpdatesChannel": "stable",
