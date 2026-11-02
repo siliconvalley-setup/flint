@@ -1,7 +1,7 @@
 ---
 name: epic-ticket
 description: "Own one epic ticket end to end: gate it, implement and review, merge, close out, record on the epic thread. Returns one line: merged or question."
-model: sonnet
+model: opus
 effort: high
 color: orange
 experimental:
