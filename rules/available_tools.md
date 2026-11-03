@@ -19,7 +19,7 @@ Login ready, unless line says otherwise. Skill named first: load it before first
 - `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
 - `firecrawl`: default to read web page or docs as markdown.
   - Page: `firecrawl scrape <url> --only-main-content`
-  - JSON fields: `firecrawl scrape <url> --format json --schema '<json>'`
+  - JSON fields: `firecrawl scrape <url> --format json --schema '<json>'` **preferred choice**
   - Site: `firecrawl crawl <url> --wait --limit <n>`
   - URL list: `firecrawl map <url>`
   - Empty or loading output: retry once with `--wait-for 5000`. Still empty: skill **toolchain-installed**, browser section.
