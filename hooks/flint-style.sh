@@ -6,8 +6,8 @@
 #                    compaction prunes injected context, caveman 80a317e)
 #   SubagentStart    full ruleset (SessionStart context is parent-thread only
 #                    and never reaches Task-spawned subagents, ponytail #252)
-#   UserPromptSubmit one static reinforcement line (attention anchor, not the
-#                    ruleset — caveman 3ed7b73: "recency and repetition win")
+#   UserPromptSubmit flint-submit.md (attention anchor — caveman 3ed7b73:
+#                    "recency and repetition win"); same lookup as ruleset
 #
 # Constraints carried from the upstream plugins' bug history:
 # - hookSpecificOutput JSON for ALL events: SubagentStart silently drops raw
@@ -35,11 +35,6 @@ case "$EVENT" in
     *) EVENT='SessionStart' ;;
 esac
 
-if [ "$EVENT" = "UserPromptSubmit" ]; then
-    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"**FLINT ULTRA ACTIVE**\n- ASD-STE100: answer first, no ceremony, one idea per sentence. Payload verbatim. User language.\n- YAGNI-ultra-ladder: reuse, stdlib, native, one line, shortest working diff, root cause not symptom.\n- External lib: context7 first; LSP navigation + diagnostics when available."}}' 2>/dev/null || :
-    exit 0
-fi
-
 emit_marker() {
     printf '{"hookSpecificOutput":{"hookEventName":"%s","additionalContext":"FLINT HOOK ERROR: %s. Style ruleset NOT injected — report this to the user."}}\n' "$EVENT" "$1" 2>/dev/null || :
     exit 0
@@ -48,15 +43,17 @@ emit_marker() {
 # Resolution order: baked container path, then clone geometry (this repo),
 # then the vmCODE vendored geometry (scripts/ + container-docs/). The baked
 # path is root-owned; both fallbacks are user-writable, so symlinks refused.
-RULESET='/etc/claude-docs/flint.md'
+F='flint.md'
+[ "$EVENT" = "UserPromptSubmit" ] && F='flint-submit.md'
+RULESET="/etc/claude-docs/$F"
 if [ ! -s "$RULESET" ]; then
     DIR="$(dirname "$0" 2>/dev/null)"
-    if [ -s "$DIR/../flint.md" ] && [ ! -L "$DIR/../flint.md" ]; then
-        RULESET="$DIR/../flint.md"
-    elif [ -s "$DIR/../container-docs/flint.md" ] && [ ! -L "$DIR/../container-docs/flint.md" ]; then
-        RULESET="$DIR/../container-docs/flint.md"
+    if [ -s "$DIR/../$F" ] && [ ! -L "$DIR/../$F" ]; then
+        RULESET="$DIR/../$F"
+    elif [ -s "$DIR/../container-docs/$F" ] && [ ! -L "$DIR/../container-docs/$F" ]; then
+        RULESET="$DIR/../container-docs/$F"
     else
-        emit_marker 'ruleset not found (or empty) at /etc/claude-docs/flint.md, ../flint.md, or ../container-docs/flint.md'
+        emit_marker "ruleset not found (or empty) at /etc/claude-docs/$F, ../$F, or ../container-docs/$F"
     fi
 fi
 

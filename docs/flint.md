@@ -51,7 +51,7 @@ One script, three Claude Code hook events. The **event name arrives as `$1`**
 |---|---|---|
 | `SessionStart` | full ruleset (flint.md; emitted envelope ≤10,000 chars — §8) | loads the rules once per session |
 | `SubagentStart` | full ruleset (same) | SessionStart context is parent-thread only — Task-spawned subagents NEVER see it |
-| `UserPromptSubmit` | static anchor block (hardcoded in the script) | attention anchor: "recency and repetition win in LLM attention" — a one-shot injection loses to competing per-turn injections |
+| `UserPromptSubmit` | flint-submit.md (exact copy of flint.md; same lookup paths) | attention anchor: "recency and repetition win in LLM attention" — a one-shot injection loses to competing per-turn injections |
 
 Output for **all three** events is this exact JSON shape on stdout:
 
@@ -115,14 +115,9 @@ phrasing is the fix.
 | Auto-Clarity list ("Write full, unabbreviated prose for: …"), incl. the `"migrate table drop column backup first"` example | caveman `d84127c` + #239 | fragments in security/irreversible/multi-step content caused real ambiguity; the trigger list must stay a LIST |
 | Hardware/calibration carve-out | ponytail SKILL.md | kept because flint drives real containers and I/O |
 
-The context7-first and LSP-navigation clauses ("Docs first: context7… once
-per lib per session"; "An LSP covers the file? Navigate symbols through
-it…") are a maintainer decision (2026-07-17: model wrote code against
-external libs from stale training memory, and grep missed callers behind
-re-exports). They live in the **`UserPromptSubmit` anchor** hardcoded in
-`hooks/flint-style.sh`, not in `flint.md` — kept out of the near-verbatim
-merge so the merged body stays pure upstream text; test 12 (§8) asserts the
-anchor carries them.
+The context7-first and LSP-navigation clauses (maintainer decision
+2026-07-17) lived in the `UserPromptSubmit` anchor. Removed 2026-11-03:
+anchor now read from `flint-submit.md` = exact copy of `flint.md`; test 12/12b (§8) assert it.
 
 Present, not absent (retired claim — see below): **intensity tiers**
 (lite/full/ultra, one per section) and a **Persistence** assertion
@@ -179,9 +174,9 @@ Every invariant is a fixed upstream bug. Breaking one reintroduces it.
    No `[[ ]]`, no arrays, no `${var:0:5}`, no GNU-only flags. Syntax-checked
    by `bash -n`, `sh -n`, `zsh -n` (where present) + shellcheck in CI.
 
-The UserPromptSubmit anchor is **hardcoded in the script** (not read from
-flint.md) so a ruleset-file problem cannot break the per-turn anchor. If you
-change the ruleset's core rules, check whether the line still summarizes them.
+The UserPromptSubmit anchor is read from **flint-submit.md** (same lookup
+paths and guards as flint.md). If you change flint.md, copy it to
+flint-submit.md; test 12b fails on drift.
 
 ## 6. Recipes
 
@@ -198,9 +193,7 @@ change the ruleset's core rules, check whether the line still summarizes them.
 3. Effective immediately on this device (settings.json points at the clone).
 
 ### Change the per-turn reminder
-Edit the `printf` inside the `UserPromptSubmit` branch. Static block, one
-JSON string (`\n`-separated lines), end-to-end quoted. Never dynamic, never
-read from a file.
+Edit `flint-submit.md`. Keep it an exact copy of `flint.md` (test 12b).
 
 ### Add/remove a hook event
 1. `EVENTS` in `install.py`.

@@ -15,7 +15,7 @@ PY="$(command -v python3 2>/dev/null || command -v python 2>/dev/null)"
 # 1-3: valid JSON, right event, anchor line on all 3 events
 sh hooks/flint-style.sh SessionStart     | "$PY" -m json.tool >/dev/null 2>&1; ck $? "1 SessionStart JSON"
 sh hooks/flint-style.sh SubagentStart    | "$PY" -m json.tool >/dev/null 2>&1; ck $? "2 SubagentStart JSON"
-sh hooks/flint-style.sh UserPromptSubmit | grep -q 'FLINT ULTRA ACTIVE'; ck $? "3 UserPromptSubmit anchor"
+sh hooks/flint-style.sh UserPromptSubmit | grep -q 'Respond concise'; ck $? "3 UserPromptSubmit anchor"
 
 # 4: every ruleset path missing -> loud marker + exit 0 (probe on a /tmp copy)
 FX="$(mktemp -d)"
@@ -108,12 +108,10 @@ bash -n statusline/statusline-usage.sh; ck $? "10e statusline syntax"
 # 11: installer seam tests
 "$PY" test/install_test.py | grep -q '^PASS$'; ck $? "11 installer suite"
 
-# 12: docs-first rule reaches the model via the per-turn anchor. The flint2
-# ruleset (flint.md) is kept pure upstream — no context7/LSP clause — by design;
-# the UserPromptSubmit anchor carries context7/LSP every turn instead. Subagents
-# get the ruleset (no anchor), so they do not receive this clause: known gap.
-sh hooks/flint-style.sh UserPromptSubmit | grep -q 'context7 first'
-ck $? "12 docs-first clause on per-turn anchor"
+# 12: UserPromptSubmit reads flint-submit.md; flint-submit.md = exact copy of flint.md
+sh hooks/flint-style.sh UserPromptSubmit | "$PY" -c 'import json,sys; sys.exit(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"] != open("flint-submit.md", encoding="utf-8", newline="").read())'
+ck $? "12 per-turn anchor = flint-submit.md"
+cmp -s flint.md flint-submit.md; ck $? "12b flint-submit.md = flint.md"
 
 # 13: character budgets. 13a/13b/13c are external hard caps (published surface
 # limits); 13d-13f are sanity ceilings — those surfaces publish no cap, the
