@@ -38,14 +38,19 @@ def _find_bash():
 POSIX = os.name != 'nt'   # the full config installs on macOS/Linux only
 
 
-def run_cli(config_dir, *args, root=ROOT, home=None, claude_bin=None, path=None):
+def run_cli(config_dir, *args, root=ROOT, home=None, claude_bin=None, path=None,
+            extra_env=None):
     """install.py with a fake config dir AND a fake HOME (the installer also
     writes under HOME: the ai-memory credential link). Offline: no fetch of the
-    external skills. No `claude` unless the test passes a stub."""
+    external skills. No `claude` unless the test passes a stub. This machine's
+    data dir vars never leak in: a test passes them in `extra_env`."""
     home = str(home or Path(config_dir) / 'home')
     env = dict(os.environ, CLAUDE_CONFIG_DIR=str(config_dir), HOME=home,
                USERPROFILE=home, FLINT_OFFLINE='1',
                FLINT_CLAUDE_BIN=claude_bin or str(Path(config_dir) / 'no-claude'))
+    for v in ('AI_MEMORY_DATA_DIR', 'XDG_DATA_HOME'):
+        env.pop(v, None)
+    env.update(extra_env or {})
     if path is not None:
         env['PATH'] = str(path)
     return subprocess.run([sys.executable, str(Path(root) / 'install.py'), *args],
@@ -348,12 +353,20 @@ def test_external_skills_list_names_the_three_sources():
                      ['npm', '@reallroboto/qb']]
 
 
+def _token_link(home):
+    """Where `ai-memory hook` reads its bearer: <data dir>/auth-token, data dir
+    = Rust dirs::data_local_dir() + /ai-memory (XDG_DATA_HOME unset)."""
+    if sys.platform == 'darwin':
+        return home / 'Library' / 'Application Support' / 'ai-memory' / 'auth-token'
+    return home / '.local' / 'share' / 'ai-memory' / 'auth-token'
+
+
 def test_ai_memory_token_link_follows_the_machine_secret():
     if skip_unless_posix():
         return
     with tempfile.TemporaryDirectory() as d:
         home = Path(d) / 'home'
-        link = home / '.local' / 'share' / 'ai-memory' / 'auth-token'
+        link = _token_link(home)
         run_cli(d, home=home)
         assert not link.is_symlink()                    # no secret, no link
         secret = home / '.config' / 'ai-memory-auth-token'
@@ -361,8 +374,99 @@ def test_ai_memory_token_link_follows_the_machine_secret():
         secret.write_text('tok\n')
         run_cli(d, home=home)
         assert link.is_symlink() and link.resolve() == secret.resolve()
+        run_cli(d, home=home)                           # second run: same link
+        assert link.is_symlink() and link.resolve() == secret.resolve()
         run_cli(d, '--uninstall', home=home)
         assert not link.is_symlink() and secret.read_text() == 'tok\n'
+
+
+def _secret(home):
+    secret = home / '.config' / 'ai-memory-auth-token'
+    secret.parent.mkdir(parents=True, exist_ok=True)
+    secret.write_text('tok')
+    return secret
+
+
+def test_ai_memory_data_dir_env_moves_the_token_link():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        home = Path(d) / 'home'
+        secret = _secret(home)
+        data = Path(d) / 'aim-data'
+        run_cli(d, home=home, extra_env={'AI_MEMORY_DATA_DIR': str(data)})
+        link = data / 'auth-token'
+        assert link.is_symlink() and link.resolve() == secret.resolve()
+        assert not _token_link(home).is_symlink()
+
+
+def test_xdg_data_home_moves_the_token_link_off_macos_only():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        home = Path(d) / 'home'
+        secret = _secret(home)
+        xdg = Path(d) / 'xdg'
+        run_cli(d, home=home, extra_env={'XDG_DATA_HOME': str(xdg)})
+        link = _token_link(home) if sys.platform == 'darwin' else xdg / 'ai-memory' / 'auth-token'
+        assert link.is_symlink() and link.resolve() == secret.resolve()
+
+
+def _legacy_state(d, home, old_content=None):
+    """State before the data dir rule: `true` = flint's link at the old fixed path."""
+    old = home / '.local' / 'share' / 'ai-memory' / 'auth-token'
+    old.parent.mkdir(parents=True)
+    if old_content is None:
+        old.symlink_to(home / '.config' / 'ai-memory-auth-token')
+    else:
+        old.write_text(old_content)
+    (Path(d) / '.flint-state.json').write_text(json.dumps({'ai_memory_link': True}))
+    return old
+
+
+def test_flints_old_token_link_moves_to_the_data_dir():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        home = Path(d) / 'home'
+        secret = _secret(home)
+        old = _legacy_state(d, home)
+        data = Path(d) / 'aim-data'
+        run_cli(d, home=home, extra_env={'AI_MEMORY_DATA_DIR': str(data)})
+        link = data / 'auth-token'
+        assert not old.is_symlink()
+        assert link.is_symlink() and link.resolve() == secret.resolve()
+        run_cli(d, '--uninstall', home=home)            # no env: the recorded link goes
+        assert not link.is_symlink() and secret.read_text() == 'tok'
+
+
+def test_flints_old_token_link_moves_to_the_platform_default():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        home = Path(d) / 'home'
+        secret = _secret(home)
+        old = _legacy_state(d, home)
+        run_cli(d, home=home)
+        link = _token_link(home)                        # Linux: same path as old
+        assert link.is_symlink() and link.resolve() == secret.resolve()
+        assert old.is_symlink() == (old == link)
+        run_cli(d, '--uninstall', home=home)
+        assert not link.is_symlink() and not old.is_symlink()
+
+
+def test_a_user_file_at_the_old_token_path_is_kept():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        home = Path(d) / 'home'
+        _secret(home)
+        old = _legacy_state(d, home, old_content='my own token')
+        data = Path(d) / 'aim-data'
+        run_cli(d, home=home, extra_env={'AI_MEMORY_DATA_DIR': str(data)})
+        assert old.read_text() == 'my own token'
+        run_cli(d, '--uninstall', home=home)
+        assert old.read_text() == 'my own token'
 
 
 def test_ai_memory_token_file_of_the_user_is_kept():
@@ -372,7 +476,7 @@ def test_ai_memory_token_file_of_the_user_is_kept():
         home = Path(d) / 'home'
         (home / '.config').mkdir(parents=True)
         (home / '.config' / 'ai-memory-auth-token').write_text('tok')
-        link = home / '.local' / 'share' / 'ai-memory' / 'auth-token'
+        link = _token_link(home)
         link.parent.mkdir(parents=True)
         link.write_text('my own token')
         run_cli(d, home=home)
@@ -434,7 +538,7 @@ def test_a_preexisting_ai_memory_link_is_not_flints_to_remove():
         secret = home / '.config' / 'ai-memory-auth-token'
         secret.parent.mkdir(parents=True)
         secret.write_text('tok')
-        link = home / '.local' / 'share' / 'ai-memory' / 'auth-token'
+        link = _token_link(home)
         link.parent.mkdir(parents=True)
         link.symlink_to(secret)
         run_cli(d, home=home)
