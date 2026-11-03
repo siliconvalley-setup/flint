@@ -109,7 +109,7 @@ bash -n statusline/statusline-usage.sh; ck $? "10e statusline syntax"
 "$PY" test/install_test.py | grep -q '^PASS$'; ck $? "11 installer suite"
 
 # 12: UserPromptSubmit reads flint-submit.md; flint-submit.md = exact copy of flint.md
-[ "$(sh hooks/flint-style.sh UserPromptSubmit | "$PY" -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"], end="")')" = "$(cat flint-submit.md)" ]
+sh hooks/flint-style.sh UserPromptSubmit | "$PY" -c 'import json,sys; sys.exit(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"] != open("flint-submit.md", encoding="utf-8", newline="").read())'
 ck $? "12 per-turn anchor = flint-submit.md"
 cmp -s flint.md flint-submit.md; ck $? "12b flint-submit.md = flint.md"
 
