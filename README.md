@@ -42,10 +42,12 @@ Plus: `claude plugin install` for each plugin `settings.defaults.json`
 enables that is missing (a warning names a missing machine binary —
 `typescript-language-server`, `pyright`, `ai-memory`), the ai-memory plugin
 updated while older than the `ai-memory` binary, one cached version per
-flint plugin, and a link
-`~/.local/share/ai-memory/auth-token` → `~/.config/ai-memory-auth-token`
-when that secret file exists. `"${FLINT}"` in a settings string = the clone
-path.
+flint plugin, and a link `<ai-memory data dir>/auth-token` →
+`~/.config/ai-memory-auth-token` when that secret file exists. Data dir as the
+binary resolves it: `AI_MEMORY_DATA_DIR`, else macOS
+`~/Library/Application Support/ai-memory`, Linux
+`${XDG_DATA_HOME:-~/.local/share}/ai-memory`. `"${FLINT}"` in a settings
+string = the clone path.
 
 ### Edit loop
 

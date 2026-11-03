@@ -433,28 +433,39 @@ def _ai_memory_behind(plugin_version):
 
 # ── ai-memory credential ──────────────────────────────────────────────────────
 # `ai-memory hook` (the plugin's) reads its bearer only from
-# <data dir>/auth-token; 3.2.2-3.2.4 ignore AI_MEMORY_AUTH_TOKEN. A link to the
+# <data dir>/auth-token; 3.2.2-3.3.1 ignore AI_MEMORY_AUTH_TOKEN. A link to the
 # machine's secret file keeps one source. Drop once upstream reads the env var.
 def _ai_memory_paths():
     home = Path(os.environ.get('HOME') or str(Path.home()))
-    return (home / '.local' / 'share' / 'ai-memory' / 'auth-token',
-            home / '.config' / 'ai-memory-auth-token')
+    # data dir as the binary resolves it: AI_MEMORY_DATA_DIR, else
+    # Rust dirs::data_local_dir() + /ai-memory (XDG_DATA_HOME only if absolute)
+    xdg = os.environ.get('XDG_DATA_HOME', '')
+    if os.environ.get('AI_MEMORY_DATA_DIR'):
+        data = Path(os.environ['AI_MEMORY_DATA_DIR'])
+    elif sys.platform == 'darwin':
+        data = home / 'Library' / 'Application Support' / 'ai-memory'
+    else:
+        data = (Path(xdg) if os.path.isabs(xdg) else home / '.local' / 'share') / 'ai-memory'
+    return (data / 'auth-token', home / '.config' / 'ai-memory-auth-token')
 
 
 def link_ai_memory_token(owned, remove=False):
-    """Create the link where nothing is. `owned` = flint made it (state file);
-    only then is it re-checked or removed. Returns whether flint owns it now."""
+    """Create the link where nothing is. `owned` = path of the link flint made
+    (state file); only that link is re-checked, moved or removed. Returns the
+    path flint owns now, or False."""
     link, secret = _ai_memory_paths()
-    ours = owned and _points_at(link, secret)
-    if remove or not secret.is_file():
-        if ours:
-            link.unlink()
+    if owned is True:  # older state: flint's link at the old fixed path
+        owned = str(Path(os.environ.get('HOME') or str(Path.home()))
+                    / '.local' / 'share' / 'ai-memory' / 'auth-token')
+    if owned and _points_at(Path(owned), secret):
+        if not remove and secret.is_file() and Path(owned) == link:
+            return owned
+        Path(owned).unlink()
+    if remove or not secret.is_file() or link.exists() or link.is_symlink():
         return False
-    if link.exists() or link.is_symlink():
-        return ours
     link.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     link.symlink_to(secret)
-    return True
+    return str(link)
 
 
 # ── Plugin cache: one version per flint plugin ────────────────────────────────
