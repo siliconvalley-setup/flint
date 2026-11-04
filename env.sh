@@ -24,3 +24,9 @@ export USE_BUILTIN_RIPGREP=0
 # Private servers on r1 (LAN).
 export FIRECRAWL_API_URL=http://192.168.1.2:3002
 export AI_MEMORY_SERVER_URL=http://192.168.1.2:49374
+
+# TokenEconomizer plugin (env wins over its config files): never prune ai-memory
+# tools; facts only from repeated failures (no model calls); learn from earlier sessions.
+export TE_TOOLPRUNE_PROTECT='mcp__plugin_ai-memory_ai-memory__*'
+export TE_MICROSKILLS=envfacts
+export TE_HISTORY_IMPORT=true

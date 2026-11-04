@@ -131,6 +131,12 @@
         "source": "github",
         "repo": "akitaonrails/ai-memory"
       }
+    },
+    "tokeneconomizer": {
+      "source": {
+        "source": "github",
+        "repo": "microsoft/TokenEconomizer"
+      }
     }
   }
 }

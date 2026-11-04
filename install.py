@@ -333,6 +333,7 @@ PLUGIN_BINARIES = {
     'ai-memory@ai-memory': 'ai-memory',
 }
 AI_MEMORY = 'ai-memory@ai-memory'
+TOKENECONOMIZER = 'tokeneconomizer@tokeneconomizer'
 CLAUDE_TIMEOUT = 600
 
 
@@ -361,6 +362,17 @@ def _version(text):
     return tuple(int(x) for x in m.group(0).split('.')) if m else None
 
 
+def _python3_version():
+    py = shutil.which('python3')
+    if not py:
+        return None
+    try:
+        r = subprocess.run([py, '--version'], capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return _version(r.stdout + r.stderr)
+
+
 def _github_repo(markets, mkt):
     conf = markets.get(mkt) if isinstance(markets, dict) else None
     src = conf.get('source') if isinstance(conf, dict) else None
@@ -372,13 +384,18 @@ def _github_repo(markets, mkt):
 def apply_plugins(cfg, catalog):
     """Install each flint plugin the config leaves enabled and is missing.
     ai-memory is also updated while it is older than the machine's binary
-    (the plugin must not run ahead of the server client). Needs `claude`:
+    (the plugin must not run ahead of the server client). Warns when
+    TokenEconomizer is wanted and PATH python3 is < 3.10. Needs `claude`:
     missing -> warn, the next run retries. Returns the plugins installed."""
     wanted = [p for p in catalog if cfg.get('enabledPlugins', {}).get(p) is True]
     for plugin in wanted:
         binary = PLUGIN_BINARIES.get(plugin)
         if binary and not shutil.which(binary):
             warn('{} needs `{}` on PATH; install it on this machine'.format(plugin, binary))
+    # Its hook runs the PATH python3 and silently does nothing below 3.10.
+    if TOKENECONOMIZER in wanted and (_python3_version() or (0,)) < (3, 10):
+        warn('{} needs python3 >= 3.10 on PATH; below that it does nothing'
+             .format(TOKENECONOMIZER))
     if not wanted:
         return []
     claude = claude_bin()
