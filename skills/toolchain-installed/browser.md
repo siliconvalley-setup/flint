@@ -41,7 +41,8 @@ Engine: fireup on r1 (`http://192.168.1.2:3002`). Renders JavaScript, keeps link
 - Subagent `web-search-researcher`: `agent-browser read` only (firecrawl fetches outside `--allowed-domains`).
 
 ## Login
-- Default `agent-browser`: temp profile, no cookies.
+- Default `agent-browser`: persistent profile `~/.agent-browser/profile`. Cookies, localStorage, IndexedDB stay across `close` and restarts. UA = normal Chrome, `navigator.webdriver` false.
+- One session per profile. Parallel session: add `--profile <own dir>` (same dir → `exit code: 21`).
 - Logins, 2FA, YubiKey, password manager: operator Chromium on CDP `9222`. Use `--cdp 9222 --pin-tab`. Skill **agent-browser** owns this flow.
 
 ## WebKit
