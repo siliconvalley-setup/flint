@@ -28,7 +28,7 @@ Prompt files sit in `~/.claude/skills/local-delegate/prompts/`.
    - T3: `git diff <range> > "<dir>/diff.patch"`; touched files the review needs: `rsync -R <paths> "<dir>/"` from the repo root.
    - T4: `cp <plan> "<dir>/plan.md"`; cited files: `rsync -R <paths> "<dir>/"`.
 
-   Size check, numbers only: `wc -c <dir>/*`. A page of a few hundred bytes = failed scrape: refetch it, or drop it. The model window is 64K tokens: keep one run under ~100 KB, split bigger inputs over several runs.
+   Size check, numbers only: `wc -c <dir>/*`. A page of a few hundred bytes = failed scrape: refetch it, or drop it. Keep one run under ~80 KB of input; split bigger inputs over several runs. The window is 100K tokens, but Claude Code compacts near 66K (measured: 258 s, read text summarized away). Read text costs ~2.2 bytes per token (31 KB of pages = 14K tokens), plus ~3K of fixed prompt and ~1–3K per turn.
 
    Every `<…>` value goes inside single quotes; write a `'` in it as `'\''`.
 
@@ -57,6 +57,7 @@ Prompt files sit in `~/.claude/skills/local-delegate/prompts/`.
 
 ## Failures
 
+- Run much slower than 1–5 min: another session shares the server (max 2 requests at once); decode drops 2–4×. Wait; no restart.
 - Output is a 507, a timeout, or empty: oMLX refused (memory guard) or is down. Do the reading yourself, in ranges (`rg`, `sed -n`), and say the delegate failed. No retry loop.
 - `claude-omlx: command not found`: the account has no local model. Skip this skill.
 - Headless caller (`claude -p`): the process can exit when your turn ends and kill a pending run (seen once in 5 test sessions, on a rerun). Run one delegate at a time, and give your answer from the runs that finished.
