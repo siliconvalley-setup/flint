@@ -6,7 +6,7 @@
 ## Paths
 - Nix tools: Node 26, Python 3.15, uv, git, gh, rg, fd, jq, ffmpeg, imagemagick, more.
 - Node libraries: `~/.npm-global/lib/node_modules` (`NODE_PATH`). `require('<name>')` works from any project. ESM `import` fails.
-- Browsers: `agent-browser` own Chrome for Testing (`~/.agent-browser/browsers`). Playwright: `~/Library/Caches/ms-playwright`. Operator Chromium: CDP `127.0.0.1:9222`.
+- Browser: one Chromium, `/Applications/Chromium.app` (`$CHROME_PATH`), for every tool. Playwright WebKit: `~/Library/Caches/ms-playwright`. Operator Chromium session: CDP `127.0.0.1:9222`.
 
 ## Installs
 - Blocked: `npx`, `npm install`, global `pnpm add`, `pip install`.
