@@ -232,6 +232,17 @@ def test_a_key_dropped_from_env_sh_leaves_settings_env():
         assert 'FIRECRAWL_API_URL' not in env and 'DISABLE_AUTO_COMPACT' in env
 
 
+def test_tokeneconomizer_setup_reaches_the_claude_env():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        run_cli(d)
+        env = read_settings(d)['env']
+        assert env['TE_TOOLPRUNE_PROTECT'] == 'mcp__plugin_ai-memory_ai-memory__*'
+        assert env['TE_MICROSKILLS'] == 'envfacts'
+        assert env['TE_HISTORY_IMPORT'] == 'true'
+
+
 def fake_claude(parent, installed=(), version='1.0.0'):
     """A `claude` stub: logs each call, answers the two list calls with JSON."""
     log = Path(parent) / 'claude.log'
@@ -249,7 +260,7 @@ def fake_claude(parent, installed=(), version='1.0.0'):
 
 
 CATALOG = ['typescript-lsp@claude-plugins-official', 'pyright-lsp@claude-plugins-official',
-           'ai-memory@ai-memory']
+           'ai-memory@ai-memory', 'tokeneconomizer@tokeneconomizer']
 
 
 def test_install_adds_the_marketplace_and_installs_the_catalog():
@@ -260,6 +271,7 @@ def test_install_adds_the_marketplace_and_installs_the_catalog():
         assert run_cli(d, claude_bin=stub).returncode == 0
         calls = log.read_text().splitlines()
         assert 'plugin marketplace add https://github.com/akitaonrails/ai-memory' in calls
+        assert 'plugin marketplace add https://github.com/microsoft/TokenEconomizer' in calls
         for plugin in CATALOG:
             assert 'plugin install {}'.format(plugin) in calls
         assert not any('builtin' in c for c in calls)
@@ -304,6 +316,17 @@ def test_a_missing_plugin_binary_is_named():
         assert 'typescript-language-server' in r.stderr
         assert '`ai-memory`' in r.stderr
         assert '`pyright`' not in r.stderr
+
+
+def test_tokeneconomizer_warns_when_python3_is_older_than_3_10():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        r = run_cli(d, path=fake_bin(d, 'python3', 'Python 3.9.6'))
+        assert 'tokeneconomizer@tokeneconomizer needs python3 >= 3.10' in r.stderr
+    with tempfile.TemporaryDirectory() as d:
+        r = run_cli(d, path=fake_bin(d, 'python3', 'Python 3.15.0'))
+        assert 'python3 >= 3.10' not in r.stderr
 
 
 def test_a_plugin_the_user_disabled_is_not_installed():
