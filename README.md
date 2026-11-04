@@ -51,10 +51,12 @@ string = the clone path.
 
 TokenEconomizer needs `python3` >= 3.10 on PATH (the run warns below that;
 its hook then does nothing). Its setup comes from the `TE_*` lines in
-`env.sh`. It never updates by itself: `claude plugin marketplace update
-tokeneconomizer && claude plugin update tokeneconomizer@tokeneconomizer`,
-then check `gitCommitSha` in `plugins/installed_plugins.json` (its version
-stays `0.1.0`, so an update may do nothing).
+`env.sh`. It never updates by itself. Its version stays `0.1.0`, so
+Claude Code keeps the old cached code even when `installed_plugins.json`
+shows the new `gitCommitSha`. To update, close every Claude session, then:
+`claude plugin marketplace update tokeneconomizer && claude plugin uninstall
+tokeneconomizer@tokeneconomizer && rm -rf <config dir>/plugins/cache/tokeneconomizer
+&& claude plugin install tokeneconomizer@tokeneconomizer`.
 
 ### Edit loop
 
