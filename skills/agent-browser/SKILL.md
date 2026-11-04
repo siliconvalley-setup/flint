@@ -19,7 +19,7 @@ Load the version-matched command reference from the CLI itself:
 
 | Mode | Use when | Command |
 |------|----------|---------|
-| **Local (headless)** | headless verification, HMR, exploration — the agent works alone | `agent-browser open <url>` (own headless Chrome for Testing, temp profile) |
+| **Local (headless)** | headless verification, HMR, exploration — the agent works alone | `agent-browser open <url>` (headless `/Applications/Chromium.app`, temp profile) |
 | **Host CDP (shared)** | the task needs the human's real login state — 2FA, YubiKey, password-manager dialog, existing cookies | `agent-browser --cdp 9222 --pin-tab <cmd>` |
 
 Page and docs reads → `firecrawl scrape <url>` (renders JS, keeps links). `agent-browser read <url>` only for docs that serve markdown or `llms.txt`: `--filter "<text>"` (section), `--outline` (headings), `--llms index` (docs discovery). Library/framework docs → `ctx7 docs`. Boundary and fallback → **toolchain-installed** skill (browser).

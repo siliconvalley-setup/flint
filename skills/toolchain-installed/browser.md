@@ -1,9 +1,9 @@
 # Browser
 
 - No GUI session: run every browser **headless**.
-- `agent-browser`: own Chrome for Testing.
-- `playwright-cli`: Playwright Chromium + WebKit. Missing: `playwright-cli install-browser <name>`.
-- Operator Chromium (`/Applications/Chromium.app`) crashes headless. Reach it only over CDP (see Login).
+- One Chromium: `/Applications/Chromium.app` (`$CHROME_PATH`). agent-browser, playwright-cli, Lighthouse, Puppeteer read it from env. Never download Chrome for Testing or Playwright Chromium.
+- `playwright-cli`: Chromium above + Playwright WebKit.
+- Logged-in operator session: CDP only (see Login).
 
 ## Pick tool
 
