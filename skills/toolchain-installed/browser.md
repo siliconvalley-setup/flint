@@ -38,7 +38,6 @@ Engine: fireup on r1 (`http://192.168.1.2:3002`). Renders JavaScript, keeps link
 - "Connection refused": browser steps, then tell human links are lost and ask for `fireup up` on r1.
 - `--format json` returns only schema fields; warnings outside schema are lost. Whole page matters: read markdown.
 - `json` gateway connect error: read markdown; ask human for `fireup gateway start`.
-- Anti-bot block: never bypass (stealth, TLS impersonation, proxies). Tell human.
 - Subagent `web-search-researcher`: `agent-browser read` only (firecrawl fetches outside `--allowed-domains`).
 
 ## Login
