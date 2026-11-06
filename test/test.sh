@@ -154,14 +154,15 @@ else
     echo "ok  15 mod suites (skipped: claude not on PATH)"
 fi
 
-# 16: tb suite (node --test). Without node:sqlite + FTS5 tb exits non-zero by
-# design (the mod then passes results through), so the suite cannot run.
-if node -e "new (require('node:sqlite').DatabaseSync)(':memory:').exec('CREATE VIRTUAL TABLE p USING fts5(x)')" >/dev/null 2>&1; then
+# 16: tb suite (node --test). Gated on tb's own doctor (node >= 26, node:sqlite +
+# FTS5, writable data dir): without them tb exits non-zero by design (the mod
+# then passes results through), so the suite cannot run.
+if TB_DOCTOR="$(TB_DATA_DIR="$FX/tb-doctor" node tools/tb.mjs doctor 2>&1)"; then
     node --test --test-reporter=tap test/tb.test.mjs > "$FX/tb.tap" 2>&1; RC=$?
     ck "$RC" "16 tb suite"; [ "$RC" -eq 0 ] || cat "$FX/tb.tap"
     grep '# SKIP' "$FX/tb.tap" | sed -e 's/^ *ok [0-9]* - /ok  16 /' -e 's/ # SKIP \(.*\)$/ (skipped: \1)/'
 else
-    echo "ok  16 tb suite (skipped: node:sqlite/FTS5 missing)"
+    echo "ok  16 tb suite (skipped: tb doctor: $(printf '%s\n' "$TB_DOCTOR" | head -n 1))"
 fi
 
 rm -rf "$FX"

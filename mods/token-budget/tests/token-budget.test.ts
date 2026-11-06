@@ -173,6 +173,11 @@ test('meter: one warning at 150k, one handoff order at 200k, on the next main to
   await measure($, 205_000)
   await measure($, 40_000)
   expect(await ctx(), 'a note whose threshold fell back before delivery is dropped').toBeUndefined()
+  await measure($, 140_000)
+  await measure($, 210_000)
+  const jump = await ctx()
+  expect(jump?.length, 'a jump past both thresholds sends the handoff order alone').toBe(1)
+  expect(jump?.[0]).toContain('memory_handoff_begin')
 })
 
 function spawn($: Engine, fork: boolean, parentAgentId?: string) {

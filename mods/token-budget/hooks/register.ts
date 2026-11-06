@@ -7,7 +7,8 @@
 //   core stores it; the original stays on disk or in tb's store.
 // - Context meter: main-thread context past 150k tokens adds one warning, past
 //   200k one handoff order, to the next main-thread tool result; once per
-//   upward crossing, so a compaction or a drop re-arms it.
+//   upward crossing, so a compaction or a drop re-arms it. One note per
+//   result: a jump past both sends the handoff order alone.
 // - Fork guard: refuses a fork from the main thread while its context is over
 //   100k tokens (the session.measure figure): the fork would inherit it all.
 //   Defense in depth: flint's env turns fork mode off (#47).
@@ -27,16 +28,17 @@ const TB_TIMEOUT_MS = 5000
 const WARN_TOKENS = 150_000
 // Main-thread context that orders a handoff: past it every turn rereads too much.
 const HANDOFF_TOKENS = 200_000
+const k = (tokens: number) => `${tokens / 1000}k`
 const METER: readonly (readonly [number, string])[] = [
-  [WARN_TOKENS, 'TOKEN-BUDGET: the main context is over 150k tokens, and every turn reads it again. '
+  [WARN_TOKENS, `TOKEN-BUDGET: the main context is over ${k(WARN_TOKENS)} tokens, and every turn reads it again. `
     + 'Finish the current step and plan where to stop. Read sections (tb get, Read offset/limit), not whole files.'],
-  [HANDOFF_TOKENS, 'TOKEN-BUDGET: the main context is over 200k tokens. Start no new tool work. '
+  [HANDOFF_TOKENS, `TOKEN-BUDGET: the main context is over ${k(HANDOFF_TOKENS)} tokens. Start no new tool work. `
     + 'Write an ai-memory handoff with memory_handoff_begin (summary, open_questions, next_steps, files_touched), '
     + 'then tell the user to continue in a new session.'],
 ]
 // A main-thread fork past this copies too much context into every one of its requests.
 const FORK_MAX_TOKENS = 100_000
-const FORK_DENY = 'Not spawned: a fork copies this conversation, over 100k tokens, into the subagent and pays for it on every request. '
+const FORK_DENY = `Not spawned: a fork copies this conversation, over ${k(FORK_MAX_TOKENS)} tokens, into the subagent and pays for it on every request. `
   + 'Spawn a fresh agent (not fork) with a self-contained brief: the goal, the files to read, what you ruled out, and when it is done.'
 // Read of these stays whole: the Read → Edit workflow on code keeps its shape.
 const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'py', 'sh', 'go', 'rs',
@@ -130,6 +132,7 @@ export function register(on: On) {
         due.delete(at)
       } else if (!crossed.has(at)) {
         crossed.add(at)
+        due.clear() // METER ascends: only a lower, now superseded note can wait here
         due.set(at, note)
       }
     }
