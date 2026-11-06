@@ -129,7 +129,7 @@ not only the style core. The repo is private: a consumer needs read access.
 
 ```sh
 sh test/test.sh        # must end ALL PASS — hook contract, installer seam,
-                       # budgets, canary
+                       # budgets, canary, mod suites, tb suite
 ```
 
 CI runs the same matrix on ubuntu/macos/windows + shellcheck. The Windows

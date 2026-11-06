@@ -37,6 +37,11 @@ Output style does not reach this cost.
 - `node` >= 26 with `node:sqlite` and FTS5 must be on the PATH of the Claude
   Code process. silicon-valley provides and checks it.
 - Windows (Git Bash) uses the same path logic, untested; the mod fails open.
+- Stored Bash outputs stay out of the shared index, so the 24 h purge
+  removes every copy (tool output may hold secrets). `find` searches files
+  only, and a stored output's hint has no `search:` part.
+- `put` also takes `--session <id>` (not in #46's contract), so `stats` can
+  report per session.
 
 ## Alternatives rejected
 

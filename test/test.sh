@@ -1,5 +1,6 @@
 #!/bin/sh
-# flint test matrix — hook stdout contract + installer seam + character budgets.
+# flint test matrix — hook stdout contract + installer seam + character budgets
+# + mod suites + tb suite.
 # Run from the repo root: sh test/test.sh   Every step must print its ok tag.
 #
 # `[ ... ]; ck $?` is deliberate throughout the budget block: ck consumes the

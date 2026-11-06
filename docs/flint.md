@@ -234,7 +234,7 @@ against `header + unwrap(flint.md)` (`tools/resync.py --check`).
 `desktop/chat/project-instructions.md` is hand-derived (condensed), not
 byte-checked. Then the mod suites (`claude plugin test` per `mods/*` dir;
 skipped without `claude`) and the tb suite (`node --test test/tb.test.mjs`;
-skipped without `node:sqlite` + FTS5). The offline replay
+skipped when `node tools/tb.mjs doctor` fails). The offline replay
 (`test/replay.mjs`) reads private transcripts and stays out of the matrix.
 CI runs the matrix on ubuntu/macos/windows + shellcheck; the
 Windows runner exercises the Git Bash path.
