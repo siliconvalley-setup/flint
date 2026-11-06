@@ -1,5 +1,5 @@
 // sleep-guard mod: three wait and stop rules on Bash calls, in the main
-// conversation and every subagent (docs/adr/sleep-guard.md).
+// conversation and every subagent (vmCODE docs/adr/sleep-guard.md).
 // - Sleep: denies a foreground call whose first segment is `sleep N`,
 //   N ≥ 25 s. Same rule as Claude Code's own block in Bash validateInput, which
 //   the server flag `tengu_amber_sentinel` keeps off: its regex, its 25 s
