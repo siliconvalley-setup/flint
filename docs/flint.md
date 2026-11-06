@@ -32,7 +32,8 @@ for why that distinction matters.
 | `install.py` / `install.sh` / `install.ps1` / `uninstall.py` | Registration in `settings.json` (idempotent, re-pointing, atomic writes) |
 | `desktop/` | Derivados for the hook-less Claude Desktop surfaces (→ `desktop/README.md`) |
 | `tools/unwrap.py` / `tools/resync.py` | Derivado tooling: unwrap paragraph hard-wraps; regenerate + verify the verbatim derivados |
-| `test/test.sh` + `test/install_test.py` | The full matrix (§8) |
+| `tools/tb.mjs` + `mods/token-budget/` | Token budget: section index + placeholders for large tool results, context meter, fork guard (ADR 0003) |
+| `test/test.sh` + `test/install_test.py` + `test/tb.test.mjs` | The full matrix (§8) |
 | `docs/flint.md` | This file |
 
 **Consumers**: [vmCODE](https://github.com/realroboto/vmCODE) vendors a pinned
@@ -231,7 +232,11 @@ instructions ≤8,000 · chat style ≤8,000 sanity · cowork skill ≤64 KB san
 and byte parity of the one verbatim derivado (`desktop/cowork/SKILL.md`)
 against `header + unwrap(flint.md)` (`tools/resync.py --check`).
 `desktop/chat/project-instructions.md` is hand-derived (condensed), not
-byte-checked. CI runs the matrix on ubuntu/macos/windows + shellcheck; the
+byte-checked. Then the mod suites (`claude plugin test` per `mods/*` dir;
+skipped without `claude`) and the tb suite (`node --test test/tb.test.mjs`;
+skipped when `node tools/tb.mjs doctor` fails). The offline replay
+(`test/replay.mjs`) reads private transcripts and stays out of the matrix.
+CI runs the matrix on ubuntu/macos/windows + shellcheck; the
 Windows runner exercises the Git Bash path.
 
 ## 9. Hard don'ts

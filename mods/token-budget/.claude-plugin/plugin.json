@@ -1,0 +1,8 @@
+{
+  "name": "token-budget",
+  "version": "1.0.0",
+  "description": "Replaces a large text tool result with a recoverable tb placeholder, warns at 150k and 200k tokens of main-thread context, and refuses a fork from a main thread over 100k tokens",
+  "author": {
+    "name": "realroboto"
+  }
+}

@@ -1,5 +1,6 @@
 #!/bin/sh
-# flint test matrix — hook stdout contract + installer seam + character budgets.
+# flint test matrix — hook stdout contract + installer seam + character budgets
+# + mod suites + tb suite.
 # Run from the repo root: sh test/test.sh   Every step must print its ok tag.
 #
 # `[ ... ]; ck $?` is deliberate throughout the budget block: ck consumes the
@@ -142,6 +143,28 @@ ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 # byte parity subsumes the old canary-token grep (the token is in flint.md,
 # and test 12 already asserts it reaches the hook output).
 "$PY" tools/resync.py --check; ck $? "14 verbatim derivado parity"
+
+# 15: mod suites, one `claude plugin test` per mods/* dir (sleep-guard included).
+if command -v claude >/dev/null 2>&1; then
+    for m in mods/*/; do
+        m="${m%/}"
+        claude plugin test "$m" > "$FX/mod.out" 2>&1; RC=$?
+        ck "$RC" "15 mod suite ${m#mods/}"; [ "$RC" -eq 0 ] || cat "$FX/mod.out"
+    done
+else
+    echo "ok  15 mod suites (skipped: claude not on PATH)"
+fi
+
+# 16: tb suite (node --test). Gated on tb's own doctor (node >= 26, node:sqlite +
+# FTS5, writable data dir): without them tb exits non-zero by design (the mod
+# then passes results through), so the suite cannot run.
+if TB_DOCTOR="$(TB_DATA_DIR="$FX/tb-doctor" node tools/tb.mjs doctor 2>&1)"; then
+    node --test --test-reporter=tap test/tb.test.mjs > "$FX/tb.tap" 2>&1; RC=$?
+    ck "$RC" "16 tb suite"; [ "$RC" -eq 0 ] || cat "$FX/tb.tap"
+    grep '# SKIP' "$FX/tb.tap" | sed -e 's/^ *ok [0-9]* - /ok  16 /' -e 's/ # SKIP \(.*\)$/ (skipped: \1)/'
+else
+    echo "ok  16 tb suite (skipped: tb doctor: $(printf '%s\n' "$TB_DOCTOR" | head -n 1))"
+fi
 
 rm -rf "$FX"
 if [ "$FAILS" -eq 0 ]; then echo "ALL PASS"; else echo "FAILURES: $FAILS"; exit 1; fi

@@ -49,6 +49,12 @@ binary resolves it: `AI_MEMORY_DATA_DIR`, else macOS
 `${XDG_DATA_HOME:-~/.local/share}/ai-memory`. `"${FLINT}"` in a settings
 string = the clone path.
 
+The `token-budget` mod needs `node` >= 26 with `node:sqlite` and FTS5 on the
+PATH of the Claude Code process: it runs `node tools/tb.mjs` from the clone.
+Without it, the first tool result of a session shows one `TOKEN-BUDGET ERROR`
+line and tool results pass unchanged. Check with `node tools/tb.mjs doctor`
+(prints `ok`). See ADR 0003.
+
 TokenEconomizer needs `python3` >= 3.10 on PATH (the run warns below that;
 its hook then does nothing). Its setup comes from the `TE_*` lines in
 `env.sh`. It never updates by itself. Its version stays `0.1.0`, so

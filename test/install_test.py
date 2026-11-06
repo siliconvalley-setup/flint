@@ -209,7 +209,8 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert 'DISABLE_UPDATES' not in env
         assert env['MY_VAR'] == '1'
         dirs = env['CLAUDE_CODE_PLUGIN_DIRS'].split(':')
-        assert dirs == ['/mine/mod', (ROOT / 'mods' / 'sleep-guard').as_posix()]
+        shipped = sorted(p.parent.parent.as_posix() for p in (ROOT / 'mods').glob('*/.claude-plugin/plugin.json'))
+        assert shipped and dirs == ['/mine/mod', *shipped]
         out = subprocess.run(['sh', '-c', '. "$1" && printf %s "$FIRECRAWL_API_URL"',
                               'sh', str(ROOT / 'env.sh')],
                              capture_output=True, text=True).stdout
