@@ -109,11 +109,15 @@ test('Bash eligibility: errors, interrupts, background, images, persisted output
   await passes('isImage', 'make', { result: bashOut(BIG, { isImage: true }) })
   await passes('persistedOutputPath', 'make', { result: bashOut(BIG, { persistedOutputPath: '/t/o.txt' }) })
   await passes('4095 B', 'make', { result: bashOut(BIG.slice(1)) })
+  // #52: the agent bounded these itself; a placeholder only cost it one more call for the same lines.
   const ranges = ["sed -n '1,200p' docs/a.md", 'sed -n 1,200p a.md', 'sed -n "5,9p" a.md', 'head -n 300 build.log',
-    'tail -n 300 build.log', "node /c/tools/tb.mjs get '/p/a.md#intro'", 'cd /p && node /c/tools/tb.mjs find "fork guard"']
+    'tail -n 300 build.log', "node /c/tools/tb.mjs get '/p/a.md#intro'", 'cd /p && node /c/tools/tb.mjs find "fork guard"',
+    'cd /p; sed -n 36,150p tools/tokscan.py', 'cd /p; git diff HEAD | head -400', "gh api repos/o/r/issues/48 --jq '.body' | head -c 6000",
+    'cd /p; wc -l t.sh; sed -n 1,400p t.sh', "sed -n 1,99p t.sh | cut -c1-200", "sed -n '1,200p' a.md | rg x",
+    'head -n 300 a.md b.md', 'head -c 9999 a.md']
   for (const c of ranges) await passes(c, c, { result: bashOut(BIG) })
-  const whole = ["sed -n '1,200p' a.md | rg x", 'head -n 300 a.md b.md', 'tail -f build.log', "sed 's/a/b/' a.md",
-    'head -c 9999 a.md', 'cat a.md', 'sed -n 1,200p a.md; cat b.md']
+  const whole = ['tail -f build.log', 'tail -n 50 -F build.log', "sed 's/a/b/' a.md", 'cat a.md', 'sed -n 1,200p a.md; cat b.md',
+    'git diff HEAD && git status --short', 'cat a.md | rg x', 'echo head; cat a.md', 'cd /p && cat a.md || head -n 5 b.md']
   for (const c of whole) {
     answer = { result: bashOut(BIG) }
     expect((await bash($, c)).result, c).toEqual(bashOut(PLACEHOLDER.trimEnd()))

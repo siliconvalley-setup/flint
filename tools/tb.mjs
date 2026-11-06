@@ -5,7 +5,7 @@
 // see the same section ids. Plain text on stdout; exit 0 on success.
 //
 //   put --source <label> [--path <abs>] [--intent <text>] [--session <id>]  (content on stdin)
-//   outline <path> · get <path>#<id> | <path>:<a>-<b> · find "<query>" [paths…] [--offset N]
+//   outline <path> · get <path>[#<id> | :<a>-<b>] · find "<query>" [paths…] [--offset N]
 //   doctor · stats · purge
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -286,16 +286,28 @@ function put(text, opts) {
   return bytes(ph) <= bytes(text) * GAIN ? ph : ''
 }
 
-// `<where>#<id>` or `<where>:<a>-<b>` as the current lines, numbered.
+// Claude Code saves Bash output past this many chars to a file; flint's env sets 10000 (#47).
+const BASH_WINDOW = Number(process.env.BASH_MAX_OUTPUT_LENGTH) || 10000
+
+// `<where>#<id>`, `<where>:<a>-<b>` or all of `<where>` as the current lines,
+// numbered. Pages below the Bash window: past it Claude Code saves the output to
+// a file, and a Read of that file gets one more placeholder (#52).
 function get(db, target) {
   const range = /^(.*):(\d+)-(\d+)$/.exec(target)
-  const at = target.lastIndexOf('#')
-  if (!range && at < 1) throw new Fail(`give ${target}#<id> or ${target}:<a>-<b>`)
-  const where = resolveWhere(range ? range[1] : target.slice(0, at))
+  const at = range ? -1 : target.lastIndexOf('#')
+  const where = resolveWhere(range ? range[1] : at < 1 ? target : target.slice(0, at))
   const lines = splitLines(index(db, where))
-  const s = range ? { a: +range[2], b: +range[3] } : sectionize(lines).find(x => x.id === target.slice(at + 1))
+  const s = range ? { a: +range[2], b: +range[3] } : at < 1 ? { a: 1, b: lines.length }
+    : sectionize(lines).find(x => x.id === target.slice(at + 1))
   if (!s) throw new Fail(`no section ${target.slice(at + 1)}; list them: node ${arg(TB)} outline ${arg(where)}`)
-  return lines.slice(s.a - 1, s.b).map((l, i) => `${s.a + i}\t${l}\n`).join('')
+  const more = n => `more: node ${arg(TB)} get ${quote(`${where}:${n}-${s.b}`)}\n`
+  let out = ''
+  for (let n = s.a; n <= Math.min(s.b, lines.length); n++) {
+    const line = `${n}\t${lines[n - 1]}\n`
+    if (out && out.length + line.length + more(n).length >= BASH_WINDOW) return out + more(n)
+    out += line
+  }
+  return out
 }
 
 // node:sqlite with FTS5, or why not: every command but doctor needs both.

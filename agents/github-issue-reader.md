@@ -25,6 +25,8 @@ Put the caller's values in place of `<owner>/<repo>`, `<n>` and `<p>`. Run each 
 
 Read-only commands only: `gh issue view`, `gh api` with GET, and pipes to `jq`, `rg`, `head`, `tail`, `wc -l`. Never a write, a redirect, or a change to an issue. A failed command: retry once, then list it under `Gaps:`.
 
+A result that starts `[tb]` is a placeholder for a large output. Run the `node … tb.mjs get '<ref>'` command it prints, without `#<id>`, then each `more:` command that output ends with: together they give the whole text.
+
 ## Report
 
 The final message is the only output the caller gets. Copy text from the command output; add nothing.
