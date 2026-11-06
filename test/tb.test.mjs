@@ -78,6 +78,25 @@ test('get: by id and by range, exact current lines with numbers, fresh after a c
   assert.equal(missing.out, '')
 })
 
+// #52: a ref with no section failed; output past the Bash window came back as one more placeholder.
+test('get: no section reads it all; output pages below the Bash window, the last line names the next range', () => {
+  const { dir, data } = project({})
+  const out = Array.from({ length: 2000 }, (_, i) => `line ${i + 1}`).join('\n') + '\n'
+  const ref = /→ (tb:[0-9a-f]{16})/.exec(tb(['put', '--source', 'Bash'], { input: out, data, cwd: dir }).out)[1]
+  const get = (target, window) => tb(['get', target], { data, cwd: dir, env: { BASH_MAX_OUTPUT_LENGTH: window } })
+  assert.equal(get(`${ref}:1-2`, '10000').out, '1\tline 1\n2\tline 2\n')
+  const page = get(ref, '10000')
+  assert.equal(page.code, 0, page.err)
+  assert.ok(page.out.length < 10000, `${page.out.length}`)
+  const lines = page.out.trimEnd().split('\n')
+  assert.equal(lines[0], '1\tline 1')
+  const last = +lines.at(-2).split('\t')[0]
+  assert.equal(lines.at(-1), `more: node ${TB} get '${ref}:${last + 1}-2000'`)
+  assert.equal(get(`${ref}:${last + 1}-2000`, '10000').out.split('\n')[0], `${last + 1}\tline ${last + 1}`)
+  assert.equal(get(ref, '').out.trimEnd().split('\n').length, lines.length, 'no window set: flint default 10000')
+  assert.ok(get(ref, '100000').out.endsWith('2000\tline 2000\n'), 'a wide window takes it all')
+})
+
 test('put: a markdown Bash output becomes an outline, stored 0600 outside the repo, read back by get', () => {
   const { dir, data } = project({})
   const ticket = GUIDE + 'filler line\n'.repeat(400)

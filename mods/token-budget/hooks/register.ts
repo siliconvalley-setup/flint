@@ -45,9 +45,15 @@ const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 
   'java', 'kt', 'swift', 'c', 'h', 'cpp', 'hpp', 'cs', 'rb', 'php', 'css', 'scss', 'html', 'vue', 'svelte', 'sql',
   'json', 'yaml', 'yml', 'toml'])
 
-// A narrowed Bash read: the agent already chose the lines. Any tb.mjs call: tb's
-// own output never becomes a placeholder, or a large section could not be read.
-const RANGE_READS = [/^sed -n (['"]?)\d+,\d+p\1 \S+$/, /^head -n \d+ \S+$/, /^tail -n \d+ \S+$/, /\btb\.mjs\b/]
+// A Bash read the agent bounded: every statement but cd, echo and wc pipes through
+// head, tail (not -f) or sed -n. The agent already chose the lines; a placeholder
+// only cost it one more call for them (#52: 12 of 16 placeholders). Any tb.mjs
+// call: tb's own output never becomes a placeholder, or a large section could not be read.
+// shortcut: splits on ; && || and newlines without parsing quotes; parse when a quoted separator misleads it.
+const BOUND = /(^|\|)\s*(head|sed -n|tail(?![^|]*\s-[fF]\b))\b/
+const QUIET = /^(cd|echo|wc)\b/
+const bounded = (command: string) => /\btb\.mjs\b/.test(command)
+  || command.split(/;|&&|\|\||\n/).map(s => s.trim()).filter(s => s && !QUIET.test(s)).every(s => BOUND.test(s))
 
 type ReadText = { type: string, file: { content: string, truncatedByTokenCap?: boolean } }
 type BashOut = { stdout: string, interrupted: boolean, isImage?: boolean, backgroundTaskId?: string, persistedOutputPath?: string }
@@ -94,7 +100,7 @@ export function eligible(e: ToolCallInput, result: unknown) {
   if (e.tool === 'Bash') {
     const r = result as BashOut
     if (e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined
-      || r.persistedOutputPath !== undefined || RANGE_READS.some(x => x.test(e.command.trim())) || !big(r.stdout)) return undefined
+      || r.persistedOutputPath !== undefined || bounded(e.command) || !big(r.stdout)) return undefined
     return {
       text: r.stdout,
       args: ['--source', 'Bash', ...(e.description ? ['--intent', e.description] : [])],

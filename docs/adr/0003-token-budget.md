@@ -42,6 +42,18 @@ Output style does not reach this cost.
   only, and a stored output's hint has no `search:` part.
 - `put` also takes `--session <id>` (not in #46's contract), so `stats` can
   report per session.
+- Amended 2026-11-06 (#52). Bash read the agent bounded passes whole: every
+  statement but `cd`, `echo`, `wc` pipes through `head`, `tail` (not `-f`) or
+  `sed -n`. Transcripts 2026-11-06: 12 of 16 Bash placeholders hit such
+  reads, 9 of 12 fetched same lines again within 3 calls. Replay of 225
+  transcripts: bytes saved 6.56 MB → 4.84 MB; refetch already gave back most
+  of difference, at one more turn each.
+- Amended 2026-11-06 (#52). `tb get <ref>` without `#<id>` or range reads
+  all. `get` output stays below Bash window (`BASH_MAX_OUTPUT_LENGTH`, flint
+  10000); last line `more:` names next range. Past window, Claude Code saved
+  output to file, and Read of that file got second placeholder.
+- Read of Claude Code `tool-results/` file keeps placeholder: outline is the
+  cheap way into large output (#52 option 3a rejected).
 
 ## Alternatives rejected
 
