@@ -64,6 +64,19 @@ shows the new `gitCommitSha`. To update, close every Claude session, then:
 tokeneconomizer@tokeneconomizer && rm -rf <config dir>/plugins/cache/tokeneconomizer
 && claude plugin install tokeneconomizer@tokeneconomizer`.
 
+### Cost report
+
+`python3 -I tools/tokscan.py 2026-11-06` prints where tokens went that day:
+totals per token kind, weighted cost (units of base input price, ratios per
+model from the pricing page, printed in the report) and USD, one row per
+session, the most expensive subagents, tool use per category, Bash per program,
+the largest tool results, and files read 3+ times in one session. A range is
+`A..B` (local dates). `--compare A..B C..D` prints the deltas between two
+ranges. `--json` gives the same data; `--no-prompts` hides prompt and input
+previews. It reads `$CLAUDE_CONFIG_DIR` (or `~/.claude`) only and sends
+nothing. Claude Code deletes transcripts after `cleanupPeriodDays` (default
+30): run a baseline compare before that.
+
 ### Edit loop
 
 - Skill, agent, rule, output style, mod, statusline: edit the file. Live at

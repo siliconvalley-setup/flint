@@ -33,7 +33,8 @@ for why that distinction matters.
 | `desktop/` | Derivados for the hook-less Claude Desktop surfaces (→ `desktop/README.md`) |
 | `tools/unwrap.py` / `tools/resync.py` | Derivado tooling: unwrap paragraph hard-wraps; regenerate + verify the verbatim derivados |
 | `tools/tb.mjs` + `mods/token-budget/` | Token budget: section index + placeholders for large tool results, context meter, fork guard (ADR 0003) |
-| `test/test.sh` + `test/install_test.py` + `test/tb.test.mjs` | The full matrix (§8) |
+| `tools/tokscan.py` | Cost report from local Claude Code transcripts: weighted cost per session, subagent, tool and Bash program; `--compare` two date ranges (#48) |
+| `test/test.sh` + `test/install_test.py` + `test/tb.test.mjs` + `test/tokscan_test.sh` | The full matrix (§8) |
 | `docs/flint.md` | This file |
 
 **Consumers**: [vmCODE](https://github.com/realroboto/vmCODE) vendors a pinned
@@ -234,7 +235,9 @@ against `header + unwrap(flint.md)` (`tools/resync.py --check`).
 `desktop/chat/project-instructions.md` is hand-derived (condensed), not
 byte-checked. Then the mod suites (`claude plugin test` per `mods/*` dir;
 skipped without `claude`) and the tb suite (`node --test test/tb.test.mjs`;
-skipped when `node tools/tb.mjs doctor` fails). The offline replay
+skipped when `node tools/tb.mjs doctor` fails), then the tokscan suite
+(`test/tokscan_test.sh`: shell-built fixture transcripts, assertions on
+`--json` and text output). The offline replay
 (`test/replay.mjs`) reads private transcripts and stays out of the matrix.
 CI runs the matrix on ubuntu/macos/windows + shellcheck; the
 Windows runner exercises the Git Bash path.
