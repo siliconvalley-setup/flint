@@ -204,6 +204,8 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert env['FIRECRAWL_API_URL'] == 'http://192.168.1.2:3002'
         assert env['AI_MEMORY_SERVER_URL'] == 'http://192.168.1.2:49374'
         assert env['DISABLE_AUTO_COMPACT'] == '1'
+        assert env['CLAUDE_CODE_FORK_SUBAGENT'] == '0'
+        assert env['BASH_MAX_OUTPUT_LENGTH'] == '10000'
         assert 'DISABLE_UPDATES' not in env
         assert env['MY_VAR'] == '1'
         dirs = env['CLAUDE_CODE_PLUGIN_DIRS'].split(':')

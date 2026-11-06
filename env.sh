@@ -20,6 +20,9 @@ export CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS=1
 export CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH=200
 export CLAUDE_CODE_DISABLE_CRON=1
 export USE_BUILTIN_RIPGREP=0
+# Subagents start fresh (no fork of the parent context); Bash output over 10k chars goes to a file (issue #47).
+export CLAUDE_CODE_FORK_SUBAGENT=0
+export BASH_MAX_OUTPUT_LENGTH=10000
 
 # Private servers on r1 (LAN).
 export FIRECRAWL_API_URL=http://192.168.1.2:3002
