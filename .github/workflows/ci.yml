@@ -32,4 +32,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: shellcheck
-        run: shellcheck hooks/flint-style.sh install.sh test/test.sh
+        run: shellcheck hooks/flint-style.sh install.sh test/test.sh test/tokscan_test.sh

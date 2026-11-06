@@ -1,6 +1,6 @@
 #!/bin/sh
 # flint test matrix — hook stdout contract + installer seam + character budgets
-# + mod suites + tb suite.
+# + mod suites + tb suite + tokscan suite.
 # Run from the repo root: sh test/test.sh   Every step must print its ok tag.
 #
 # `[ ... ]; ck $?` is deliberate throughout the budget block: ck consumes the
@@ -165,6 +165,10 @@ if TB_DOCTOR="$(TB_DATA_DIR="$FX/tb-doctor" node tools/tb.mjs doctor 2>&1)"; the
 else
     echo "ok  16 tb suite (skipped: tb doctor: $(printf '%s\n' "$TB_DOCTOR" | head -n 1))"
 fi
+
+# 17: tokscan suite (stdlib python, shell-built fixture transcripts).
+sh test/tokscan_test.sh > "$FX/tokscan.out" 2>&1; RC=$?
+ck "$RC" "17 tokscan suite"; [ "$RC" -eq 0 ] || cat "$FX/tokscan.out"
 
 rm -rf "$FX"
 if [ "$FAILS" -eq 0 ]; then echo "ALL PASS"; else echo "FAILURES: $FAILS"; exit 1; fi
