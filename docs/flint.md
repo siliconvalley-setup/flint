@@ -33,6 +33,7 @@ for why that distinction matters.
 | `desktop/` | Derivados for the hook-less Claude Desktop surfaces (→ `desktop/README.md`) |
 | `tools/unwrap.py` / `tools/resync.py` | Derivado tooling: unwrap paragraph hard-wraps; regenerate + verify the verbatim derivados |
 | `tools/tb.mjs` + `mods/token-budget/` | Token budget: section index + placeholders for large tool results, context meter, fork guard (ADR 0003) |
+| `mods/sleep-guard/` | Wait and stop rules on Bash calls, main conversation and every subagent (vmCODE `docs/adr/sleep-guard.md`) |
 | `tools/tokscan.py` | Cost report from local Claude Code transcripts: weighted cost per session, subagent, tool and Bash program; `--compare` two date ranges (#48) |
 | `test/test.sh` + `test/install_test.py` + `test/tb.test.mjs` + `test/tokscan_test.sh` | The full matrix (§8) |
 | `docs/flint.md` | This file |
