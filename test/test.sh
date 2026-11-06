@@ -143,5 +143,26 @@ ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 # and test 12 already asserts it reaches the hook output).
 "$PY" tools/resync.py --check; ck $? "14 verbatim derivado parity"
 
+# 15: mod suites, one `claude plugin test` per mods/* dir (sleep-guard included).
+if command -v claude >/dev/null 2>&1; then
+    for m in mods/*/; do
+        m="${m%/}"
+        claude plugin test "$m" > "$FX/mod.out" 2>&1; RC=$?
+        ck "$RC" "15 mod suite ${m#mods/}"; [ "$RC" -eq 0 ] || cat "$FX/mod.out"
+    done
+else
+    echo "ok  15 mod suites (skipped: claude not on PATH)"
+fi
+
+# 16: tb suite (node --test). Without node:sqlite + FTS5 tb exits non-zero by
+# design (the mod then passes results through), so the suite cannot run.
+if node -e "new (require('node:sqlite').DatabaseSync)(':memory:').exec('CREATE VIRTUAL TABLE p USING fts5(x)')" >/dev/null 2>&1; then
+    node --test --test-reporter=tap test/tb.test.mjs > "$FX/tb.tap" 2>&1; RC=$?
+    ck "$RC" "16 tb suite"; [ "$RC" -eq 0 ] || cat "$FX/tb.tap"
+    grep '# SKIP' "$FX/tb.tap" | sed -e 's/^ *ok [0-9]* - /ok  16 /' -e 's/ # SKIP \(.*\)$/ (skipped: \1)/'
+else
+    echo "ok  16 tb suite (skipped: node:sqlite/FTS5 missing)"
+fi
+
 rm -rf "$FX"
 if [ "$FAILS" -eq 0 ]; then echo "ALL PASS"; else echo "FAILURES: $FAILS"; exit 1; fi
