@@ -3,10 +3,11 @@
 // Runs every Read and Bash result of the given transcripts through the
 // token-budget mod's own eligibility rules and a real `tb put`, then reports
 // eligible bytes before and after and the replacement count.
-// Pass: after <= 50% of before, and no replaced result under TRIGGER_B.
+// Pass: Read after <= 50% of before, and no replaced Read under TRIGGER_B.
+// A saved Bash output is reported against core's preview, what the model gets without tb.
 // Run: node test/replay.mjs <transcript.jsonl>...
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,6 +22,12 @@ let before = 0
 let after = 0
 let replaced = 0
 let small = 0
+let saved = 0
+let savedReplaced = 0
+let preview = 0
+let shown = 0
+let gone = 0
+const visible = c => typeof c === 'string' ? c : (c ?? []).map(x => x.text ?? '').join('')
 
 for (const file of process.argv.slice(2)) {
   const calls = new Map()
@@ -37,20 +44,34 @@ for (const file of process.argv.slice(2)) {
       if ((e?.tool !== 'Read' && e?.tool !== 'Bash') || rec.toolUseResult === undefined) continue
       results++
       const hit = eligible(e, rec.toolUseResult)
+      // Core deletes a saved Bash output with its session: replay the ones still on disk.
       if (!hit) continue
+      if (hit.file !== undefined && !existsSync(hit.file)) {
+        gone++
+        continue
+      }
+      const text = hit.file === undefined ? hit.text : readFileSync(hit.file, 'utf8')
       const r = spawnSync(process.execPath, [TB, 'put', ...hit.args, '--session', 'replay'],
-        { input: hit.text, encoding: 'utf8', env, maxBuffer: 1 << 30 })
-      const out = r.status === 0 ? r.stdout : ''
-      before += bytes(hit.text)
-      after += out ? bytes(out) : bytes(hit.text)
+        { input: text, encoding: 'utf8', env, maxBuffer: 1 << 30 })
+      const out = r.status === 0 && r.stdout !== '' && hit.replace(r.stdout.replace(/\n$/, '')) ? r.stdout : ''
+      if (hit.file !== undefined) {
+        saved++
+        preview += bytes(visible(b.content))
+        shown += out ? bytes(out) : bytes(visible(b.content))
+        if (out) savedReplaced++
+        continue
+      }
+      before += bytes(text)
+      after += out ? bytes(out) : bytes(text)
       if (out) replaced++
-      if (out && bytes(hit.text) < TRIGGER_B) small++
+      if (out && bytes(text) < TRIGGER_B) small++
     }
   }
 }
 
 rmSync(data, { recursive: true, force: true })
 const pass = before > 0 && after <= before * 0.5 && small === 0
-console.log(`results ${results}  eligible ${before} B -> ${after} B (${(100 * after / (before || 1)).toFixed(1)}%)`
+console.log(`results ${results}  Read eligible ${before} B -> ${after} B (${(100 * after / (before || 1)).toFixed(1)}%)`
   + `  replaced ${replaced}  replaced under ${TRIGGER_B} B: ${small}  ${pass ? 'PASS' : 'FAIL'}`)
+console.log(`saved Bash ${saved} (${gone} files gone)  replaced ${savedReplaced}  core preview ${preview} B -> shown ${shown} B`)
 process.exitCode = pass ? 0 : 1

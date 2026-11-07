@@ -55,7 +55,9 @@ Output style does not reach this cost.
   `sed -n`. Transcripts 2026-11-06: 12 of 16 Bash placeholders hit such
   reads, 9 of 12 fetched same lines again within 3 calls. Replay of 225
   transcripts: bytes saved 6.56 MB → 4.84 MB; refetch already gave back most
-  of difference, at one more turn each.
+  of difference, at one more turn each. Superseded 2026-11-07 by
+  [#46](https://github.com/realroboto/flint/issues/46) (last amendment below): Bash inside window passes whole, any command; past
+  window bounded read gets placeholder too.
 - Amended 2026-11-06 (#52). `tb get <ref>` without `#<id>` or range reads
   all. `get` output stays below Bash window (`BASH_MAX_OUTPUT_LENGTH`, flint
   10000); last line `more:` names next range. Past window, Claude Code saved
@@ -72,7 +74,9 @@ Output style does not reach this cost.
   under 16 KB fetched same bytes again. In flint env Bash branch rarely
   fires: output past window is persisted, and persisted output passes.
   Replay of 585 transcripts: bytes saved 12.63 MB → 6.86 MB; refetch already
-  gave back most of difference, at one more turn each.
+  gave back most of difference, at one more turn each. Bash part superseded
+  2026-11-07 by [#46](https://github.com/realroboto/flint/issues/46) (last
+  amendment below): branch never fired.
 - Amended 2026-11-06 (#57). Read of file Claude Code persisted for bounded
   Bash read passes whole: agent asked for every line. Mod keeps those paths
   per session. Persisted output of unbounded command keeps placeholder on
@@ -91,6 +95,24 @@ Output style does not reach this cost.
   more calls; placeholder cost more input tokens than whole file in all 4.
   Replay of 616 transcripts: bytes saved 6.60 MB → 6.25 MB, before refetch.
   Risk not measured: large logs and test output, main context near 150k.
+- Amended 2026-11-07 (#46 follow-up). Bash placeholder takes place of core
+  preview of saved output. 16384 B trigger sat above Bash window: at
+  `tool.call` core already saved every stdout past 10,000 chars
+  (`persistedOutputPath` set, `stdout` cut to window), and saved output
+  passed. Bash branch never fired. Transcripts 2026-11-07 02:48Z–19:30Z:
+  0 Bash placeholders, 16 Read; 37 whole Reads of `tool-results/` put 893 KB
+  in context. Now Bash eligible = output core saved: mod reads saved file
+  (`$.fs.read`), pipes it to `tb put` (stored output, out of shared index,
+  24 h purge), drops persisted fields, so core
+  shows placeholder inline, not its 2 KB preview. Placeholder of window size
+  or more, or failed read: core preview stays. Output inside window passes
+  whole, any command (`bounded()` removed). Read of `tool-results/` stays
+  whole (#62): now second ask, after placeholder. Replay, 24 h: 279 saved
+  outputs, 191 placeholders; model-visible bytes 589,713 B (core preview) →
+  672,839 B. Gain only when agent then reads less than whole saved file.
+  Measure: whole `tool-results/` Reads per saved output (before: 32 of 163).
+  Same shape as context-mode "Externalize" row (host output over cap,
+  indexed whole, 98.3% saved in its bench).
 
 ## Alternatives rejected
 

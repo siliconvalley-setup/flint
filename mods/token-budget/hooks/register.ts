@@ -1,10 +1,11 @@
 // token-budget mod: keeps large tool results and fat contexts out of the
 // model's input, in the main conversation and every subagent (issue #46,
 // docs/adr/0003-token-budget.md).
-// - Placeholders: a large text Read or Bash result goes to tb (tools/tb.mjs),
-//   and the model gets tb's placeholder: an outline, or head, tail and intent
-//   hits, with the exact command that fetches any part. Rewritten once, before
-//   core stores it; the original stays on disk or in tb's store.
+// - Placeholders: a large text Read, or a Bash output core saved to a file past
+//   its window, goes to tb (tools/tb.mjs), and the model gets tb's placeholder:
+//   an outline, or head, tail and intent hits, with the exact command that
+//   fetches any part. For Bash it takes the place of core's 2 KB preview.
+//   Rewritten once, before core stores it; the original stays on disk.
 // - Context meter: main-thread context past 150k tokens adds one warning, past
 //   200k one handoff order, to the next main-thread tool result; once per
 //   upward crossing, so a compaction or a drop re-arms it. One note per
@@ -21,6 +22,8 @@ import type { EngineInterface, On, ToolCallInput } from 'claude-code'
 
 // Below this agents fetched the rest again: a placeholder cost a call and saved nothing (#57).
 export const TRIGGER_B = 16384
+// Claude Code's Bash window (env.sh BASH_MAX_OUTPUT_LENGTH): past it core saves the output to a file.
+const BASH_WINDOW = 10000
 // Past this the original passes: a slow tb never holds a result for long.
 const TB_TIMEOUT_MS = 5000
 
@@ -47,18 +50,9 @@ const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 
 // Output Claude Code saved past the Bash window: the agent reads it to see the output (#62).
 const TOOL_RESULTS = /[\\/]tool-results[\\/][^\\/]+$/
 
-// A Bash read the agent bounded: every statement but cd, echo and wc pipes through
-// head, tail (not -f) or sed -n. The agent already chose the lines; a placeholder
-// only cost it one more call for them (#52: 12 of 16 placeholders). Any tb.mjs
-// call: tb's own output never becomes a placeholder, or a large section could not be read.
-// shortcut: splits on ; && || and newlines without parsing quotes; parse when a quoted separator misleads it.
-const BOUND = /(^|\|)\s*(head|sed -n|tail(?![^|]*\s-[fF]\b))\b/
-const QUIET = /^(cd|echo|wc)\b/
-const bounded = (command: string) => /\btb\.mjs\b/.test(command)
-  || command.split(/;|&&|\|\||\n/).map(s => s.trim()).filter(s => s && !QUIET.test(s)).every(s => BOUND.test(s))
-
 type ReadText = { type: string, file: { content: string, truncatedByTokenCap?: boolean } }
-type BashOut = { stdout: string, interrupted: boolean, isImage?: boolean, backgroundTaskId?: string, persistedOutputPath?: string }
+type BashOut = { stdout: string, interrupted: boolean, isImage?: boolean, backgroundTaskId?: string,
+  persistedOutputPath?: string, persistedOutputSize?: number }
 
 const utf8 = new TextEncoder()
 const extension = (path: string) => /\.([^./\\]+)$/.exec(path)?.[1]?.toLowerCase() ?? ''
@@ -84,9 +78,10 @@ async function doctor($: EngineInterface) {
   }
 }
 
-// An eligible Read or Bash result: its text (TRIGGER_B or more), tb put's
-// arguments, and the result with a placeholder in place of the text. No I/O: the
-// offline replay (test/replay.mjs) runs the same rules.
+// An eligible Read or Bash result: its text (a Read of TRIGGER_B or more) or the
+// file core saved a Bash output to, tb put's arguments, and the result with a
+// placeholder in place of the text. No I/O: the offline replay (test/replay.mjs)
+// runs the same rules.
 export function eligible(e: ToolCallInput, result: unknown) {
   const big = (text: string) => utf8.encode(text).length >= TRIGGER_B
   if (e.tool === 'Read') {
@@ -100,13 +95,15 @@ export function eligible(e: ToolCallInput, result: unknown) {
     }
   }
   if (e.tool === 'Bash') {
-    const r = result as BashOut
-    if (e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined
-      || r.persistedOutputPath !== undefined || bounded(e.command) || !big(r.stdout)) return undefined
+    // Inside the window the model sees the output whole: a placeholder only cost it a call (#57).
+    const { persistedOutputPath: file, persistedOutputSize, ...r } = result as BashOut
+    if (file === undefined || e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined) return undefined
     return {
-      text: r.stdout,
+      file,
+      // No --path: a stored output stays out of the shared index, so the 24 h purge removes every copy.
       args: ['--source', 'Bash', ...(e.description ? ['--intent', e.description] : [])],
-      replace: (ph: string) => ({ ...r, stdout: ph }),
+      // No persisted fields: core shows the placeholder inline in place of its preview.
+      replace: (ph: string) => ph.length < BASH_WINDOW ? { ...r, stdout: ph } : undefined,
     }
   }
   return undefined
@@ -115,8 +112,10 @@ export function eligible(e: ToolCallInput, result: unknown) {
 // The result with its text replaced by tb's placeholder, else undefined.
 async function rewrite($: EngineInterface, e: ToolCallInput, result: unknown) {
   const hit = eligible(e, result)
-  const ph = hit && await placeholder($, hit.text, hit.args)
-  return ph === undefined ? undefined : hit?.replace(ph)
+  if (!hit) return undefined
+  const text = hit.file === undefined ? hit.text : await $.fs.read(hit.file).catch(() => undefined)
+  const ph = text === undefined ? undefined : await placeholder($, text, hit.args)
+  return ph === undefined ? undefined : hit.replace(ph)
 }
 
 export function register(on: On) {

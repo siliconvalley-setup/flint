@@ -82,47 +82,75 @@ function bash($: Engine, command: string, extra: { run_in_background?: boolean, 
   return $.tool.call({ tool: 'Bash' as const, command, ...extra })
 }
 
-test('a large Bash stdout becomes the placeholder; core context is kept, no ref or text returned', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG), context: ['from core'], ref: 7, text: BIG }) as never)
+// What core keeps of a Bash output past its window, and the file it saved the whole output to.
+const SAVED = '/h/.claude/projects/-p/s1/tool-results/b1.txt'
+const saved = (extra: object = {}) => bashOut(BIG.slice(0, 9999), { persistedOutputPath: SAVED, persistedOutputSize: BIG.length, ...extra })
+
+// The saved file as $.fs.read gives it: every read recorded, answered by `answer`.
+function files(on: On, answer: (path: string) => string = () => BIG) {
+  const reads: string[] = []
+  on('fs.read', ($, e) => {
+    reads.push(e.path)
+    return { value: answer(e.path) }
+  })
+  return reads
+}
+
+test('a Bash output core saved to a file becomes the placeholder of the whole file; core context kept, no ref or text', async ($, on) => {
+  on('tool.call', () => ({ result: saved(), context: ['from core'], ref: 7, text: 'preview' }) as never)
   const runs = tb(on)
+  const reads = files(on)
   const r = await bash($, 'gh issue view 46', { description: 'Read issue 46' })
+  // No persisted fields: core shows the placeholder inline, not its 2 KB preview of the file.
   expect(r.result).toEqual(bashOut(PLACEHOLDER.trimEnd()))
   expect(r.context).toEqual(['from core'])
   expect([r.ref, r.text]).toEqual([undefined, undefined])
+  expect(reads).toEqual([SAVED])
   expect(runs[0]?.argv.slice(2)).toEqual(['put', '--source', 'Bash', '--intent', 'Read issue 46', '--session', 's1'])
   expect(runs[0]?.stdin).toBe(BIG)
 })
 
-test('Bash eligibility: errors, interrupts, background, images, persisted output, range reads and tb calls pass', async ($, on) => {
-  let answer: object = { result: bashOut(BIG) }
+test('Bash eligibility: only an output core saved to a file; errors, interrupts, background and images pass', async ($, on) => {
+  let answer: object = { result: saved() }
   on('tool.call', () => answer as never)
   const runs = tb(on)
+  files(on)
   const passes = async (label: string, command: string, result: object, extra = {}) => {
     answer = result
     const before = runs.length
     expect((await bash($, command, extra)).result, label).toEqual((result as { result: object }).result)
     expect(runs.length, label).toBe(before)
   }
+  // #57: the model already sees an output inside the window whole; a placeholder only cost it one more call.
+  for (const c of ['cat a.md', 'git diff HEAD', "sed -n '1,200p' docs/a.md"]) await passes(c, c, { result: bashOut(BIG) })
   await passes('error', 'make', { isError: true, result: BIG, text: BIG })
-  await passes('interrupted', 'make', { result: bashOut(BIG, { interrupted: true }) })
-  await passes('background input', 'make', { result: bashOut(BIG) }, { run_in_background: true })
-  await passes('backgroundTaskId', 'make', { result: bashOut(BIG, { backgroundTaskId: 'b1' }) })
-  await passes('isImage', 'make', { result: bashOut(BIG, { isImage: true }) })
-  await passes('persistedOutputPath', 'make', { result: bashOut(BIG, { persistedOutputPath: '/t/o.txt' }) })
-  await passes('16383 B', 'make', { result: bashOut(BIG.slice(1)) })
-  // #52: the agent bounded these itself; a placeholder only cost it one more call for the same lines.
-  const ranges = ["sed -n '1,200p' docs/a.md", 'sed -n 1,200p a.md', 'sed -n "5,9p" a.md', 'head -n 300 build.log',
-    'tail -n 300 build.log', "node /c/tools/tb.mjs get '/p/a.md#intro'", 'cd /p && node /c/tools/tb.mjs find "fork guard"',
-    'cd /p; sed -n 36,150p tools/tokscan.py', 'cd /p; git diff HEAD | head -400', "gh api repos/o/r/issues/48 --jq '.body' | head -c 6000",
-    'cd /p; wc -l t.sh; sed -n 1,400p t.sh', "sed -n 1,99p t.sh | cut -c1-200", "sed -n '1,200p' a.md | rg x",
-    'head -n 300 a.md b.md', 'head -c 9999 a.md']
-  for (const c of ranges) await passes(c, c, { result: bashOut(BIG) })
-  const whole = ['tail -f build.log', 'tail -n 50 -F build.log', "sed 's/a/b/' a.md", 'cat a.md', 'sed -n 1,200p a.md; cat b.md',
-    'git diff HEAD && git status --short', 'cat a.md | rg x', 'echo head; cat a.md', 'cd /p && cat a.md || head -n 5 b.md']
-  for (const c of whole) {
-    answer = { result: bashOut(BIG) }
+  await passes('interrupted', 'make', { result: saved({ interrupted: true }) })
+  await passes('background input', 'make', { result: saved() }, { run_in_background: true })
+  await passes('backgroundTaskId', 'make', { result: saved({ backgroundTaskId: 'b1' }) })
+  await passes('isImage', 'make', { result: saved({ isImage: true }) })
+  // Bounded commands too: past the window the model sees core's preview, not the lines it asked for (#62).
+  for (const c of ["sed -n '1,200p' docs/a.md", 'cat a.md', 'head -n 300 build.log']) {
+    answer = { result: saved() }
     expect((await bash($, c)).result, c).toEqual(bashOut(PLACEHOLDER.trimEnd()))
   }
+})
+
+test('saved Bash output: a failed file read keeps core preview', async ($, on) => {
+  on('tool.call', () => ({ result: saved() }))
+  const runs = tb(on)
+  on('fs.read', () => { throw new Error('fs.read: ENOENT') })
+  expect((await bash($, 'make')).result).toEqual(saved())
+  expect(runs.length).toBe(0)
+})
+
+test('saved Bash output: a placeholder of Bash window size or more keeps core preview', async ($, on) => {
+  on('tool.call', () => ({ result: saved() }))
+  let size = 9999
+  tb(on, () => ({ stdout: 'y'.repeat(size) + '\n' }))
+  files(on)
+  expect((await bash($, 'make')).result, '9999 chars').toEqual(bashOut('y'.repeat(9999)))
+  size = 10000
+  expect((await bash($, 'make')).result, '10000 chars').toEqual(saved())
 })
 
 test('Read of a Claude Code tool-results file passes whole, whatever command made it', async ($, on) => {
@@ -134,8 +162,9 @@ test('Read of a Claude Code tool-results file passes whole, whatever command mad
 })
 
 test('tb timeout, non-zero exit or empty stdout: the original passes', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG) }))
+  on('tool.call', () => ({ result: saved() }))
   on('session.id', () => ({ value: 's1' }))
+  files(on)
   let answer: () => Partial<ProcessRunResult> = () => ({})
   const timeouts: (number | undefined)[] = []
   on('process.run', ($, e) => {
@@ -149,7 +178,7 @@ test('tb timeout, non-zero exit or empty stdout: the original passes', async ($,
   ]
   for (const [label, run] of cases) {
     answer = run
-    expect((await bash($, 'make')).result, label).toEqual(bashOut(BIG))
+    expect((await bash($, 'make')).result, label).toEqual(saved())
   }
   expect(timeouts).toEqual([5000, 5000, 5000])
 })
@@ -214,15 +243,16 @@ test('fork guard: a main-thread fork over 100k tokens is refused; other spawns r
 })
 
 test('fail-open: an internal error passes the original, no deny', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG) }))
+  on('tool.call', () => ({ result: saved() }))
   on('session.id', () => { throw new Error('forced') })
+  files(on)
   const runs: unknown[] = []
   on('process.run', ($, e) => {
     runs.push(e.argv)
     return { value: { exitCode: 0, stdout: PLACEHOLDER, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }
   })
   const r = await bash($, 'make')
-  expect([r.deny, r.result]).toEqual([undefined, bashOut(BIG)])
+  expect([r.deny, r.result]).toEqual([undefined, saved()])
   expect(runs.length).toBe(0)
 })
 
@@ -231,24 +261,25 @@ function start($: Engine) {
 }
 
 test('loud failure: a failed tb doctor puts one TOKEN-BUDGET ERROR line on the first main result, then placeholders stay off', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG) }))
+  on('tool.call', () => ({ result: saved() }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   const runs = tb(on, argv => argv.at(-1) === 'doctor'
     ? { exitCode: 1, stdout: 'node:sqlite with FTS5 missing: no such module: fts5\n' }
     : { stdout: PLACEHOLDER })
+  files(on)
   await start($)
   const sub = await $.tool.call({ tool: 'Bash' as const, command: 'make', agentId: 'a1' })
-  expect([sub.result, sub.context]).toEqual([bashOut(BIG), undefined])
+  expect([sub.result, sub.context]).toEqual([saved(), undefined])
   const first = await bash($, 'make')
-  expect(first.result).toEqual(bashOut(BIG))
+  expect(first.result).toEqual(saved())
   expect(first.context).toEqual(['TOKEN-BUDGET ERROR: node:sqlite with FTS5 missing: no such module: fts5; placeholders off this session'])
   const later = await bash($, 'make')
-  expect([later.result, later.context]).toEqual([bashOut(BIG), undefined])
+  expect([later.result, later.context]).toEqual([saved(), undefined])
   expect(runs.map(r => r.argv.at(-1))).toEqual(['doctor'])
 })
 
 test('loud failure: node missing from PATH is named', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG) }))
+  on('tool.call', () => ({ result: saved() }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('process.run', () => ({ deny: 'spawn node ENOENT' }))
   await start($)
@@ -256,9 +287,10 @@ test('loud failure: node missing from PATH is named', async ($, on) => {
 })
 
 test('a good tb doctor keeps placeholders on, with no error line', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut(BIG) }))
+  on('tool.call', () => ({ result: saved() }))
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   tb(on, argv => ({ stdout: argv.at(-1) === 'doctor' ? 'ok\n' : PLACEHOLDER }))
+  files(on)
   await start($)
   const r = await bash($, 'make')
   expect([r.result, r.context]).toEqual([bashOut(PLACEHOLDER.trimEnd()), undefined])
