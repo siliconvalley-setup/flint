@@ -104,11 +104,12 @@ elif [ "$WORKDIR" != "-" ]; then addseg "$WORKDIR"
 elif [ -n "$HOST" ]; then addseg "${C_DIM}${HOST}${C_RST}"; fi
 
 # --- Context: used/max (pct). Color by absolute tokens used, not pct — the same
-# on a 200k or 1M window: blue ≤150k, yellow ≤170k, orange ≤200k, red >200k. ---
+# on a 200k or 1M window, on the handoff mod meter scale: blue ≤250k, yellow ≤275k,
+# orange ≤300k, red >300k. ---
 ctx_color() {
-  if   [ "$1" -gt 200000 ]; then printf '%s' "$C_RED"
-  elif [ "$1" -gt 170000 ]; then printf '%s' "$C_ORG"
-  elif [ "$1" -gt 150000 ]; then printf '%s' "${ESC}[38;5;226m"
+  if   [ "$1" -gt 300000 ]; then printf '%s' "$C_RED"
+  elif [ "$1" -gt 275000 ]; then printf '%s' "$C_ORG"
+  elif [ "$1" -gt 250000 ]; then printf '%s' "${ESC}[38;5;226m"
   else printf '%s' "${ESC}[38;5;81m"; fi
 }
 if [ "$CTX_USED" != "-" ] && [ "$CTX_USED" -gt 0 ] 2>/dev/null && [ "$CTX_MAX" -gt 0 ] 2>/dev/null; then

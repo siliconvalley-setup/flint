@@ -113,6 +113,10 @@ Output style does not reach this cost.
   Measure: whole `tool-results/` Reads per saved output (before: 32 of 163).
   Same shape as context-mode "Externalize" row (host output over cap,
   indexed whole, 98.3% saved in its bench).
+- Amended 2026-11-07 (#70). Context meter (warning 150k, ai-memory handoff
+  order 200k) left token-budget mod. Meter part Superseded 2026-11-07 by
+  [ADR 0004](./0004-handoff-catalog.md): handoff mod, 250k/300k, order runs
+  `/handoff`. token-budget keeps placeholders and fork guard.
 
 ## Alternatives rejected
 

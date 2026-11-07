@@ -40,3 +40,12 @@ Glossary only. No implementation details.
   installer and sourceable by a shell.
 - **external skill** — a skill fetched from another repo or npm package
   (`external-skills.txt`) into `.cache/`.
+- **handoff** — a document that lets a new session continue a work line with
+  no access to the old session. One per work line; open until the owner
+  closes it.
+- **work line** — one task, research or decision thread that spans sessions.
+  The unit a handoff tracks; never split over two handoffs.
+- **subject** — the short, specific name of a work line, by which the owner
+  finds and resumes its handoff.
+- **meter** — the in-session notes on main-thread context size: a warning,
+  then an order to hand off.
