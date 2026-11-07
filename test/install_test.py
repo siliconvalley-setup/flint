@@ -206,6 +206,8 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert env['DISABLE_AUTO_COMPACT'] == '1'
         assert env['CLAUDE_CODE_FORK_SUBAGENT'] == '0'
         assert env['BASH_MAX_OUTPUT_LENGTH'] == '10000'
+        assert env['CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS'] == '1'
+        assert env['CLAUDE_CODE_SUBAGENT_EFFORT'] == 'medium'
         assert 'DISABLE_UPDATES' not in env
         assert env['MY_VAR'] == '1'
         dirs = env['CLAUDE_CODE_PLUGIN_DIRS'].split(':')

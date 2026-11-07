@@ -23,6 +23,10 @@ export USE_BUILTIN_RIPGREP=0
 # Subagents start fresh (no fork of the parent context); Bash output over 10k chars goes to a file (issue #47).
 export CLAUDE_CODE_FORK_SUBAGENT=0
 export BASH_MAX_OUTPUT_LENGTH=10000
+# Built-in Explore and Plan subagents off; custom agents named Explore or Plan stay on.
+export CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS=1
+# Effort for subagents with no `effort` of their own (Claude Code v2.1.316+; older versions ignore it).
+export CLAUDE_CODE_SUBAGENT_EFFORT=medium
 
 # Private servers on r1 (LAN).
 export FIRECRAWL_API_URL=http://192.168.1.2:3002
