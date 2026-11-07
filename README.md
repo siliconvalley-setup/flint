@@ -8,10 +8,10 @@ style core only.
 
 It also carries the original flint **style core**: terse prose, minimal code,
 always on. One plain-text ruleset ([`flint.md`](flint.md)), one POSIX-sh hook
-([`hooks/flint-style.sh`](hooks/flint-style.sh)) with zero state machinery —
-a near-verbatim merge of [caveman](https://github.com/JuliusBrussee/caveman)
-(terse prose) and [ponytail](https://github.com/DietrichGebert/ponytail) (lazy
-code); the [provenance table](docs/flint.md) maps each rule to its origin.
+([`hooks/flint-style.sh`](hooks/flint-style.sh)) with zero state machinery. It replaced
+[caveman](https://github.com/JuliusBrussee/caveman) (terse prose) and
+[ponytail](https://github.com/DietrichGebert/ponytail) (lazy code); the
+[provenance table](docs/flint.md) maps rules to their origin.
 
 ## Install
 

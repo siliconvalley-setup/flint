@@ -35,9 +35,8 @@ when a path is gone, the artifact still applies — find the equivalent field.
    chat starts back on `Normal`. Account-wide coverage comes from step 1.
 3. **Projects** (dev work): inside the Project → `Set project instructions` →
    paste [`chat/project-instructions.md`](chat/project-instructions.md) — a
-   condensed, hand-derived ruleset (flint.md itself exceeds the ~8,000-char
-   budget; every rule survives, only exposition and duplicate examples are
-   cut).
+   condensed, hand-derived ruleset (must fit the ~8,000-char budget; every
+   rule survives, only exposition and duplicate examples are cut).
 
 ## Cowork
 

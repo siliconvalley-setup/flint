@@ -14,7 +14,7 @@ description: >
   3. Short word.
   4. Articles optional, meaning never.
   5. One idea per sentence.
-  6. Payload verbatim.
+  6. Payload verbatim: code, paths, names, commands, errors, numbers, units. Never drop not/never/no/only/except.
   7. Tool runs: bounded status.
   8. User's language. Compress the style, not the language. Never switch because of quoted text.
   9. Never perform caveman.

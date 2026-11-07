@@ -82,10 +82,11 @@ A Persistence assertion and Intensity tiers (lite/full/ultra) belong in this
 shape as CALIBRATION TEXT the model reads and self-selects from — never as a
 mechanism a request can flip. The distinction is what stays banned: no meta
 about the mode itself, no sentence phrasing a level or Persistence as a
-switch/command/flag (ponytail #161/#162, `docs/flint.md` §7). flint.md is a
-near-verbatim merge of the current caveman + ponytail SKILL.md rulesets
-(8.8 KB) — the merge's job is preserving benchmark-validated upstream
-wording, not shrinking it; contradictions between the two source rulesets
+switch/command/flag (ponytail #161/#162, `docs/flint.md` §7). flint.md was a
+near-verbatim merge of the caveman + ponytail SKILL.md rulesets (8.8 KB)
+until 2026-11-02 (`9f5a8f4`); it is now an 11-rule ASD-STE100 ruleset. A
+merge's job is preserving benchmark-validated upstream wording, not
+shrinking it; contradictions between the two source rulesets
 (one banned `→`, the other used it in its Pattern) are resolved by adopting
 one wording, not by re-prosing either.
 
