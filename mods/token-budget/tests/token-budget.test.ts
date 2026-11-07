@@ -1,8 +1,8 @@
 import { expect, test, type Engine } from 'claude-code/testing'
 import type { On, ProcessRunResult } from 'claude-code'
 
-const BIG = 'x'.repeat(4096)
-const PLACEHOLDER = '[tb] 4096 B, 1 lines → /p/notes.md\n#notes  L1-1  4.0K  Notes\nread one: node /c/tools/tb.mjs get …\n'
+const BIG = 'x'.repeat(16384)
+const PLACEHOLDER = '[tb] 16384 B, 1 lines → /p/notes.md\n#notes  L1-1  16K  Notes\nread one: node /c/tools/tb.mjs get …\n'
 
 // tb as the mod calls it: every run recorded, answered by `answer`.
 function tb(on: On, answer: (argv: readonly string[]) => Partial<ProcessRunResult> = () => ({ stdout: PLACEHOLDER })) {
@@ -48,7 +48,7 @@ test('a large markdown Read becomes the tb placeholder, numLines its line count'
 const CODE = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'py', 'sh', 'go', 'rs', 'java', 'kt', 'swift', 'c', 'h', 'cpp', 'hpp',
   'cs', 'rb', 'php', 'css', 'scss', 'html', 'vue', 'svelte', 'sql', 'json', 'yaml', 'yml', 'toml']
 
-test('Read eligibility: only a whole, untruncated, non-code text file of 4096 B or more is rewritten', async ($, on) => {
+test('Read eligibility: only a whole, untruncated, non-code text file of 16384 B or more is rewritten', async ($, on) => {
   let answer: object = readText(BIG)
   on('tool.call', () => ({ result: answer }) as never)
   const runs = tb(on)
@@ -67,7 +67,7 @@ test('Read eligibility: only a whole, untruncated, non-code text file of 4096 B 
   await passes('offset', { offset: 1 }, readText(BIG))
   await passes('limit', { limit: 400 }, readText(BIG))
   await passes('truncatedByTokenCap', {}, readText(BIG, { truncatedByTokenCap: true }))
-  await passes('4095 B', {}, readText('é'.repeat(2047) + 'x'))
+  await passes('16383 B', {}, readText('é'.repeat(8191) + 'x'))
   for (const ext of CODE) await passes(ext, { file_path: `/p/a.${ext.toUpperCase()}` }, readText(BIG))
   for (const path of ['/p/a.md', '/p/a.txt', '/p/a.log', '/p/a.csv', '/p/Makefile']) {
     answer = readText(BIG)
@@ -108,7 +108,7 @@ test('Bash eligibility: errors, interrupts, background, images, persisted output
   await passes('backgroundTaskId', 'make', { result: bashOut(BIG, { backgroundTaskId: 'b1' }) })
   await passes('isImage', 'make', { result: bashOut(BIG, { isImage: true }) })
   await passes('persistedOutputPath', 'make', { result: bashOut(BIG, { persistedOutputPath: '/t/o.txt' }) })
-  await passes('4095 B', 'make', { result: bashOut(BIG.slice(1)) })
+  await passes('16383 B', 'make', { result: bashOut(BIG.slice(1)) })
   // #52: the agent bounded these itself; a placeholder only cost it one more call for the same lines.
   const ranges = ["sed -n '1,200p' docs/a.md", 'sed -n 1,200p a.md', 'sed -n "5,9p" a.md', 'head -n 300 build.log',
     'tail -n 300 build.log', "node /c/tools/tb.mjs get '/p/a.md#intro'", 'cd /p && node /c/tools/tb.mjs find "fork guard"',
@@ -122,6 +122,20 @@ test('Bash eligibility: errors, interrupts, background, images, persisted output
     answer = { result: bashOut(BIG) }
     expect((await bash($, c)).result, c).toEqual(bashOut(PLACEHOLDER.trimEnd()))
   }
+})
+
+test('Read of a persisted output passes whole when the Bash read was bounded, else gets the placeholder', async ($, on) => {
+  let answer: object = { result: bashOut('preview', { persistedOutputPath: '/t/bounded.txt' }) }
+  on('tool.call', () => answer as never)
+  const runs = tb(on)
+  await bash($, 'sed -n 75,224p a.md')
+  answer = { result: bashOut('preview', { persistedOutputPath: '/t/whole.txt' }) }
+  await bash($, 'cat a.md')
+  answer = { result: readText(BIG) }
+  // #57: the agent asked for every line of the bounded read; a placeholder made it read the source again.
+  expect(await readFile(read($, { file_path: '/t/bounded.txt' }))).toEqual(readText(BIG).file)
+  expect(runs.length).toBe(0)
+  expect((await readFile(read($, { file_path: '/t/whole.txt' })) as { content: string }).content).toBe(PLACEHOLDER.trimEnd())
 })
 
 test('tb timeout, non-zero exit or empty stdout: the original passes', async ($, on) => {
