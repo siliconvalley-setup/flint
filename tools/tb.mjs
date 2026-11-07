@@ -183,7 +183,13 @@ function openIndex() {
   mkdirSync(join(DATA, 'db'), { recursive: true, mode: 0o700 })
   const db = new DatabaseSync(join(DATA, 'db', `${sha(root)}.db`))
   db.exec(`PRAGMA busy_timeout = ${BUSY_MS}`)
-  db.exec('PRAGMA journal_mode = WAL')
+  // The WAL switch on a new file skips busy_timeout (SQLite avoids a lock deadlock): retry it.
+  for (const end = Date.now() + BUSY_MS; ;) {
+    try { db.exec('PRAGMA journal_mode = WAL'); break } catch (e) {
+      if (e.errcode !== 5 || Date.now() > end) throw e // 5 = SQLITE_BUSY
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10)
+    }
+  }
   db.exec(`CREATE TABLE IF NOT EXISTS files(path TEXT PRIMARY KEY, mtime REAL NOT NULL, hash TEXT NOT NULL);
     CREATE VIRTUAL TABLE IF NOT EXISTS sections USING fts5(path UNINDEXED, hash UNINDEXED, id UNINDEXED,
       a UNINDEXED, b UNINDEXED, size UNINDEXED, title, body);

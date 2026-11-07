@@ -215,6 +215,22 @@ test('concurrency: parallel put and find calls on a new index all succeed', asyn
   for (const r of await Promise.all(calls)) assert.equal(r.code, 0, r.err)
 })
 
+// Two calls racing to create the index: the WAL switch skips busy_timeout, so one
+// round fails ~20% of the time. 30 fresh indexes make a missing retry fail almost surely.
+test('concurrency: two parallel put calls on 30 fresh indexes all succeed', async () => {
+  const run = (dir, data, i) => new Promise(done => {
+    const c = spawn(process.execPath, [TB, 'put', '--source', 'Bash'], { cwd: dir, env: { ...process.env, TB_DATA_DIR: data } })
+    let err = ''
+    c.stderr.on('data', d => { err += d })
+    c.on('close', code => done({ code, err }))
+    c.stdin.end(LOG.replace('ERROR', `ERROR ${i}`))
+  })
+  for (let round = 0; round < 30; round++) {
+    const { dir, data } = project({})
+    for (const r of await Promise.all([run(dir, data, 0), run(dir, data, 1)])) assert.equal(r.code, 0, r.err)
+  }
+})
+
 // Import hooks that make node:sqlite fail to load, or load without FTS5.
 const FAKE_SQLITE = 'export class DatabaseSync { exec(sql) { if (/fts5/i.test(sql)) throw new Error("no such module: fts5") } }'
 function hookFile(resolveBody) {
