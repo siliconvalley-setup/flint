@@ -11,7 +11,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
 
 ## token-budget (`mods/token-budget/` + `tools/tb.mjs`)
 
-Section index + placeholders for large Read/Bash results, context meter, fork guard. Decision + amendments: ADR [0003](../adr/0003-token-budget.md).
+Section index + placeholders for large Read results and Bash output Claude Code saved past its window, context meter, fork guard. Decision + amendments: ADR [0003](../adr/0003-token-budget.md).
 
 - Needs `node` >= 26 with `node:sqlite` + FTS5 on PATH of Claude Code process. Runs `node tools/tb.mjs` from clone (not on PATH).
 - Missing → first tool result shows one `TOKEN-BUDGET ERROR` line; results pass unchanged.
