@@ -1,3 +1,11 @@
+---
+type: Architecture Decision Record
+title: ADR 0002 — Windows requires Git Bash
+description: One POSIX-sh hook; Windows needs Git for Windows; no PowerShell port.
+tags: [adr]
+status: stable
+---
+
 # ADR 0002 — Windows requires Git Bash; no PowerShell hook port
 
 Date: 2026-07-21 · Status: accepted

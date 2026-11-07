@@ -5,7 +5,7 @@
     resync.py --check   exit 1 if it differs from header + unwrap(flint.md)
 
 The header here is the source of truth for the derivado header; the body
-is always unwrap(flint.md). Hand-edits are overwritten by design (AGENTS.md:
+is always unwrap(flint.md). Hand-edits are overwritten by design (docs/style-core/ruleset.md:
 derivados are REGENERATED, never hand-patched). desktop/chat/project-instructions.md
 is NOT in this set — it's a hand-derived (condensed) artifact like style.md/
 profile.md, not byte-parity-checked (it must fit an 8,000-char cap flint.md

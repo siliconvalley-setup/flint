@@ -76,7 +76,7 @@ fi
 rm -f "$FX/flint.md"   # step 8's symlink: writing through it would FOLLOW it into /etc/hosts
 # Shell-built, not python-built: a native Windows python can't resolve Git
 # Bash's POSIX /tmp paths. BOUNDED producer, deliberately: `yes x | tr | head`
-# hung the macOS runner for 6h (see AGENTS.md) — dd reaches EOF on its own, so
+# hung the macOS runner for 6h (see docs/testing.md) — dd reaches EOF on its own, so
 # nothing here depends on SIGPIPE reaching a process the runner may have
 # shielded.
 { printf '# flint\n'; dd if=/dev/zero bs=1024 count=5120 2>/dev/null | tr '\0' 'x'; } > "$FX/flint.md" 2>/dev/null

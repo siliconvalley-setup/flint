@@ -1,3 +1,11 @@
+---
+type: Architecture Decision Record
+title: ADR 0003 — Token budget
+description: Placeholders for large tool results before storage; tb CLI in clone, not MCP; fail open, loudly.
+tags: [adr]
+status: stable
+---
+
 # ADR 0003 — Token budget: placeholders before storage, tb CLI in the clone
 
 Date: 2026-11-06 · Status: accepted · Issue: #46
