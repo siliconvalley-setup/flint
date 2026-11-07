@@ -3,7 +3,7 @@
 // Runs every Read and Bash result of the given transcripts through the
 // token-budget mod's own eligibility rules and a real `tb put`, then reports
 // eligible bytes before and after and the replacement count.
-// Pass: after <= 50% of before, and no replaced result under TRIGGER_B (4096 B).
+// Pass: after <= 50% of before, and no replaced result under TRIGGER_B.
 // Run: node test/replay.mjs <transcript.jsonl>...
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
@@ -24,6 +24,7 @@ let small = 0
 
 for (const file of process.argv.slice(2)) {
   const calls = new Map()
+  const boundedPersisted = new Set()
   for (const line of readFileSync(file, 'utf8').split('\n')) {
     let rec
     try {
@@ -36,7 +37,7 @@ for (const file of process.argv.slice(2)) {
       const e = b.type === 'tool_result' && !b.is_error ? calls.get(b.tool_use_id) : undefined
       if ((e?.tool !== 'Read' && e?.tool !== 'Bash') || rec.toolUseResult === undefined) continue
       results++
-      const hit = eligible(e, rec.toolUseResult)
+      const hit = eligible(e, rec.toolUseResult, boundedPersisted)
       if (!hit) continue
       const r = spawnSync(process.execPath, [TB, 'put', ...hit.args, '--session', 'replay'],
         { input: hit.text, encoding: 'utf8', env, maxBuffer: 1 << 30 })

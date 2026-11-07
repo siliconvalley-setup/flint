@@ -53,7 +53,21 @@ Output style does not reach this cost.
   10000); last line `more:` names next range. Past window, Claude Code saved
   output to file, and Read of that file got second placeholder.
 - Read of Claude Code `tool-results/` file keeps placeholder: outline is the
-  cheap way into large output (#52 option 3a rejected).
+  cheap way into large output (#52 option 3a rejected). Superseded in part
+  2026-11-06 by [#57](https://github.com/realroboto/flint/issues/57) (second
+  amendment below): file of bounded Bash read passes whole.
+- Amended 2026-11-06 (#57). Trigger 4096 B → 16384 B, Read and Bash. Bash
+  output under Bash window (10,000 chars) already shows whole. Transcripts
+  after #54: 16/16 Bash placeholders (4.4–9.4 KB) and 4/6 Read placeholders
+  under 16 KB fetched same bytes again. In flint env Bash branch rarely
+  fires: output past window is persisted, and persisted output passes.
+  Replay of 585 transcripts: bytes saved 12.63 MB → 6.86 MB; refetch already
+  gave back most of difference, at one more turn each.
+- Amended 2026-11-06 (#57). Read of file Claude Code persisted for bounded
+  Bash read passes whole: agent asked for every line. Mod keeps those paths
+  per session. Persisted output of unbounded command keeps placeholder on
+  Read: 18 of 23 unranged `tool-results/` Reads, 10–60 KB each, so skip for
+  every `tool-results/` Read (#57 option 1) rejected.
 
 ## Alternatives rejected
 
