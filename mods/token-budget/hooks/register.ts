@@ -44,6 +44,8 @@ const FORK_DENY = `Not spawned: a fork copies this conversation, over ${k(FORK_M
 const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'py', 'sh', 'go', 'rs',
   'java', 'kt', 'swift', 'c', 'h', 'cpp', 'hpp', 'cs', 'rb', 'php', 'css', 'scss', 'html', 'vue', 'svelte', 'sql',
   'json', 'yaml', 'yml', 'toml'])
+// Output Claude Code saved past the Bash window: the agent reads it to see the output (#62).
+const TOOL_RESULTS = /[\\/]tool-results[\\/][^\\/]+$/
 
 // A Bash read the agent bounded: every statement but cd, echo and wc pipes through
 // head, tail (not -f) or sed -n. The agent already chose the lines; a placeholder
@@ -84,14 +86,13 @@ async function doctor($: EngineInterface) {
 
 // An eligible Read or Bash result: its text (TRIGGER_B or more), tb put's
 // arguments, and the result with a placeholder in place of the text. No I/O: the
-// offline replay (test/replay.mjs) runs the same rules. A Read of a file in
-// boundedPersisted (output of a bounded Bash read) passes whole: the agent asked for every line (#57).
-export function eligible(e: ToolCallInput, result: unknown, boundedPersisted: Set<string>) {
+// offline replay (test/replay.mjs) runs the same rules.
+export function eligible(e: ToolCallInput, result: unknown) {
   const big = (text: string) => utf8.encode(text).length >= TRIGGER_B
   if (e.tool === 'Read') {
     const r = result as ReadText
     if (r.type !== 'text' || e.offset !== undefined || e.limit !== undefined || e.allow_large || r.file.truncatedByTokenCap
-      || CODE_EXTENSIONS.has(extension(e.file_path)) || boundedPersisted.has(e.file_path) || !big(r.file.content)) return undefined
+      || CODE_EXTENSIONS.has(extension(e.file_path)) || TOOL_RESULTS.test(e.file_path) || !big(r.file.content)) return undefined
     return {
       text: r.file.content,
       args: ['--source', 'Read', '--path', e.file_path],
@@ -100,7 +101,6 @@ export function eligible(e: ToolCallInput, result: unknown, boundedPersisted: Se
   }
   if (e.tool === 'Bash') {
     const r = result as BashOut
-    if (r.persistedOutputPath !== undefined && bounded(e.command)) boundedPersisted.add(r.persistedOutputPath)
     if (e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined
       || r.persistedOutputPath !== undefined || bounded(e.command) || !big(r.stdout)) return undefined
     return {
@@ -113,8 +113,8 @@ export function eligible(e: ToolCallInput, result: unknown, boundedPersisted: Se
 }
 
 // The result with its text replaced by tb's placeholder, else undefined.
-async function rewrite($: EngineInterface, e: ToolCallInput, result: unknown, boundedPersisted: Set<string>) {
-  const hit = eligible(e, result, boundedPersisted)
+async function rewrite($: EngineInterface, e: ToolCallInput, result: unknown) {
+  const hit = eligible(e, result)
   const ph = hit && await placeholder($, hit.text, hit.args)
   return ph === undefined ? undefined : hit?.replace(ph)
 }
@@ -126,7 +126,6 @@ export function register(on: On) {
   const due = new Map<number, string>()
   let broken: Promise<string | undefined> = Promise.resolve(undefined)
   let reported = false
-  const boundedPersisted = new Set<string>()
 
   on('session.start', ($, e, next) => {
     broken = doctor($)
@@ -155,7 +154,7 @@ export function register(on: On) {
     const r = await next(e)
     if (r.deny !== undefined) return r
     const failure = await broken
-    const result = r.isError || failure !== undefined ? undefined : await rewrite($, e, r.result, boundedPersisted)
+    const result = r.isError || failure !== undefined ? undefined : await rewrite($, e, r.result)
     const context = [...(r.context ?? [])]
     if (e.agentId === undefined) {
       if (failure !== undefined && !reported) context.push(`TOKEN-BUDGET ERROR: ${failure}; placeholders off this session`)

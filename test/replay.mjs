@@ -24,7 +24,6 @@ let small = 0
 
 for (const file of process.argv.slice(2)) {
   const calls = new Map()
-  const boundedPersisted = new Set()
   for (const line of readFileSync(file, 'utf8').split('\n')) {
     let rec
     try {
@@ -37,7 +36,7 @@ for (const file of process.argv.slice(2)) {
       const e = b.type === 'tool_result' && !b.is_error ? calls.get(b.tool_use_id) : undefined
       if ((e?.tool !== 'Read' && e?.tool !== 'Bash') || rec.toolUseResult === undefined) continue
       results++
-      const hit = eligible(e, rec.toolUseResult, boundedPersisted)
+      const hit = eligible(e, rec.toolUseResult)
       if (!hit) continue
       const r = spawnSync(process.execPath, [TB, 'put', ...hit.args, '--session', 'replay'],
         { input: hit.text, encoding: 'utf8', env, maxBuffer: 1 << 30 })
