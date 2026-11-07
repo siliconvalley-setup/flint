@@ -43,7 +43,7 @@ You audit how the `token-budget` mod behaved in **this** session, and file **fri
 
 Friction (the mod cost more than it saved):
 
-- **Refetch**: after a placeholder, the agent fetched the same bytes again: `tb get` of all of it, a Read without offset/limit, the same command again.
+- **Refetch**: after a placeholder, the agent fetched the same bytes again in more than one call: `tb get` of all of it by pages, a range walk with `sed` or Read offset/limit, the same command again.
 - **Dead end**: the agent could not resolve the placeholder: no follow-up call, "not retrievable" in its report, or the main thread read the same source again.
 - **Stacked placeholder**: a placeholder on output that came from `tb` or from an earlier placeholder.
 - **Lost content**: the placeholder hid what the agent needed (a failing line, a body to copy), and its answer missed it.
@@ -52,7 +52,7 @@ Friction (the mod cost more than it saved):
 
 By design:
 
-- A placeholder followed by one targeted read (`tb get '<ref>#<id>'`, a `:a-b` range, Read with offset/limit), or by no read because the outline was enough.
+- A placeholder followed by one targeted read (`tb get '<ref>#<id>'`, a `:a-b` range, Read with offset/limit), by the one whole read its hint names (`whole: Read …`), or by no read because the outline was enough.
 - A fork denial followed by a fresh agent with a self-contained brief.
 
 ## Issue form
