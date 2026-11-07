@@ -34,6 +34,8 @@ const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 
   'json', 'yaml', 'yml', 'toml'])
 // Output Claude Code saved past the Bash window: the agent reads it to see the output (#62).
 const TOOL_RESULTS = /[\\/]tool-results[\\/][^\\/]+$/
+// A tb call is the way back from a placeholder: its output never gets one (#74).
+const TB_CALL = /\btb\.mjs\b/
 
 type ReadText = { type: string, file: { content: string, truncatedByTokenCap?: boolean } }
 type BashOut = { stdout: string, interrupted: boolean, isImage?: boolean, backgroundTaskId?: string,
@@ -82,11 +84,13 @@ export function eligible(e: ToolCallInput, result: unknown) {
   if (e.tool === 'Bash') {
     // Inside the window the model sees the output whole: a placeholder only cost it a call (#57).
     const { persistedOutputPath: file, persistedOutputSize, ...r } = result as BashOut
-    if (file === undefined || e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined) return undefined
+    if (file === undefined || e.run_in_background || r.interrupted || r.isImage || r.backgroundTaskId !== undefined
+      || TB_CALL.test(e.command)) return undefined
     return {
       file,
       // No --path: a stored output stays out of the shared index, so the 24 h purge removes every copy.
-      args: ['--source', 'Bash', ...(e.description ? ['--intent', e.description] : [])],
+      // --saved: the placeholder names the one-call whole read; a Read of that file passes (#62).
+      args: ['--source', 'Bash', '--saved', file, ...(e.description ? ['--intent', e.description] : [])],
       // No persisted fields: core shows the placeholder inline in place of its preview.
       replace: (ph: string) => ph.length < BASH_WINDOW ? { ...r, stdout: ph } : undefined,
     }
