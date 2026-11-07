@@ -7,8 +7,8 @@
 //   result: a jump past both sends the handoff order alone.
 // - Session start: one line with the count of open handoffs of the working
 //   directory, only when there is one or more. No handoff text loaded.
-// - Fail-open: a store that is missing or cannot be read gives no line; a hook
-//   that throws is skipped by the mods runtime.
+// - Fail-open: a missing store or an unreadable file gives no line; a store
+//   that cannot be listed throws, and the mods runtime skips the hook loudly.
 import type { EngineInterface, On } from 'claude-code'
 
 // Main-thread context that earns a warning: room left to finish the step and hand off.
@@ -34,6 +34,8 @@ async function storeDir($: EngineInterface, cwd: string) {
 }
 
 async function openCount($: EngineInterface, dir: string) {
+  // No store = the usual case: a throw would show "hook skipped" in every such directory.
+  if (!await $.fs.exists(dir)) return 0
   const files = (await $.fs.list(dir)).filter(f => f.kind === 'file' && f.name.endsWith('.md'))
   // An unreadable file counts as not open: the others still count.
   const texts = await Promise.all(files.map(f => $.fs.read(`${dir}/${f.name}`).catch(() => '')))

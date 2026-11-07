@@ -25,7 +25,7 @@ Context meter + handoff catalog. Decision: ADR [0004](../adr/0004-handoff-catalo
 - Session start (not compaction): one line `N open handoffs for this directory: run /handoff list`, only when N > 0.
 - Store: `${CLAUDE_CONFIG_DIR:-~/.claude}/handoffs/<working dir, non-alphanumeric → ->/`. One `.md` per work line; `status: open` in frontmatter counts.
 - Skill: `/handoff` write or update, `/handoff list [--all]`, `/handoff resume [words|nº]`.
-- Missing or unreadable store → no line, no error.
+- Missing store or unreadable file → no line, no error. Store that cannot be listed → runtime skips hook and shows the error.
 
 ## sleep-guard (`mods/sleep-guard/`)
 

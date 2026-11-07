@@ -58,6 +58,7 @@ function store(on: On, dir: Record<string, string | null> | 'missing', env: Reco
   const listed: string[] = []
   on('classic.SessionStart', () => ({}))
   on('env.get', ($, e) => ({ value: env[e.name] }))
+  on('fs.exists', () => ({ value: dir !== 'missing' }))
   on('fs.list', ($, e) => {
     listed.push(e.path)
     if (dir === 'missing') throw new Error(`fs.list: ENOENT ${e.path}`)
@@ -93,7 +94,9 @@ test('session start: no line with no open handoff, or on a compaction', async ($
   expect((await start($, 'compact')).additionalContext ?? []).toEqual([])
 })
 
-test('session start: a missing store fails open, no line', async ($, on) => {
-  store(on, 'missing')
+test('session start: a missing store, the usual case, gives no line and no throw', async ($, on) => {
+  // A throw would surface as "hook skipped" to the user in every directory without handoffs.
+  const listed = store(on, 'missing')
   expect((await start($)).additionalContext ?? []).toEqual([])
+  expect(listed, 'no list of a missing store').toEqual([])
 })
