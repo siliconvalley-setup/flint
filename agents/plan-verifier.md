@@ -1,7 +1,7 @@
 ---
 name: plan-verifier
 description: "Blind, read-only audit of one drafted plan, spec, or ticket. Returns bare READY, or REVISE with root cause and a grounded, idiomatic fix per blocker."
-model: claude-opus-4-6
+model: sonnet
 effort: high
 ---
 <important>Headless: silent until the final report.</important>
