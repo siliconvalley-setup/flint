@@ -30,4 +30,4 @@ Gate a drafted plan, spec, or ticket through **blind** `plan-verifier` audits un
 
 ## Completion criterion
 
-A blind audit returns READY, or 5 REVISE loops are spent; every blocker got a first-hand decision, and every fix landed at its origin, not on the flagged line alone.
+A blind audit returns READY, or 2 REVISE loops are spent; every blocker got a first-hand decision, and every fix landed at its origin, not on the flagged line alone.
