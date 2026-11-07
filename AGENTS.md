@@ -22,20 +22,17 @@ shipped somewhere — upstream, or in this repo's own CI history.
 - **No state machinery in the style core** (`flint.md` + the hook). The
   installer is the only place state lives (`.flint-state.json`, see below).
   No flag files, config files, slash commands, badges,
-  or any sentence in `flint.md` phrasing an off-switch as a command. Intensity
-  tiers (lite/full/ultra) and Persistence are calibration TEXT the model
-  self-selects from, not state (`docs/flint.md` §7). Upstream's state machinery
+  or any sentence in `flint.md` phrasing an off-switch as a command. Upstream's state machinery
   (~1,141 lines of JS) was the bug factory.
 - **The ruleset's real ceiling is 10,000 CHARACTERS, not 64 KB.** Claude Code
   caps hook output strings there and past it swaps the text for a preview +
   file path — the ruleset arrives as a pointer, no error, no loud marker
   (official docs `/en/hooks`; `docs/hook-engineering.md`). Budget the JSON
-  envelope, not `flint.md`: 8,802 chars of ruleset emit 9,107 on LF. NEUTRALIZED
+  envelope, not `flint.md` (test 13a guards it at 9,300). CRLF NEUTRALIZED
   — `.gitattributes` pins `eol=lf` on every checkout, the Windows runner
   included, so the CRLF double-cost (each escaped `\r\n` counts twice) is
   dead as long as the pin stays; delete `.gitattributes` and Windows-only
-  spend reopens, which no local LF run will catch. Against test 13a's 9,300
-  guard a new rule now spends from **~193 characters**, not 58 KB.
+  spend reopens, which no local LF run will catch.
 - **No matcher on any hook registration** — the empty matcher is what re-fires
   the ruleset after compact; a matcher kills the style mid-session silently.
 - **No raw stdout on SubagentStart** — silently dropped. All three events emit
@@ -120,10 +117,9 @@ not only the style core. The repo is private: a consumer needs read access.
   breaks the vmCODE vendored layout.
 - Changed hook or ruleset → tag a release; consumers bump the pin. Never
   assume a consumer pulls `main`.
-- The UserPromptSubmit anchor line is hardcoded in the hook, separate from
-  `flint.md` — core-rule changes need a manual anchor re-sync (and the
-  installed-clone model means users get hook changes on `git pull` with no
-  re-install).
+- The UserPromptSubmit anchor is `flint-submit.md`, an exact copy of
+  `flint.md` (test 12b): edit both together. The installed-clone model means
+  users get hook and ruleset changes on `git pull` with no re-install.
 
 ## Before shipping anything
 
