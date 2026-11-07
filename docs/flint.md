@@ -7,12 +7,12 @@ the code disagree, the code is right — fix this file in the same change.
 ## 1. What flint is
 
 flint makes every Claude Code session answer in **concise ASD-STE100 prose**
-(answer first, short words, articles optional, one idea per sentence). It
+(no ceremony, short words, payload verbatim). It
 replaced two third-party plugins — `caveman`
 (terse prose) and `ponytail` (lazy code) — with:
 
-- **one plain-text ruleset** — [flint.md](../flint.md), 11 numbered rules;
-  rule 11 defers lazy-code behavior to the `<rules>` block (`rules/rules.md`)
+- **one plain-text ruleset** — [flint.md](../flint.md), 8 bullet rules;
+  last rule defers lazy-code behavior to the `<rules>` block (`rules/rules.md`)
 - **one POSIX-sh hook** — [hooks/flint-style.sh](../hooks/flint-style.sh)
 
 There is **no state machinery**: no flag files, no config files, no slash
@@ -90,17 +90,20 @@ Python, Claude Code) reads unambiguously.
 
 ## 4. The ruleset (flint.md) — structure and provenance
 
-flint.md is an 11-rule ASD-STE100 ruleset under one heading. It replaced the
+flint.md is an 8-rule ASD-STE100 bullet list, no heading. It replaced the
 caveman + ponytail merge on 2026-11-02 (`9f5a8f4`); the merged rules and
 their provenance table live in git (`git show 9f5a8f4^:flint.md`,
-`git show 9f5a8f4^:docs/flint.md`).
+`git show 9f5a8f4^:docs/flint.md`). 2026-11-06 (`62d90c3`, `b9a19bd`): owner
+cut 11 numbered rules to 8 bullets; dropped answer first, articles optional,
+one idea per sentence, bounded tool status, never perform caveman; added
+quality-over-speed rule.
 
 Rules below carry a recorded origin. **Do not paraphrase or "tighten"
 them** — the exact wording is the fix.
 
 | flint.md rule | Origin | The bug it fixed |
 |---|---|---|
-| 6\. "Payload verbatim: code, paths, names, commands, errors, numbers, units. Never drop not/never/no/only/except." | caveman #670 and the caveman never-touch list (both dropped in `9f5a8f4`); CAVEWOMAN (EMNLP 2026) L1 output prompt keeps "nouns, main verbs, numbers, and standard symbols" | caveman #670: compression dropped a negation and inverted the instruction. 2026-11-06 A/B (5 flint tasks × 3 runs, Opus): bare "Payload verbatim." let one answer replace `.flint-state.json` with a paraphrase |
+| 4\. "Payload verbatim: code, paths, names, commands, errors, numbers, units. Never drop not/never/no/only/except." | caveman #670 and the caveman never-touch list (both dropped in `9f5a8f4`); CAVEWOMAN (EMNLP 2026) L1 output prompt keeps "nouns, main verbs, numbers, and standard symbols" | caveman #670: compression dropped a negation and inverted the instruction. 2026-11-06 A/B (5 flint tasks × 3 runs, Opus): bare "Payload verbatim." let one answer replace `.flint-state.json` with a paraphrase |
 
 The context7-first and LSP-navigation clauses (maintainer decision
 2026-07-17) lived in the `UserPromptSubmit` anchor. Removed 2026-11-03:
