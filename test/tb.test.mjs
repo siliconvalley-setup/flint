@@ -59,7 +59,7 @@ test('outline: heading-path ids, duplicate suffix, fenced # ignored, exact range
   assert.match(lines[3], /^#guide\/usage {2}L8-9 {2}\S+ {2}Usage$/)
   assert.match(lines[4], /^#guide\/install-2 {2}L10-11 {2}\S+ {2}Install$/)
   assert.equal(lines.length, 6)
-  assert.ok(lines[5].startsWith(`read one: node ${TB} get '${path}#<id>'`), lines[5])
+  assert.ok(lines[5].startsWith(`read one: node ${TB} get '${path}#guide/install' or any #id above · whole: Read ${path} with allow_large`), lines[5])
   assert.ok(lines[5].includes('before Edit: Read the exact range with offset/limit'), lines[5])
   assert.equal(tb(['outline', path], { data, cwd: dir }).out, first.out)
 })
@@ -95,21 +95,30 @@ test('get: no section reads it all; output pages below the Bash window, the last
   assert.equal(get(`${ref}:${last + 1}-2000`, '10000').out.split('\n')[0], `${last + 1}\tline ${last + 1}`)
   assert.equal(get(ref, '').out.trimEnd().split('\n').length, lines.length, 'no window set: flint default 10000')
   assert.ok(get(ref, '100000').out.endsWith('2000\tline 2000\n'), 'a wide window takes it all')
+  // #76: core counts bytes; a page of multibyte text stays under the window in bytes.
+  const wide = '— × … multibyte line here\n'.repeat(900)
+  const ref2 = /→ (tb:[0-9a-f]{16})/.exec(tb(['put', '--source', 'Bash'], { input: wide, data, cwd: dir }).out)[1]
+  const p2 = get(ref2, '10000').out
+  assert.ok(Buffer.byteLength(p2) < 10000 && p2.length < 9000, `${Buffer.byteLength(p2)} B, ${p2.length} chars`)
+  assert.match(p2.trimEnd().split('\n').at(-1), /^more: /)
 })
+
+// A ticket as `gh issue view` prints it: blank lines around every heading.
+const TICKET = ['# Guide', '', 'intro', '', '## Install', '', 'step', '', '## Usage', '', 'use', ''].join('\n') + 'filler line\n'.repeat(400)
 
 test('put: a markdown Bash output becomes an outline, stored 0600 outside the repo, read back by get', () => {
   const { dir, data } = project({})
-  const ticket = GUIDE + 'filler line\n'.repeat(400)
-  const r = tb(['put', '--source', 'Bash', '--intent', 'show ticket'], { input: ticket, data, cwd: dir })
+  const ticket = TICKET
+  const r = tb(['put', '--source', 'Bash', '--intent', 'show ticket', '--saved', '/h/tool-results/b1.txt'], { input: ticket, data, cwd: dir })
   assert.equal(r.code, 0, r.err)
   const [head, ...rest] = r.out.trimEnd().split('\n')
   const where = /^\[tb\] (\d+) B, (\d+) lines → (tb:[0-9a-f]{16})$/.exec(head)
   assert.ok(where, head)
   assert.deepEqual([+where[1], +where[2]], [ticket.length, 411])
-  assert.match(rest[3], /^#guide\/install-2 {2}L10-411 {2}\S+ {2}Install$/)
-  assert.ok(rest.at(-1).startsWith(`read one: node ${TB} get '${where[3]}#<id>'`), rest.at(-1))
-  assert.ok(!rest.at(-1).includes('before Edit'))
-  assert.equal(tb(['get', `${where[3]}#guide/usage`], { data, cwd: dir }).out, '8\t## Usage\n9\tuse\n')
+  assert.match(rest[2], /^#guide\/usage {2}L9-411 {2}\S+ {2}Usage$/)
+  // #75: the example names the section with the most text of its own; the whole read is one Read that passes the mod.
+  assert.equal(rest.at(-1), `read one: node ${TB} get '${where[3]}#guide/usage' or any #id above · whole: Read /h/tool-results/b1.txt`)
+  assert.equal(tb(['get', `${where[3]}#guide/install`], { data, cwd: dir }).out, '5\t## Install\n6\t\n7\tstep\n8\t\n')
   assert.equal(walk(data).filter(f => readFileSync(f, 'utf8') === ticket).length, 1)
   assert.deepEqual(walk(dir), [])
 })
@@ -132,17 +141,53 @@ test('put: other text keeps head, tail and intent hits; same input gives same by
   assert.deepEqual(plain.slice(1, 3), ['step 1 ok', 'step 2 ok'])
   assert.deepEqual(plain.slice(40, 43), ['step 40 ok', '[… L41-380 omitted]', 'step 381 ok'])
   assert.equal(plain[61], 'step 400 ok')
-  assert.ok(plain[62].startsWith(`read one: node ${TB} get 'tb:`) && plain[62].includes(':<a>-<b>'), plain[62])
+  assert.ok(plain[62].startsWith(`read one: node ${TB} get 'tb:`) && plain[62].endsWith(":<a>-<b>'"), plain[62])
   assert.equal(plain.length, 63)
+  assert.ok(put(LOG, undefined).out === put(LOG).out)
+  assert.ok(tb(['put', '--source', 'Bash', '--saved', '/h/b2.txt'], { input: LOG, data, cwd: dir }).out.endsWith(":<a>-<b>' · whole: Read /h/b2.txt\n"))
   const hit = put(LOG, 'check disk space').out
   assert.ok(hit.includes('step 40 ok\n[… L41-160 omitted]\nstep 161 ok\n'), hit)
   assert.ok(hit.includes('\nERROR disk full on /var\n[… L201-380 omitted]\nstep 381 ok\n'), hit)
   put('unrelated output\n'.repeat(300), 'unrelated')
   tb(['outline', join(dir, 'guide.md')], { data, cwd: dir })
   assert.equal(put(LOG, 'check disk space').out, hit)
-  const tiny = put(Array.from({ length: 2000 }, (_, i) => `# h${i}`).join('\n'))
+  const tiny = put(Array.from({ length: 2000 }, (_, i) => `# h${i}\n`).join('\n'))
   assert.deepEqual([tiny.code, tiny.out], [0, ''])
   assert.ok(!walk(data).some(f => readFileSync(f, 'utf8').includes('# h1999')), 'a passed output is not stored')
+})
+
+const DIFF = [
+  'diff --git a/README.md b/README.md', 'index 1..2 100644', '--- a/README.md', '+++ b/README.md', '@@ -1,3 +1,4 @@',
+  ' # dataforseo-cli (`dfs`)', '+new line', '-old', ' ctx',
+  'diff --git a/src/call.ts b/src/call.ts', '--- a/src/call.ts', '+++ b/src/call.ts', '@@ -1 +1 @@', '-a', '+b', '+c',
+].join('\n') + '\n'
+
+test('put: a diff is outlined by file with +/- counts, never by a # context line; get returns one file (#74)', () => {
+  const { dir, data } = project({})
+  const text = DIFF + ' filler context\n'.repeat(400)
+  const r = tb(['put', '--source', 'Bash'], { input: text, data, cwd: dir })
+  const [head, ...rest] = r.out.trimEnd().split('\n')
+  const ref = /→ (tb:[0-9a-f]{16})$/.exec(head)[1]
+  assert.match(rest[0], /^#readme-md {2}L1-9 {2}\S+ {2}README\.md {2}\+1 -1$/)
+  assert.match(rest[1], /^#src-call-ts {2}L10-416 {2}\S+ {2}src\/call\.ts {2}\+2 -1$/)
+  assert.equal(rest[2], `read one: node ${TB} get '${ref}#src-call-ts' or any #id above`)
+  assert.equal(tb(['get', `${ref}#readme-md`], { data, cwd: dir }).out.split('\n').length, 10)
+  // Plain `diff -u` and a status line before the first file.
+  const plain = 'M x\n--- x.txt\t2026\n+++ x.txt\t2026\n@@ -1 +1 @@\n-a\n+b\n' + ' c\n'.repeat(400)
+  const out = tb(['put', '--source', 'Bash'], { input: plain, data, cwd: dir }).out.split('\n')
+  assert.match(out[1], /^#_top {2}L1-1 /)
+  assert.match(out[2], /^#x-txt {2}L2-406 {2}\S+ {2}x\.txt {2}\+1 -1$/)
+})
+
+test('put: text with no markdown name needs real markdown: # comments, a code head and tight headings get an excerpt (#74)', () => {
+  const { dir, data } = project({ 'tight.md': GUIDE + 'x\n'.repeat(400) })
+  const put = input => tb(['put', '--source', 'Bash'], { input, data, cwd: dir }).out.split('\n')[1]
+  assert.equal(put('#!/bin/sh\n\n# 15: mod suites\nfor m in x; do\n  echo $m\ndone\n\n# 16: tb suite\n' + 'echo line\n'.repeat(300)), '#!/bin/sh')
+  assert.equal(put('const x = 1\n'.repeat(100) + TICKET), 'const x = 1')
+  assert.equal(put(GUIDE + 'x\n'.repeat(400)), '# Guide', 'headings with no blank line around them: code comments, not markdown')
+  assert.match(put(TICKET), /^#guide {2}L1-411 /)
+  // The same tight text under a .md name is markdown, as before.
+  assert.match(tb(['outline', join(dir, 'tight.md')], { data, cwd: dir }).out.split('\n')[1], /^#guide {2}L1-411 /)
 })
 
 test('find: ranks named and already-indexed files, top 5 then more:, pages, stays fresh', () => {

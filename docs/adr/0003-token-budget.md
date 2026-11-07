@@ -113,6 +113,24 @@ Output style does not reach this cost.
   Measure: whole `tool-results/` Reads per saved output (before: 32 of 163).
   Same shape as context-mode "Externalize" row (host output over cap,
   indexed whole, 98.3% saved in its bench).
+- Amended 2026-11-07 (#74, #75, #76). Transcripts 2026-11-07 (24 h, `test/refetch.mjs`):
+  101 placeholders, 41 on `git diff`, 24 on code via `cat`, 27 on markdown; agents
+  fetched 1,253 KB of 1,919 KB original back within 3 calls, `tb get` used after
+  26; headroom's detector order has no markdown class and a diff class
+  (`content_detector.rs`). Now `put` decides shape by the text's own evidence:
+  unified diff (git header or `---`/`+++` pair) → outline per file, `+n -m` in the
+  title; markdown → outline per heading, strict when the text has no markdown name
+  (Bash and stored output: heading at column 0, blank line before and after, first
+  inside 40 lines, so `#` comments, diff context and code pasted before a doc fail);
+  else excerpt. Every hint names one copy-ready part (`get '<ref>#<largest own
+  text>'`) and one whole read that passes the mod (`whole: Read <saved file>`, or
+  `Read <path> with allow_large`): a wrong placeholder costs one call, never a range
+  walk. A Bash command that runs `tb.mjs` keeps its output (#74 stacked case).
+  `get` pages by bytes, as core counts (#76). Rejected: SubagentStart instruction
+  line (fixed cost per subagent, story 3); Bash code-file exemption by command
+  parsing (whole read line gives the same one call); one threshold for Read and
+  Bash (#75 option 2a: between 10 and 16 KB the placeholder costs the same one call
+  as core's preview). Measure after: `test/refetch.mjs` next3 against orig per kind.
 - Amended 2026-11-07 (#70). Context meter (warning 150k, ai-memory handoff
   order 200k) left token-budget mod. Meter part Superseded 2026-11-07 by
   [ADR 0004](./0004-handoff-catalog.md): handoff mod, 250k/300k, order runs

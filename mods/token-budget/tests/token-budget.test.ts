@@ -106,7 +106,7 @@ test('a Bash output core saved to a file becomes the placeholder of the whole fi
   expect(r.context).toEqual(['from core'])
   expect([r.ref, r.text]).toEqual([undefined, undefined])
   expect(reads).toEqual([SAVED])
-  expect(runs[0]?.argv.slice(2)).toEqual(['put', '--source', 'Bash', '--intent', 'Read issue 46', '--session', 's1'])
+  expect(runs[0]?.argv.slice(2)).toEqual(['put', '--source', 'Bash', '--saved', SAVED, '--intent', 'Read issue 46', '--session', 's1'])
   expect(runs[0]?.stdin).toBe(BIG)
 })
 
@@ -128,6 +128,10 @@ test('Bash eligibility: only an output core saved to a file; errors, interrupts,
   await passes('background input', 'make', { result: saved() }, { run_in_background: true })
   await passes('backgroundTaskId', 'make', { result: saved({ backgroundTaskId: 'b1' }) })
   await passes('isImage', 'make', { result: saved({ isImage: true }) })
+  // #74: a tb call is the way back from a placeholder; its output, piped or not, never gets one.
+  for (const c of ["node /c/tools/tb.mjs get 'tb:1#a'", "node /c/tools/tb.mjs get 'tb:1' | cat -n | sed -n 1,400p"]) {
+    await passes(c, c, { result: saved() })
+  }
   // Bounded commands too: past the window the model sees core's preview, not the lines it asked for (#62).
   for (const c of ["sed -n '1,200p' docs/a.md", 'cat a.md', 'head -n 300 build.log']) {
     answer = { result: saved() }

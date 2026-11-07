@@ -4,7 +4,7 @@
 // call it through Bash; it is the only implementation of sectioning, so both
 // see the same section ids. Plain text on stdout; exit 0 on success.
 //
-//   put --source <label> [--path <abs>] [--intent <text>] [--session <id>]  (content on stdin)
+//   put --source <label> [--path <abs>] [--saved <abs>] [--intent <text>] [--session <id>]  (content on stdin)
 //   outline <path> · get <path>[#<id> | :<a>-<b>] · find "<query>" [paths…] [--offset N]
 //   doctor · stats · purge
 import { createHash } from 'node:crypto'
@@ -43,6 +43,10 @@ const now = () => process.env.TB_NOW ? Number(process.env.TB_NOW) * 1000 : Date.
 
 const HEADING = /^ {0,3}(#{1,6})[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*\r?$/
 const FENCE = /^ {0,3}(`{3,}|~{3,})/
+// A file section of a unified diff: git's header, or the ---/+++ pair of plain diff -u.
+const DIFF_GIT = /^diff --git a\/.* b\/(.*)$/
+const DIFF_NEW = /^\+\+\+ (?:b\/)?([^\t]*)/
+const MARKDOWN_EXT = /\.(md|mdx|markdown)$/i
 
 const bytes = s => Buffer.byteLength(s)
 const sha = s => createHash('sha256').update(s).digest('hex').slice(0, 16)
@@ -57,10 +61,14 @@ function splitLines(text) {
   return lines
 }
 
-// ATX headings outside fenced code, as { line, level, title }.
-function headings(lines) {
+// ATX headings outside fenced code, as { line, level, title }. Strict (text with no
+// markdown name: Bash output, stored output): column 0, a blank line before and after,
+// the first one inside the first HEAD lines. A `#` comment block in code, a diff
+// context line and code pasted before a markdown file fail that (#74).
+function headings(lines, strict) {
   const out = []
   let fence = null
+  const blank = i => i < 0 || i >= lines.length || lines[i].trim() === ''
   lines.forEach((line, i) => {
     const f = FENCE.exec(line)
     if (fence !== null) {
@@ -69,22 +77,60 @@ function headings(lines) {
     }
     if (f) return void (fence = f[1])
     const h = HEADING.exec(line)
-    if (h?.[2]) out.push({ line: i + 1, level: h[1].length, title: h[2] })
+    if (!h?.[2]) return
+    if (strict && (line[0] !== '#' || !blank(i - 1) || !blank(i + 1) || (out.length === 0 && i >= HEAD))) return
+    out.push({ line: i + 1, level: h[1].length, title: h[2] })
   })
   return out
 }
 
-// Sections of a text: markdown by heading path (a section holds its subsections),
-// else WINDOW-line windows. `own` ends the section's own text, before its first subsection.
-function sectionize(lines) {
-  const heads = headings(lines)
-  if (heads.length === 0) {
+// File sections of a unified diff, as { line, title }; empty when the text is no diff.
+// A ---/+++ pair counts only in a plain `diff -u`: under a git header it is the header's file.
+function diffFiles(lines) {
+  const git = lines.some(l => DIFF_GIT.test(l))
+  const out = []
+  lines.forEach((line, i) => {
+    const g = DIFF_GIT.exec(line)
+    const n = !git && line.startsWith('--- ') && DIFF_NEW.exec(lines[i + 1] ?? '')
+    if (g || n) out.push({ line: i + 1, title: (g ?? n)[1] })
+  })
+  return out
+}
+
+// What the text is, by its own evidence (headroom order: diff before text): a diff by
+// its file headers, markdown by its headings, else text cut in windows.
+function kind(lines, where) {
+  if (diffFiles(lines).length) return 'diff'
+  return headings(lines, !MARKDOWN_EXT.test(where ?? '')).length ? 'markdown' : 'text'
+}
+
+// Sections of a text: a diff by file, markdown by heading path (a section holds its
+// subsections), else WINDOW-line windows. `own` ends the section's own text, before
+// its first subsection. Same text and name, same ids, for put, outline, get and find.
+function sectionize(lines, where) {
+  const k = kind(lines, where)
+  const heads = k === 'markdown' ? headings(lines, !MARKDOWN_EXT.test(where ?? '')) : []
+  if (k === 'text') {
     const out = []
     for (let a = 1; a <= lines.length; a += WINDOW) {
       const b = Math.min(a + WINDOW - 1, lines.length)
       const first = lines.slice(a - 1, b).find(l => l.trim()) ?? ''
       out.push({ id: `w${(a - 1) / WINDOW + 1}`, a, b, own: b, title: first.trim().slice(0, 60) })
     }
+    return out
+  }
+  if (k === 'diff') {
+    const files = diffFiles(lines)
+    const out = files[0].line > 1 ? [{ id: '_top', a: 1, b: files[0].line - 1, own: files[0].line - 1, title: '(before first file)' }] : []
+    const seen = new Map()
+    files.forEach((f, i) => {
+      const b = files[i + 1] ? files[i + 1].line - 1 : lines.length
+      const body = lines.slice(f.line - 1, b)
+      const n = (seen.get(slug(f.title)) ?? 0) + 1
+      seen.set(slug(f.title), n)
+      const count = re => body.filter(l => re.test(l)).length
+      out.push({ id: slug(f.title) + (n > 1 ? `-${n}` : ''), a: f.line, b, own: b, title: `${f.title}  +${count(/^\+[^+]/)} -${count(/^-[^-]/)}` })
+    })
     return out
   }
   const out = []
@@ -108,11 +154,14 @@ function sectionize(lines) {
 const span = (lines, s) => lines.slice(s.a - 1, s.b).join('\n') + '\n'
 const header = (text, lines, where) => `[tb] ${bytes(text)} B, ${lines.length} lines → ${where}`
 
-// A stored output is not searchable: the index would keep it past purge.
-function hint(where, getArg) {
-  const get = `read one: node ${arg(TB)} get ${quote(where + getArg)}`
-  return STORED.test(where) ? get
-    : `${get} · search: node ${arg(TB)} find "<q>" ${arg(where)} · before Edit: Read the exact range with offset/limit`
+// One copy-ready part read, then the one-call whole read that always passes the mod
+// (#75: a template alone sent agents back to sed and Read). A stored output is not
+// searchable: the index would keep it past purge.
+function hint(where, getArg, saved, note = '') {
+  const get = `read one: node ${arg(TB)} get ${quote(where + getArg)}${note}`
+  if (STORED.test(where)) return saved ? `${get} · whole: Read ${saved}` : get
+  return `${get} · whole: Read ${where} with allow_large · search: node ${arg(TB)} find "<q>" ${arg(where)}`
+    + ' · before Edit: Read the exact range with offset/limit'
 }
 
 // Windows outside head and tail that best match the intent (BM25 over this text
@@ -128,13 +177,13 @@ function hits(lines, windows, intent) {
   return match.all(words.map(t => `"${t}"`).join(' OR ')).map(r => windows[r.rowid])
 }
 
-function excerpt(text, where, intent) {
+function excerpt(text, where, intent, saved) {
   const lines = splitLines(text)
   const show = new Set()
   const mark = (a, b) => { for (let i = a; i <= b; i++) show.add(i) }
   mark(1, Math.min(HEAD, lines.length))
   mark(Math.max(1, lines.length - TAIL + 1), lines.length)
-  for (const w of hits(lines, sectionize(lines), intent)) mark(w.a, w.b)
+  for (const w of hits(lines, sectionize(lines, where), intent)) mark(w.a, w.b)
   const out = [header(text, lines, where)]
   let prev = 0
   for (let i = 1; i <= lines.length; i++) {
@@ -143,15 +192,18 @@ function excerpt(text, where, intent) {
     out.push(lines[i - 1])
     prev = i
   }
-  return [...out, hint(where, ':<a>-<b>')].join('\n') + '\n'
+  return [...out, hint(where, ':<a>-<b>', saved)].join('\n') + '\n'
 }
 
-function outline(text, where) {
+// The example is the section with the most text of its own: a part, not the whole.
+function outline(text, where, saved) {
   const lines = splitLines(text)
-  const list = sectionize(lines)
+  const list = sectionize(lines, where)
+  const own = s => bytes(lines.slice(s.a - 1, s.own).join('\n'))
+  const example = list.reduce((m, s) => own(s) > own(m) ? s : m)
   return [header(text, lines, where),
     ...list.map(s => `#${s.id}  L${s.a}-${s.b}  ${size(bytes(span(lines, s)))}  ${s.title}`),
-    hint(where, '#<id>')].join('\n') + '\n'
+    hint(where, `#${example.id}`, saved, ' or any #id above')].join('\n') + '\n'
 }
 
 class Fail extends Error {}
@@ -214,7 +266,7 @@ function index(db, where) {
   try {
     db.prepare('DELETE FROM sections WHERE path = ?').run(where)
     const add = db.prepare('INSERT INTO sections VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    for (const s of sectionize(lines)) {
+    for (const s of sectionize(lines, where)) {
       add.run(where, hash, s.id, s.a, s.b, bytes(span(lines, s)), s.title, lines.slice(s.a - 1, s.own).join('\n'))
     }
     db.prepare('INSERT OR REPLACE INTO files VALUES (?, ?, ?)').run(where, mtime, hash)
@@ -285,10 +337,10 @@ function stats() {
   return out || 'no puts yet\n'
 }
 
-// The placeholder for a tool output: a pure function of its bytes, where and intent.
+// The placeholder for a tool output: a pure function of its bytes, where, intent and saved path.
 function put(text, opts) {
   const where = opts.path ? resolve(opts.path) : `tb:${sha(text)}`
-  const ph = headings(splitLines(text)).length ? outline(text, where) : excerpt(text, where, opts.intent)
+  const ph = kind(splitLines(text), where) === 'text' ? excerpt(text, where, opts.intent, opts.saved) : outline(text, where, opts.saved)
   return bytes(ph) <= bytes(text) * GAIN ? ph : ''
 }
 
@@ -296,22 +348,24 @@ function put(text, opts) {
 const BASH_WINDOW = Number(process.env.BASH_MAX_OUTPUT_LENGTH) || 10000
 
 // `<where>#<id>`, `<where>:<a>-<b>` or all of `<where>` as the current lines,
-// numbered. Pages below the Bash window: past it Claude Code saves the output to
-// a file, and a Read of that file gets one more placeholder (#52).
+// numbered. Pages below the Bash window in bytes, as core counts (#76): past it
+// Claude Code saves the output to a file, one more call (#52).
 function get(db, target) {
   const range = /^(.*):(\d+)-(\d+)$/.exec(target)
   const at = range ? -1 : target.lastIndexOf('#')
   const where = resolveWhere(range ? range[1] : at < 1 ? target : target.slice(0, at))
   const lines = splitLines(index(db, where))
   const s = range ? { a: +range[2], b: +range[3] } : at < 1 ? { a: 1, b: lines.length }
-    : sectionize(lines).find(x => x.id === target.slice(at + 1))
+    : sectionize(lines, where).find(x => x.id === target.slice(at + 1))
   if (!s) throw new Fail(`no section ${target.slice(at + 1)}; list them: node ${arg(TB)} outline ${arg(where)}`)
   const more = n => `more: node ${arg(TB)} get ${quote(`${where}:${n}-${s.b}`)}\n`
   let out = ''
+  let used = 0
   for (let n = s.a; n <= Math.min(s.b, lines.length); n++) {
     const line = `${n}\t${lines[n - 1]}\n`
-    if (out && out.length + line.length + more(n).length >= BASH_WINDOW) return out + more(n)
+    if (out && used + bytes(line) + bytes(more(n)) >= BASH_WINDOW) return out + more(n)
     out += line
+    used += bytes(line)
   }
   return out
 }
@@ -348,7 +402,7 @@ process.umask(0o077)
 try {
   const { values: opts, positionals: [cmd, ...pos] } = parseArgs({
     allowPositionals: true,
-    options: Object.fromEntries(['source', 'path', 'intent', 'session', 'offset'].map(k => [k, { type: 'string' }])),
+    options: Object.fromEntries(['source', 'path', 'saved', 'intent', 'session', 'offset'].map(k => [k, { type: 'string' }])),
   })
   const commands = {
     put() {
