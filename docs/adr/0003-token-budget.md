@@ -55,7 +55,9 @@ Output style does not reach this cost.
 - Read of Claude Code `tool-results/` file keeps placeholder: outline is the
   cheap way into large output (#52 option 3a rejected). Superseded in part
   2026-11-06 by [#57](https://github.com/realroboto/flint/issues/57) (second
-  amendment below): file of bounded Bash read passes whole.
+  amendment below): file of bounded Bash read passes whole. Superseded
+  2026-11-06 by [#62](https://github.com/realroboto/flint/issues/62) (last
+  amendment below).
 - Amended 2026-11-06 (#57). Trigger 4096 B → 16384 B, Read and Bash. Bash
   output under Bash window (10,000 chars) already shows whole. Transcripts
   after #54: 16/16 Bash placeholders (4.4–9.4 KB) and 4/6 Read placeholders
@@ -67,10 +69,20 @@ Output style does not reach this cost.
   Bash read passes whole: agent asked for every line. Mod keeps those paths
   per session. Persisted output of unbounded command keeps placeholder on
   Read: 18 of 23 unranged `tool-results/` Reads, 10–60 KB each, so skip for
-  every `tool-results/` Read (#57 option 1) rejected.
+  every `tool-results/` Read (#57 option 1) rejected. Superseded 2026-11-06
+  by [#62](https://github.com/realroboto/flint/issues/62) (last amendment
+  below).
 - Amended 2026-11-06 (#60). Read with `allow_large: true` passes whole, like
   `offset`/`limit`: agent asked for whole file in call. #57 comment
   6700117702: such Read got placeholder, then agent fetched same lines again.
+- Amended 2026-11-06 (#62). Read of any file under `tool-results/` passes
+  whole, whatever command made it. Outline ranges point at saved file, not
+  source, and Edit needs source path: after placeholder, 6 of 8 agents left
+  saved file and read source again. Direct Read placeholder: 7 of 11 used
+  outline. 4 measured cases: agent fetched 65–124% of bytes again in 3–4
+  more calls; placeholder cost more input tokens than whole file in all 4.
+  Replay of 616 transcripts: bytes saved 6.60 MB → 6.25 MB, before refetch.
+  Risk not measured: large logs and test output, main context near 150k.
 
 ## Alternatives rejected
 

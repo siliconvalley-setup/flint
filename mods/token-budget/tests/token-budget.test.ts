@@ -125,18 +125,12 @@ test('Bash eligibility: errors, interrupts, background, images, persisted output
   }
 })
 
-test('Read of a persisted output passes whole when the Bash read was bounded, else gets the placeholder', async ($, on) => {
-  let answer: object = { result: bashOut('preview', { persistedOutputPath: '/t/bounded.txt' }) }
-  on('tool.call', () => answer as never)
+test('Read of a Claude Code tool-results file passes whole, whatever command made it', async ($, on) => {
+  on('tool.call', () => ({ result: readText(BIG) }))
   const runs = tb(on)
-  await bash($, 'sed -n 75,224p a.md')
-  answer = { result: bashOut('preview', { persistedOutputPath: '/t/whole.txt' }) }
-  await bash($, 'cat a.md')
-  answer = { result: readText(BIG) }
-  // #57: the agent asked for every line of the bounded read; a placeholder made it read the source again.
-  expect(await readFile(read($, { file_path: '/t/bounded.txt' }))).toEqual(readText(BIG).file)
+  // #62: the agent reads the file to see the output; a placeholder sent it back to the source in 4 more calls.
+  expect(await readFile(read($, { file_path: '/h/.claude/projects/-p/s1/tool-results/b4m6bbqbd.txt' }))).toEqual(readText(BIG).file)
   expect(runs.length).toBe(0)
-  expect((await readFile(read($, { file_path: '/t/whole.txt' })) as { content: string }).content).toBe(PLACEHOLDER.trimEnd())
 })
 
 test('tb timeout, non-zero exit or empty stdout: the original passes', async ($, on) => {
