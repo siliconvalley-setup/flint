@@ -187,41 +187,6 @@ function measure($: Engine, tokens: number) {
   return $.session.measure({ context: { tokens, window: 1_000_000 }, rateLimits: [], changed: ['context'] })
 }
 
-test('meter: one warning at 150k, one handoff order at 200k, on the next main tool result, again after a drop', async ($, on) => {
-  on('tool.call', () => ({ result: bashOut('ok') }))
-  on('session.measure', ($, e) => ({ changed: e.changed }))
-  tb(on)
-  const ctx = async (agentId?: string) => (await $.tool.call({ tool: 'Bash' as const, command: 'ls', ...(agentId ? { agentId } : {}) })).context
-  await measure($, 149_000)
-  expect(await ctx()).toBeUndefined()
-  await measure($, 151_000)
-  expect(await ctx('a1')).toBeUndefined()
-  const warn = await ctx()
-  expect(warn?.length).toBe(1)
-  expect(warn?.[0]).toContain('150k')
-  expect(await ctx()).toBeUndefined()
-  await measure($, 180_000)
-  expect(await ctx()).toBeUndefined()
-  await measure($, 201_000)
-  const handoff = await ctx()
-  expect(handoff?.length).toBe(1)
-  expect(handoff?.[0]).toContain('memory_handoff_begin')
-  await measure($, 220_000)
-  expect(await ctx()).toBeUndefined()
-  await measure($, 40_000)
-  await measure($, 160_000)
-  expect((await ctx())?.[0]).toContain('150k')
-  await measure($, 40_000)
-  await measure($, 205_000)
-  await measure($, 40_000)
-  expect(await ctx(), 'a note whose threshold fell back before delivery is dropped').toBeUndefined()
-  await measure($, 140_000)
-  await measure($, 210_000)
-  const jump = await ctx()
-  expect(jump?.length, 'a jump past both thresholds sends the handoff order alone').toBe(1)
-  expect(jump?.[0]).toContain('memory_handoff_begin')
-})
-
 function spawn($: Engine, fork: boolean, parentAgentId?: string) {
   return $.agent.spawn({
     tool_use_id: 't1', prompt: 'audit', description: 'audit', subagentType: fork ? 'fork' : 'Explore',

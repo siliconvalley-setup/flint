@@ -6,10 +6,6 @@
 //   an outline, or head, tail and intent hits, with the exact command that
 //   fetches any part. For Bash it takes the place of core's 2 KB preview.
 //   Rewritten once, before core stores it; the original stays on disk.
-// - Context meter: main-thread context past 150k tokens adds one warning, past
-//   200k one handoff order, to the next main-thread tool result; once per
-//   upward crossing, so a compaction or a drop re-arms it. One note per
-//   result: a jump past both sends the handoff order alone.
 // - Fork guard: refuses a fork from the main thread while its context is over
 //   100k tokens (the session.measure figure): the fork would inherit it all.
 //   Defense in depth: flint's env turns fork mode off (#47).
@@ -27,18 +23,7 @@ const BASH_WINDOW = 10000
 // Past this the original passes: a slow tb never holds a result for long.
 const TB_TIMEOUT_MS = 5000
 
-// Main-thread context that earns a warning: room left to finish the step and hand off.
-const WARN_TOKENS = 150_000
-// Main-thread context that orders a handoff: past it every turn rereads too much.
-const HANDOFF_TOKENS = 200_000
 const k = (tokens: number) => `${tokens / 1000}k`
-const METER: readonly (readonly [number, string])[] = [
-  [WARN_TOKENS, `TOKEN-BUDGET: the main context is over ${k(WARN_TOKENS)} tokens, and every turn reads it again. `
-    + 'Finish the current step and plan where to stop. Read sections (tb get, Read offset/limit), not whole files.'],
-  [HANDOFF_TOKENS, `TOKEN-BUDGET: the main context is over ${k(HANDOFF_TOKENS)} tokens. Start no new tool work. `
-    + 'Write an ai-memory handoff with memory_handoff_begin (summary, open_questions, next_steps, files_touched), '
-    + 'then tell the user to continue in a new session.'],
-]
 // A main-thread fork past this copies too much context into every one of its requests.
 const FORK_MAX_TOKENS = 100_000
 const FORK_DENY = `Not spawned: a fork copies this conversation, over ${k(FORK_MAX_TOKENS)} tokens, into the subagent and pays for it on every request. `
@@ -120,9 +105,6 @@ async function rewrite($: EngineInterface, e: ToolCallInput, result: unknown) {
 
 export function register(on: On) {
   let tokens = 0
-  const crossed = new Set<number>()
-  // Meter notes waiting for the next main-thread result, by threshold.
-  const due = new Map<number, string>()
   let broken: Promise<string | undefined> = Promise.resolve(undefined)
   let reported = false
 
@@ -133,16 +115,6 @@ export function register(on: On) {
 
   on('session.measure', ($, e, next) => {
     tokens = e.context.tokens ?? tokens
-    for (const [at, note] of METER) {
-      if (tokens < at) {
-        crossed.delete(at)
-        due.delete(at)
-      } else if (!crossed.has(at)) {
-        crossed.add(at)
-        due.clear() // METER ascends: only a lower, now superseded note can wait here
-        due.set(at, note)
-      }
-    }
     return next(e)
   })
 
@@ -158,8 +130,6 @@ export function register(on: On) {
     if (e.agentId === undefined) {
       if (failure !== undefined && !reported) context.push(`TOKEN-BUDGET ERROR: ${failure}; placeholders off this session`)
       reported ||= failure !== undefined
-      context.push(...due.values())
-      due.clear()
     }
     if (result === undefined) return context.length ? { ...r, context } : r
     // Own { result } without ref or text: core maps the new result itself.

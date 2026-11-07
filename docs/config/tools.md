@@ -1,7 +1,7 @@
 ---
 type: Component
 title: Mods and tools
-description: token-budget mod, sleep-guard mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
+description: token-budget mod, handoff mod, sleep-guard mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
 tags: [config, mods, tools]
 status: stable
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
@@ -11,11 +11,21 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
 
 ## token-budget (`mods/token-budget/` + `tools/tb.mjs`)
 
-Section index + placeholders for large Read results and Bash output Claude Code saved past its window, context meter, fork guard. Decision + amendments: ADR [0003](../adr/0003-token-budget.md).
+Section index + placeholders for large Read results and Bash output Claude Code saved past its window, fork guard. Decision + amendments: ADR [0003](../adr/0003-token-budget.md).
 
 - Needs `node` >= 26 with `node:sqlite` + FTS5 on PATH of Claude Code process. Runs `node tools/tb.mjs` from clone (not on PATH).
 - Missing → first tool result shows one `TOKEN-BUDGET ERROR` line; results pass unchanged.
 - Check: `node tools/tb.mjs doctor` prints `ok`.
+
+## handoff (`mods/handoff/` + `skills/handoff/`)
+
+Context meter + handoff catalog. Decision: ADR [0004](../adr/0004-handoff-catalog.md).
+
+- Meter: main-thread context past 250k → one warning; past 300k → one order to run `/handoff`. Once per upward crossing; drop or compaction re-arms.
+- Session start (not compaction): one line `N open handoffs for this directory: run /handoff list`, only when N > 0.
+- Store: `${CLAUDE_CONFIG_DIR:-~/.claude}/handoffs/<working dir, non-alphanumeric → ->/`. One `.md` per work line; `status: open` in frontmatter counts.
+- Skill: `/handoff` write or update, `/handoff list [--all]`, `/handoff resume [words|nº]`.
+- Missing or unreadable store → no line, no error.
 
 ## sleep-guard (`mods/sleep-guard/`)
 

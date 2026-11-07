@@ -1,0 +1,8 @@
+{
+  "name": "handoff",
+  "version": "1.0.0",
+  "description": "Warns at 250k and orders a /handoff at 300k tokens of main-thread context, and names the open handoffs of the working directory at session start",
+  "author": {
+    "name": "realroboto"
+  }
+}

@@ -20,7 +20,7 @@ You audit how the `token-budget` mod behaved in **this** session, and file **fri
    ```sh
    jq -r -f "${CLAUDE_SKILL_DIR}/timeline.jq" "$f" | rg -B2 -A4 '\[tb\] [0-9]+ B|TOKEN-BUDGET|Not spawned|^  -> tb: |more: node' | head -n 300
    ```
-   Each hit is a mod **event**: a placeholder, a meter or error note, a fork denial, a `tb` error, a `more:` page. Lines after a hit show what the agent did next.
+   Each hit is a mod **event**: a placeholder, an error note, a fork denial, a `tb` error, a `more:` page. Lines after a hit show what the agent did next.
    Done when: you hold the event list of every transcript, subagents included.
 
 3. **Classify** each event as friction or by design, with the reference below.
@@ -53,7 +53,6 @@ Friction (the mod cost more than it saved):
 By design:
 
 - A placeholder followed by one targeted read (`tb get '<ref>#<id>'`, a `:a-b` range, Read with offset/limit), or by no read because the outline was enough.
-- A meter warning at 150k or a handoff order at 200k tokens.
 - A fork denial followed by a fresh agent with a self-contained brief.
 
 ## Issue form
