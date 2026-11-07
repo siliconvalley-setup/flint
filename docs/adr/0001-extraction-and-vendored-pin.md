@@ -1,3 +1,11 @@
+---
+type: Architecture Decision Record
+title: ADR 0001 — flint extracted from vmCODE
+description: This repo is canonical home; consumers vendor pinned copy, never edit in place.
+tags: [adr]
+status: stable
+---
+
 # ADR 0001 — flint extracted from vmCODE; consumers vendor a pinned copy
 
 Date: 2026-07-21 · Status: accepted

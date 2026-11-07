@@ -20,10 +20,10 @@ Glossary only. No implementation details.
   a ruleset change.
 - **loud marker** — the in-session `FLINT HOOK ERROR` text emitted on any
   delivery failure; the opposite of a silent stale fallback.
-- **anchor** — the short static block injected per turn; reinforcement, not the
-  ruleset.
-- **canonical home** — this repo. Consumers vendor pinned copies and never
-  edit them in place.
+- **anchor** — the block injected per turn (`flint-submit.md`, an exact copy of
+  the ruleset); reinforcement.
+- **canonical home** — this repo. Edits happen here only; a consumer never
+  edits a vendored copy in place.
 - **consumer** — a repo/system that uses flint: either vendors the ruleset +
   hook at a pinned ref (vmCODE, baked into a container), or clones flint and
   runs the installer (silicon-valley, on its agent account).
