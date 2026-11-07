@@ -68,6 +68,9 @@ Output style does not reach this cost.
   per session. Persisted output of unbounded command keeps placeholder on
   Read: 18 of 23 unranged `tool-results/` Reads, 10–60 KB each, so skip for
   every `tool-results/` Read (#57 option 1) rejected.
+- Amended 2026-11-06 (#60). Read with `allow_large: true` passes whole, like
+  `offset`/`limit`: agent asked for whole file in call. #57 comment
+  6700117702: such Read got placeholder, then agent fetched same lines again.
 
 ## Alternatives rejected
 

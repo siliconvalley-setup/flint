@@ -90,7 +90,7 @@ export function eligible(e: ToolCallInput, result: unknown, boundedPersisted: Se
   const big = (text: string) => utf8.encode(text).length >= TRIGGER_B
   if (e.tool === 'Read') {
     const r = result as ReadText
-    if (r.type !== 'text' || e.offset !== undefined || e.limit !== undefined || r.file.truncatedByTokenCap
+    if (r.type !== 'text' || e.offset !== undefined || e.limit !== undefined || e.allow_large || r.file.truncatedByTokenCap
       || CODE_EXTENSIONS.has(extension(e.file_path)) || boundedPersisted.has(e.file_path) || !big(r.file.content)) return undefined
     return {
       text: r.file.content,

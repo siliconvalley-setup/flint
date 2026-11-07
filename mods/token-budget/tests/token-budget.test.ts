@@ -19,7 +19,7 @@ function readText(content: string, extra: object = {}) {
   return { type: 'text' as const, file: { filePath: '/p/notes.md', content, numLines: 1, startLine: 1, totalLines: 1, ...extra } }
 }
 
-function read($: Engine, input: { file_path?: string, offset?: number, limit?: number } = {}) {
+function read($: Engine, input: { file_path?: string, offset?: number, limit?: number, allow_large?: boolean } = {}) {
   return $.tool.call({ tool: 'Read' as const, file_path: '/p/notes.md', ...input })
 }
 
@@ -66,6 +66,7 @@ test('Read eligibility: only a whole, untruncated, non-code text file of 16384 B
   await passes('file_unchanged', {}, { type: 'file_unchanged', file: { filePath: '/p/x' } })
   await passes('offset', { offset: 1 }, readText(BIG))
   await passes('limit', { limit: 400 }, readText(BIG))
+  await passes('allow_large', { allow_large: true }, readText(BIG))
   await passes('truncatedByTokenCap', {}, readText(BIG, { truncatedByTokenCap: true }))
   await passes('16383 B', {}, readText('é'.repeat(8191) + 'x'))
   for (const ext of CODE) await passes(ext, { file_path: `/p/a.${ext.toUpperCase()}` }, readText(BIG))
