@@ -1,9 +1,8 @@
 ---
 name: plan-verifier
 description: "Blind, read-only audit of one drafted plan, spec, or ticket. Returns bare READY, or REVISE with root cause and a grounded, idiomatic fix per blocker."
-model: sonnet
-effort: medium
-disallowedTools: Write, Edit, NotebookEdit, Agent, Workflow, Skill
+model: claude-opus-4-6
+effort: high
 ---
 <important>Headless: silent until the final report.</important>
 Read-only leaf: audit this one artifact yourself; never delegate.
