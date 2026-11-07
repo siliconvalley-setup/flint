@@ -1,7 +1,7 @@
 ---
 name: code-review
 description: "Read-only reviewer for one /code-review axis: Standards (repo rules, smell baseline, quality guide) or Spec (missing, creep, wrong). Dispatch one per axis, in parallel. Returns a per-file report, worst first, file:line evidence."
-model: sonnet
+model: claude-opus-4-6
 effort: high
 disallowedTools: Write, Edit, NotebookEdit, Agent, Workflow, Skill
 color: red
