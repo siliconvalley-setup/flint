@@ -1,6 +1,6 @@
 ---
 name: plan-verifier
-description: "Gate a drafted plan, spec, or ticket through blind plan-verifier audits: re-confront each finding, fix its root at the origin, re-audit, stop at READY or five loops. Use once a plan or spec is drafted, before implementation."
+description: "Gate a drafted plan, spec, or ticket through blind plan-verifier audits: re-confront each finding, fix its root at the origin, re-audit, stop at READY or two loops. Use once a plan or spec is drafted, before implementation."
 ---
 
 # plan-verifier
@@ -26,7 +26,7 @@ Gate a drafted plan, spec, or ticket through **blind** `plan-verifier` audits un
    *Done when:* every confirmed root is fixed at its origin or raised as a question; each fix meets its Acceptance check; `rg` finds no sibling in scope.
 5. **Re-audit.** Launch a fresh blind audit on the revised artifact. Repeat from step 2.
 
-**Cap:** stop after 5 REVISE, READY or not.
+**Cap:** stop after 2 REVISE, READY or not.
 
 ## Completion criterion
 
