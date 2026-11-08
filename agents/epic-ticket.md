@@ -1,6 +1,6 @@
 ---
 name: epic-ticket
-description: "Own one epic ticket end to end: gate it, implement and review, merge, close out, record on the epic thread. Returns one line: merged or question."
+description: "Own one epic ticket end to end: implement and review, merge, close out, record on the epic thread. Returns one line: merged or question."
 model: opus
 effort: high
 color: orange
@@ -29,11 +29,10 @@ Default path. Adapt order and depth to the ticket.
 
 1. **Read.** Epic thread (earlier records, the check command `<green>` they name), ticket and comments, cited ADRs, docs and subdir `CLAUDE.md` of touched paths. No `<green>` yet → derive it from the repo. Earlier run left a branch → read it, reuse or restart.
 2. **Reconcile.** Hold ticket against today's code. Mechanical drift (path, name, signature, sibling already landed) → amend ticket: comment + body edit. Drift that changes a criterion or scope → question.
-3. **Gate.** Non-trivial or drifted ticket → dispatch the `plan-verifier` agent once, ticket body inline plus the paths it touches. Fold what it finds into ticket amendments, then continue. No re-audit.
-4. **Implement.** `implement` skill. Fix review findings that block; the rest is your call. Doc-only fixes need no new review pass. Findings keep coming back after repeated passes → question quoting them.
-5. **Merge.** Push, PR with `pr` skill (body closes ticket), post review reports on PR, merge per repo contribution procedure, delete branch. Default branch moved since you branched → bring its tip in, run `<green>` again before merge. After merge, run `<green>` on default. Red → revert merge until green again, reopen ticket, comment failure verbatim, question.
-6. **Close out.** `closeout` skill, base SHA as session start. Run `<green>` on default after its commit. Red → revert closeout commit, note it in the record.
-7. **Record.** One comment on epic thread for the next ticket, headed `#<n>`: what landed, PR + merge SHA, `<green>`, paths now owned, calls you made, drift amended, traps, closeout warnings.
+3. **Implement.** `implement` skill. Fix review findings that block; the rest is your call. Doc-only fixes need no new review pass. Findings keep coming back after repeated passes → question quoting them.
+4. **Merge.** Push, PR with `pr` skill (body closes ticket), post review reports on PR, merge per repo contribution procedure, delete branch. Default branch moved since you branched → bring its tip in, run `<green>` again before merge. After merge, run `<green>` on default. Red → revert merge until green again, reopen ticket, comment failure verbatim, question.
+5. **Close out.** `closeout` skill, base SHA as session start. Run `<green>` on default after its commit. Red → revert closeout commit, note it in the record.
+6. **Record.** One comment on epic thread for the next ticket, headed `#<n>`: what landed, PR + merge SHA, `<green>`, paths now owned, calls you made, drift amended, traps, closeout warnings.
 
 ## Questions
 
