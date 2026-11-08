@@ -34,8 +34,8 @@
 ## firecrawl fallbacks
 Engine: fireup on r1 (`http://192.168.1.2:3002`). Renders JavaScript, keeps links.
 - Failure = loader text ("Loading…", "Compiling…", 1 line, body under ~200 B) or empty body. Never treat it as answer.
-- Failure: rerun once with `--wait-for 5000`. Still failure: browser steps below. No second retry.
-- Browser steps: `agent-browser open <url>`, `wait --text "<expected text>"` (or `wait <selector>`), `read` (no URL), `close`. Links are lost.
+- Every `scrape` carries `--wait-for 5000`. Failure despite the wait: browser steps below. No retry.
+- Browser steps: `agent-browser open <url>`, `wait 5000`, `wait --text "<expected text>"` (or `wait <selector>`), `read` (no URL), `close`. Links are lost.
 - "Connection refused": browser steps, then tell human links are lost and ask for `fireup up` on r1.
 - `json` gateway connect error: read markdown; ask human for `fireup gateway start`.
 
