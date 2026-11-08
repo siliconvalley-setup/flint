@@ -94,7 +94,7 @@ print("\n".join([f"{w:,.0f}", f"{u:.4f}", f"{h:,}"]
  + [r["path"] for r in d["rereads"]] + list(d["bash"]) + list(d["categories"])))' < "$FX/r.json" > "$FX/want.txt"
 tr -d '\r' < "$FX/want.txt" > "$FX/want.lf"   # Windows python writes CRLF
 MISS=0; while IFS= read -r w; do grep -qF -- "$w" "$FX/r.txt" || { echo "  missing in text: $w"; MISS=1; }; done < "$FX/want.lf"
-[ -s "$FX/want.txt" ] && [ "$MISS" -eq 0 ]; ck $? "17o --json parity with text"
+RC=1; [ -s "$FX/want.txt" ] && [ "$MISS" -eq 0 ] && RC=0; ck "$RC" "17o --json parity with text"
 
 run 2026-11-06 --no-prompts > "$FX/r.txt"
 ! grep -qF -e 'fix the bug please' -e 'sed -n 1,9p' -e 'Fresh review' "$FX/r.txt"; ck $? "17p --no-prompts hides prompt and input previews"
