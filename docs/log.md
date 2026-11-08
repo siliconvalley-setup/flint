@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-08
+- **dfs skill**: `external-skills.txt` gains `git realroboto/dataforseo-cli`; install links skill `dfs` (#95). `rules/available_tools.md` gains `dfs` CLI line.
 - **plan-verifier dropped**: skill and agent removed (#88). `epic-ticket` loses Gate step; flow now Read, Reconcile, Implement, Merge, Close out, Record.
 
 ## 2026-11-07

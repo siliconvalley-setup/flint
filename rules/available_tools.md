@@ -48,6 +48,7 @@ Login ready, unless line says otherwise. Skill named first: load it before first
 - `gapi`: Google Ads, GTM, GA4, Search Console, Indexing API. Skill **gapi** first. `gapi <api> <resource...> <method> --params '<json>'`. Login error: `gapi auth status`, then skill Setup section.
 - `gcloud`: Google Cloud.
 - `cf`: Cloudflare API (DNS, zones, Workers, R2, KV, D1, Zero Trust). `cf <group> <cmd>`. Find command: `cf cli search "<task>"` (action + resource type; no names, domains, IDs), then `<command> --help`. API detail: `cf schema <cmd...>`. Docs: `cf docs search "<question>"`. Auth, IDs, errors: skill **cloudflare-cf**.
+- `dfs`: DataForSEO API (SERP, keywords, backlinks, Labs, on-page, content, merchant, AI optimization). Skill **dfs** first. Commands: `dfs --help`. Credentials from env (`DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`): no login step. Exit 4 = cost guard refused: stop, show output to human. Never raise `--max-cost` unasked.
 - `fbg`: Meta Graph API (Business Manager, Pages, Instagram, audiences, webhooks). `fbg <VERB> <path> [--k=v] [--paginate]`.
 - `vultr-cli`: Vultr (servers, DNS, block storage, Kubernetes). `vultr-cli <resource> <verb>`.
 - `qb`: QuickBooks (QBO, QBD, QBD-to-QBO migration). Skill **quickbooks-epic** first; it picks the command. `qb --help --json`. First use: `qb auth login`. Exit 2, 4 or 7: stop, show output to human. Exit 7: ask human for 6-digit e-mail code, run printed `qb crm approve` command.
