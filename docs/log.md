@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-08
+- **plan-verifier dropped**: skill and agent removed (#88). `epic-ticket` loses Gate step; flow now Read, Reconcile, Implement, Merge, Close out, Record.
+
 ## 2026-11-07
 - **lsp mod**: `mods/lsp/` declares bash, astro, nix language servers (#86). Test part 15 validates every mod manifest, runs `plugin test` only for mods with hooks. `config/tools.md` gains lsp section.
 - **Handoff**: ADR 0004 added; ADR 0003 amended (meter moved out). `config/tools.md` gains handoff section. CONTEXT.md gains handoff, work line, subject, meter.
