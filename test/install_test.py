@@ -243,7 +243,7 @@ def test_tokeneconomizer_setup_reaches_the_claude_env():
     with tempfile.TemporaryDirectory() as d:
         run_cli(d)
         env = read_settings(d)['env']
-        assert env['TE_TOOLPRUNE_PROTECT'] == 'mcp__plugin_ai-memory_ai-memory__*'
+        assert env['TE_TOOLPRUNE_PROTECT'] == 'mcp__plugin_ai-memory_ai-memory__*,LSP'
         assert env['TE_MICROSKILLS'] == 'envfacts'
         assert env['TE_HISTORY_IMPORT'] == 'true'
 

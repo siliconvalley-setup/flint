@@ -47,6 +47,7 @@ Code intelligence for files no official LSP plugin covers: diagnostics after eac
 - bash: shellcheck findings come from `shellcheck` on PATH.
 - astro: `tsdk` `node_modules/typescript/lib` resolves against session working dir. Session started outside the Astro project root → astro server fails to start. First diagnostics come one turn after the edit (cold start).
 - nix: syntax, undefined variable, unused binding only. Option names need nixd `options` config (flake expression): not in this mod.
+- TokenEconomizer never prunes `LSP` (`TE_TOOLPRUNE_PROTECT` in `env.sh`): denied `LSP` also stops diagnostics.
 - Check: edit `echo $1` into a scratch `.sh` → `<new-diagnostics>` with SC2086.
 
 ## TokenEconomizer (plugin)
