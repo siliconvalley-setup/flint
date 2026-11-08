@@ -19,11 +19,11 @@ Run from the aviato checkout (the folder with `METHOD.md` and `sites/`), on `mai
    - the aviato database (`<data root>/aviato.db`) and raw pulls: GSC, Bing, GA4, Ads, Meta, `kpi.weekly`, report captures, page health, prompt-set answers;
    - the research results: `dfs store search`, `dfs store show <id>` per `aviato:<site>:strategy:` tag;
    - the site docs listed in `sites/<site>/site.yaml` `docs` (read, never copy), and owner notes in `sites/<site>/notes/`;
-   - `site.yaml` `campanhas` when present: its repo at `main`, naming the commit in Fontes.
+   - `site.yaml` `campanhas` when present: its repo at `main`, naming the commit in Fontes. Evidence: the xlsx Decisões, Alterações and Buscas tabs, the "do not propose again" list, `v2.md` with the newest review result, `incrementality.md`, the open items of `docs/metaads/README.md`. The ceciliobooks draft proposes D-067 as drop and the keyword-verdict rule text of the ads review.
    Propose values for every field; leave empty only the owner-set fields: `objetivo.number`, `objetivo.date`, `money_month`. Done when every template part holds content with a source or a ⚠️ mark.
 4. **Check.** `aviato strategy check <site> --draft`. Fix each line it prints and run it again. Done when it prints `strategy ok`.
 5. **Audit.** Dispatch one subagent with no draft context: give it only the draft path and the order "check each claim of this file against the source it names; report per claim: holds, wrong, or no source". Fix each finding in the draft, then step 4 again. At most 3 audit loops. Done when an audit reports no finding, or after loop 3: each open finding becomes a ⚠️ line in Fontes.
-6. **Hand over.** Leave the draft in the checkout, uncommitted: the strategy session writes `strategy.md` from it and deletes it in the commit that records "Estratégia v1" (R37). Tell the owner: research spend, draft path, open ⚠️ lines, owner-set fields to answer. End the session there.
+6. **Hand over.** Leave the draft in the checkout, uncommitted: the strategy session writes `strategy.md` from it and deletes it in the commit that records "Estratégia v1" (R37). Tell the owner: research spend, draft path, open ⚠️ lines, owner-set fields to answer. Done when that message is sent; end the session there.
 
 ## Template
 
