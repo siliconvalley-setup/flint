@@ -132,11 +132,36 @@ test('Bash eligibility: only an output core saved to a file; errors, interrupts,
   for (const c of ["node /c/tools/tb.mjs get 'tb:1#a'", "node /c/tools/tb.mjs get 'tb:1' | cat -n | sed -n 1,400p"]) {
     await passes(c, c, { result: saved() })
   }
-  // Bounded commands too: past the window the model sees core's preview, not the lines it asked for (#62).
-  for (const c of ["sed -n '1,200p' docs/a.md", 'cat a.md', 'head -n 300 build.log']) {
+  // Past the window the model sees core's preview, not the lines it asked for (#62).
+  for (const c of ['make', 'git diff HEAD', 'rg -n foo src', "cat a.md | rg foo", "sed -n '1p;5p' a.md"]) {
     answer = { result: saved() }
     expect((await bash($, c)).result, c).toEqual(bashOut(PLACEHOLDER.trimEnd()))
   }
+})
+
+test('saved Bash output of a file read: inline whole up to 30000 B, else core preview; never a placeholder', async ($, on) => {
+  on('tool.call', () => ({ result: saved() }))
+  const runs = tb(on)
+  let text = 'y'.repeat(30000)
+  files(on, () => text)
+  // #81: kept out, a file read came back in about 2 more calls; core keeps a hook's stdout up to 30000 inline.
+  for (const c of ['cat src/a.ts src/b.ts', "cat docs/a.md | head -80; echo ----; cat biome.json; sed -n 600,1063p /t/tool-results/b2.txt",
+    "sed -n '1,200p' docs/a.md", 'ls test/helpers && cat test/helpers/*', 'head -n 300 build.log', 'tail -n 50 a.log | nl -ba']) {
+    expect((await bash($, c)).result, c).toEqual(bashOut(text))
+  }
+  expect(runs.length).toBe(0)
+  // Past it the agent read core's saved file once; a placeholder sent it back to the sources.
+  text = 'y'.repeat(30001)
+  expect((await bash($, 'cat a.md')).result, '30001 B').toEqual(saved())
+  // Bytes, not chars: 15001 two-byte chars are 30002 B.
+  text = 'é'.repeat(15001)
+  expect((await bash($, 'cat a.md')).result, 'multibyte').toEqual(saved())
+  expect(runs.length).toBe(0)
+  for (const c of ['tail -f a.log', 'tail -n 5 -f a.log', 'cat a.md | sort']) {
+    text = 'y'.repeat(20000)
+    expect((await bash($, c)).result, c).toEqual(bashOut(PLACEHOLDER.trimEnd()))
+  }
+  expect(runs.length).toBe(3)
 })
 
 test('saved Bash output: a failed file read keeps core preview', async ($, on) => {

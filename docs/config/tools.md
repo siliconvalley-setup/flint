@@ -16,7 +16,7 @@ Section index + placeholders for large Read results and Bash output Claude Code 
 - Needs `node` >= 26 with `node:sqlite` + FTS5 on PATH of Claude Code process. Runs `node tools/tb.mjs` from clone (not on PATH).
 - Missing → first tool result shows one `TOKEN-BUDGET ERROR` line; results pass unchanged.
 - Check: `node tools/tb.mjs doctor` prints `ok`.
-- Shape by content: diff → outline per file; markdown (strict for Bash output: headings at column 0 with blank lines around, first inside 40 lines; loose for `.md` paths) → outline per heading; else head, tail, intent hits. Every placeholder ends with one copy-ready `tb get` and one `whole: Read …` that passes the mod. Output of a `tb.mjs` command never gets a placeholder.
+- Shape by content: diff → outline per file; markdown (strict for Bash output: headings at column 0 with blank lines around, first inside 40 lines; loose for `.md` paths) → outline per heading; else head, tail, intent hits. Every placeholder ends with one copy-ready `tb get` and one `whole: Read …` that passes the mod. Output of a `tb.mjs` command never gets a placeholder. Saved output of a file read (`cat`, `sed -n`, `head`, `tail`, … only) never gets one either: inline whole up to 30,000 B, else core preview (#81).
 
 ## handoff (`mods/handoff/` + `skills/handoff/`)
 
