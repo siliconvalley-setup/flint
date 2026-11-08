@@ -128,7 +128,8 @@ Output style does not reach this cost.
   walk. A Bash command that runs `tb.mjs` keeps its output (#74 stacked case).
   `get` pages by bytes, as core counts (#76). Rejected: SubagentStart instruction
   line (fixed cost per subagent, story 3); Bash code-file exemption by command
-  parsing (whole read line gives the same one call); one threshold for Read and
+  parsing (whole read line gives the same one call; Superseded 2026-11-07 by
+  [#81](https://github.com/realroboto/flint/issues/81), last amendment below); one threshold for Read and
   Bash (#75 option 2a: between 10 and 16 KB the placeholder costs the same one call
   as core's preview). Measure after: `test/refetch.mjs` next3 against orig per kind.
 - Amended 2026-11-07 (#79). Bash window 10,000 → 16,384 chars (`env.sh`
@@ -142,6 +143,20 @@ Output style does not reach this cost.
   (context-mode, caveman, headroom): their measured gains are on outputs of
   10 KB to 95 KB, read once. #79 range read (11,852 B) now passes inline.
   tb keeps 16K and over, where it beats core preview.
+- Amended 2026-11-07 (#81). Saved Bash output of file read gets no placeholder.
+  File read = every statement and pipe stage `cat`, `nl`, `ls`, `wc`, `echo`,
+  `printf`, `sed -n`, `head`, `tail` (not `-f`); split ignores quotes, so quoted
+  `;` or `|` keeps placeholder. Up to 30,000 B: mod puts whole output inline,
+  no follow-up call. Past it: core preview, agent reads saved file once.
+  Measured on Claude Code 2.1.311: core saves hook Bash stdout past 30,000
+  chars to file again (30,000 inline, 30,010 saved). `test/refetch.mjs`,
+  transcripts 2026-11-06..07, net per output against inline whole: file read
+  16–32K tb −12,930 (n 19), core −34,501 (n 17); 32K and over tb −12,939
+  (n 6), core +16,340 (n 28). Other commands 16–32K keep tb (+5,349, n 43).
+  Whole-read hint not followed: agents read sources again (#79, #81).
+  Replay, 2 days: model-visible bytes of saved outputs 790,879 B (core
+  preview) → 1,424,298 B; gain = fewer follow-up turns, not bytes. Measure
+  after: `refetch.mjs` `file` rows.
 - Amended 2026-11-07 (#70). Context meter (warning 150k, ai-memory handoff
   order 200k) left token-budget mod. Meter part Superseded 2026-11-07 by
   [ADR 0004](./0004-handoff-catalog.md): handoff mod, 250k/300k, order runs

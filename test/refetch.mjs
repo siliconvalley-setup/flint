@@ -11,6 +11,7 @@
 // would also have had (an Edit's Read), so it leans against keeping out.
 // Run: node test/refetch.mjs <transcript.jsonl>...
 import { readFileSync } from 'node:fs'
+import { fileRead } from '../mods/token-budget/hooks/register.ts'
 
 const vis = c => typeof c === 'string' ? c : (c ?? []).map(x => x.text ?? '').join('')
 const UNIT = { B: 1, KB: 1024, MB: 1 << 20 }
@@ -54,7 +55,7 @@ for (const file of process.argv.slice(2)) {
     const shown = Buffer.byteLength(s.text) / 4
     const fetched = follow.reduce((a, n) => a + Buffer.byteLength(n.text), 0) / 4
     rows.push({
-      group: `${tb ? `tb ${s.e.tool}` : 'core preview'} ${orig < 16384 ? '<16K' : orig < 32768 ? '16-32K' : '>=32K'}`,
+      group: `${tb ? `tb ${s.e.tool}` : 'core preview'}${s.e.tool === 'Bash' ? fileRead(cmd) ? ' file' : ' other' : ''} ${orig < 16384 ? '<16K' : orig < 32768 ? '16-32K' : '>=32K'}`,
       follow: follow.length,
       net: (orig / 4 - shown) * life - follow.length * 0.1 * s.e.ctx - fetched * life,
     })
@@ -62,8 +63,8 @@ for (const file of process.argv.slice(2)) {
 }
 const groups = new Map()
 for (const r of rows) groups.set(r.group, [...(groups.get(r.group) ?? []), r])
-console.log('group                 n  follow-ups/out  net/out (tokens)  net < 0')
+console.log('group                       n  follow-ups/out  net/out (tokens)  net < 0')
 for (const [g, rs] of [...groups].sort()) {
   const sum = k => rs.reduce((a, r) => a + r[k], 0)
-  console.log(`${g.padEnd(20)} ${String(rs.length).padStart(3)}  ${(sum('follow') / rs.length).toFixed(2).padStart(14)}  ${String(Math.round(sum('net') / rs.length)).padStart(16)}  ${rs.filter(r => r.net < 0).length}`)
+  console.log(`${g.padEnd(26)} ${String(rs.length).padStart(3)}  ${(sum('follow') / rs.length).toFixed(2).padStart(14)}  ${String(Math.round(sum('net') / rs.length)).padStart(16)}  ${rs.filter(r => r.net < 0).length}`)
 }

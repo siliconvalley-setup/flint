@@ -51,9 +51,11 @@ for (const file of process.argv.slice(2)) {
         continue
       }
       const text = hit.file === undefined ? hit.text : readFileSync(hit.file, 'utf8')
-      const r = spawnSync(process.execPath, [TB, 'put', ...hit.args, '--session', 'replay'],
+      // A file read gets no placeholder: inline whole up to INLINE_MAX_B, else core's preview (#81).
+      const whole = 'whole' in hit ? hit.whole : undefined
+      const r = whole ? undefined : spawnSync(process.execPath, [TB, 'put', ...hit.args, '--session', 'replay'],
         { input: text, encoding: 'utf8', env, maxBuffer: 1 << 30 })
-      const out = r.status === 0 && r.stdout !== '' && hit.replace(r.stdout.replace(/\n$/, '')) ? r.stdout : ''
+      const out = whole ? (whole(text) ? text : '') : r.status === 0 && r.stdout !== '' && hit.replace(r.stdout.replace(/\n$/, '')) ? r.stdout : ''
       if (hit.file !== undefined) {
         saved++
         preview += bytes(visible(b.content))

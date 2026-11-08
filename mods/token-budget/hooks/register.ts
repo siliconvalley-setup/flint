@@ -4,7 +4,8 @@
 // - Placeholders: a large text Read, or a Bash output core saved to a file past
 //   its window, goes to tb (tools/tb.mjs), and the model gets tb's placeholder:
 //   an outline, or head, tail and intent hits, with the exact command that
-//   fetches any part. For Bash it takes the place of core's 2 KB preview.
+//   fetches any part. For Bash it takes the place of core's 2 KB preview. A
+//   Bash command that only reads files gets none: inline whole up to 30,000 B (#81).
 //   Rewritten once, before core stores it; the original stays on disk.
 // - Fork guard: refuses a fork from the main thread while its context is over
 //   100k tokens (the session.measure figure): the fork would inherit it all.
@@ -20,6 +21,8 @@ import type { EngineInterface, On, ToolCallInput } from 'claude-code'
 export const TRIGGER_B = 16384
 // Claude Code's Bash window (env.sh BASH_MAX_OUTPUT_LENGTH): past it core saves the output to a file.
 const BASH_WINDOW = 16384
+// Core saves a hook's Bash stdout past this to a file again (measured on Claude Code 2.1.311: 30,000 inline, 30,010 saved).
+const INLINE_MAX_B = 30000
 // Past this the original passes: a slow tb never holds a result for long.
 const TB_TIMEOUT_MS = 5000
 
@@ -36,6 +39,17 @@ const CODE_EXTENSIONS: ReadonlySet<string> = new Set(['ts', 'tsx', 'js', 'jsx', 
 const TOOL_RESULTS = /[\\/]tool-results[\\/][^\\/]+$/
 // A tb call is the way back from a placeholder: its output never gets one (#74).
 const TB_CALL = /\btb\.mjs\b/
+// A statement that only prints files or names the agent gave; `tail -f` never ends.
+const FILE_READ = /^(cat|nl|ls|wc|echo|printf|sed -n|head|tail(?!.*\s-[a-zA-Z]*f))(\s|$)/
+
+// Every statement and pipe stage of the command only prints what the agent named.
+// Such an output gets no placeholder: inline whole up to INLINE_MAX_B, else core's
+// preview. test/refetch.mjs 2026-11-06..07, net per output against inline whole:
+// 16-32K tb -12,930 (n 19), core -34,501 (n 17); 32K and over tb -12,939 (n 6),
+// core +16,340 (n 28): the agent reads the saved file once (#81).
+// Split ignores quotes: a quoted `;` or `|` fails the test and keeps the placeholder.
+export const fileRead = (command: string) =>
+  command.split(/\n|;|&&|\|\||\|/).map(s => s.trim()).filter(Boolean).every(s => FILE_READ.test(s))
 
 type ReadText = { type: string, file: { content: string, truncatedByTokenCap?: boolean } }
 type BashOut = { stdout: string, interrupted: boolean, isImage?: boolean, backgroundTaskId?: string,
@@ -91,6 +105,10 @@ export function eligible(e: ToolCallInput, result: unknown) {
       // No --path: a stored output stays out of the shared index, so the 24 h purge removes every copy.
       // --saved: the placeholder names the one-call whole read; a Read of that file passes (#62).
       args: ['--source', 'Bash', '--saved', file, ...(e.description ? ['--intent', e.description] : [])],
+      // A file read: inline whole up to INLINE_MAX_B, else core's preview (undefined).
+      whole: fileRead(e.command)
+        ? (text: string) => (utf8.encode(text).length <= INLINE_MAX_B ? { ...r, stdout: text } : undefined)
+        : undefined,
       // No persisted fields: core shows the placeholder inline in place of its preview.
       replace: (ph: string) => ph.length < BASH_WINDOW ? { ...r, stdout: ph } : undefined,
     }
@@ -103,6 +121,7 @@ async function rewrite($: EngineInterface, e: ToolCallInput, result: unknown) {
   const hit = eligible(e, result)
   if (!hit) return undefined
   const text = hit.file === undefined ? hit.text : await $.fs.read(hit.file).catch(() => undefined)
+  if (text !== undefined && 'whole' in hit && hit.whole) return hit.whole(text)
   const ph = text === undefined ? undefined : await placeholder($, text, hit.args)
   return ph === undefined ? undefined : hit.replace(ph)
 }
