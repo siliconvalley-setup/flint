@@ -58,6 +58,10 @@ WRAPPERS = {'timeout', 'env', 'time', 'nohup', 'exec', 'nice', '!'}
 ASSIGN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*=')
 KEYWORDS = {'for', 'while', 'until', 'if', 'case', 'select', 'function', 'then', 'do', 'else', 'elif', 'fi', 'done', 'esac', '{', '}'}
 KINDS = ('input', 'cache_write_5m', 'cache_write_1h', 'cache_read', 'output')
+# A run of requests, each with one call that only reads, could have been one request.
+READ_ONLY = {'read file', 'search', 'list'}
+# Bash programs that print and change nothing, besides the READ_ONLY categories.
+PRINT = {'echo', 'printf'}
 
 
 def int_field(d, k):
@@ -91,8 +95,9 @@ def cost(model, t):
 
 
 def bash(cmd, cwd):
-    """(first program, files read by cat/sed -n/head/tail) of one Bash command."""
-    lines, end = [], None
+    """(first program, files read by cat/sed -n/head/tail, only reads) of one Bash command.
+    Only reads: every program in READ_ONLY categories or PRINT, no sed -i, no write redirect."""
+    lines, end, ro = [], None, True
     for line in cmd.split('\n'):  # drop heredoc bodies: data, not commands
         if end is not None:
             end = None if line.strip() == end else end
@@ -106,6 +111,7 @@ def bash(cmd, cwd):
         toks = list(lex)
     except ValueError:
         toks = '\n'.join(lines).split()[:1]  # shortcut: unbalanced quote, first word only and no reads; upgrade if 'other' grows
+        ro = False
     prog, reads, funcs, shvars, seg = None, [], set(), {}, []
     for t in toks + [';']:
         if not set(t) <= set(';&|()\n') or t == '()':
@@ -114,7 +120,8 @@ def bash(cmd, cwd):
         argv, words = [], iter(seg)
         for w in words:
             if set(w) <= set('<>&'):  # redirection: drop it, its target and its fd number
-                next(words, None)
+                target = next(words, None)
+                ro = ro and not ('>' in w and w != '>&' and target != '/dev/null')
                 if argv and argv[-1].isdigit():
                     argv.pop()
                 continue
@@ -146,8 +153,9 @@ def bash(cmd, cwd):
         if p in ('export', 'set', 'source', '.', 'local', 'unset', 'trap', 'true', ':'):
             continue
         prog = prog or p
+        ro = ro and (BASH_CATEGORY.get(p) in READ_ONLY or p in PRINT) and not (p == 'sed' and '-i' in argv)
         reads += [os.path.normpath(os.path.join(cwd, f)) for f in file_args(p, argv[1:]) if '$' not in f]
-    return prog or 'cd', reads
+    return prog or 'cd', reads, ro
 
 
 def file_args(p, args):
@@ -175,9 +183,10 @@ def call(key, name, inp, cwd):
     name, inp = str(name), inp if isinstance(inp, dict) else {}
     c = {'session': key, 'tool': name, 'category': TOOL_CATEGORY.get(name, 'other'), 'program': None, 'reads': [],
          'input': '', 'chars': 0, 'images': 0, 'done': False}
+    c['ro'] = c['category'] in READ_ONLY
     if name == 'Bash':
         cmd = str(inp.get('command') or '')
-        c['program'], c['reads'] = bash(cmd, cwd)
+        c['program'], c['reads'], c['ro'] = bash(cmd, cwd)
         c['category'] = BASH_CATEGORY.get(c['program'], 'other')
         c['tool'], c['input'] = 'Bash:' + c['program'], cmd
     elif name == 'Read':
@@ -277,15 +286,18 @@ def scan(cfg, lo, hi):
                         result(calls[c['tool_use_id']], c.get('content'))
             if e.get('type') != 'assistant' or not isinstance(m, dict) or not isinstance(m.get('usage'), dict):
                 continue
+            new = []
             for c in m.get('content') or []:
                 if isinstance(c, dict) and c.get('type') == 'tool_use' and c.get('id') not in calls:
                     calls[c.get('id')] = call(key, c.get('name'), c.get('input'), str(e.get('cwd') or ''))
+                    new.append(calls[c.get('id')]['ro'])
             model = str(m.get('model') or '?')
             if model == '<synthetic>':
                 continue
             mid = m.get('id') or e.get('uuid')
             r = reqs.setdefault(mid, {'session': key, 'agent': agent, 'model': model, 'at': lt})
             r['tokens'] = tokens(m['usage'])  # last line of the stream wins
+            r.setdefault('tools', []).extend(new)
             if not agent:
                 s['max_context'] = max(s['max_context'], sum(r['tokens'][k] for k in KINDS[:4]))
     return report(reqs, sessions, agents, calls.values(), lo, hi)
@@ -327,6 +339,18 @@ def report(reqs, sessions, agents, calls, lo, hi):
         s.setdefault('main_requests', 0)
         s.setdefault('sub_requests', 0)
         s.setdefault('sub_weighted', 0)
+    # Tool calls per request; runs of one-call read-only requests per agent, in transcript order.
+    # A batchable request (2nd and later of a run) would save its cache read: it re-reads the whole context.
+    batching, run = {'tools_per_request': {}, 'read_runs': 0, 'batchable_requests': 0, 'batchable_cache_read_weighted': 0}, {}
+    for r in reqs.values():
+        n, who = len(r['tools']), (r['session'], r['agent'])
+        k = str(n) if n < 4 else '4+'
+        batching['tools_per_request'][k] = batching['tools_per_request'].get(k, 0) + 1
+        run[who] = run.get(who, 0) + 1 if n == 1 and r['tools'][0] else 0
+        batching['read_runs'] += run[who] == 2
+        if run[who] >= 2:
+            batching['batchable_requests'] += 1
+            batching['batchable_cache_read_weighted'] += cost(r['model'], dict.fromkeys(KINDS, 0) | {'cache_read': r['tokens']['cache_read']})[0]
     categories, programs, reads = {}, {}, {}
     calls = list(calls)
     for c in calls:
@@ -341,7 +365,7 @@ def report(reqs, sessions, agents, calls, lo, hi):
             'ratios': {m: dict(zip(('row', 'usd_per_mtok', 'usd_per_mtok_over_100k', 'cache_write_5m', 'cache_write_1h', 'cache_read', 'output'), price_row(m))) for m in models},
             'totals': totals, 'models': models, 'sessions': rows,
             'subagents': sorted((a for a in agents.values() if a.get('requests')), key=by_cost)[:10],
-            'categories': categories, 'bash': programs,
+            'categories': categories, 'bash': programs, 'batching': batching,
             'largest': [{k: c[k] for k in ('chars', 'images', 'session', 'tool', 'input')}
                         for c in sorted(calls, key=lambda c: -c['chars'])[:10]],
             'rereads': [{'session': k[0], 'path': k[1], 'count': v} for k, v in sorted(reads.items(), key=lambda kv: -kv[1]) if v >= 3]}
@@ -357,6 +381,9 @@ def flat(rep):
     for k, c in sorted(rep['categories'].items()):
         f[k + ' calls'], f[k + ' tokens'] = c['calls'], c['tokens']
     f['files read 3+ times'] = len(rep['rereads'])
+    b = rep['batching']
+    f['requests with 1 tool'] = b['tools_per_request'].get('1', 0)
+    f['batchable requests'], f['batchable cache read weighted'] = b['batchable_requests'], b['batchable_cache_read_weighted']
     return f
 
 
@@ -408,6 +435,11 @@ def render(rep):
                  [(a['session'].split('/')[-1], a['type'] or '-', a['model'], a['requests'], num(a['weighted']), a['description'] or '') for a in rep['subagents']])
     cat_rows = lambda d: [(k, c['calls'], num(c['chars']), num(c['tokens']), c['images']) for k, c in sorted(d.items(), key=lambda kv: -kv[1]['chars'])]
     out += table('TOOLS by category', [('category', -14), ('calls', 6), ('result chars', 13), ('~tokens', 11), ('images', 6)], cat_rows(rep['categories']))
+    b = rep['batching']
+    out += table('TOOL BATCHING (calls per request)', [('tools', -6), ('requests', 9)],
+                 [(k, b['tools_per_request'][k]) for k in sorted(b['tools_per_request'])])
+    out.append(f"runs of one-call read-only requests: {b['read_runs']} runs, {b['batchable_requests']} batchable requests, "
+               f"cache read {num(b['batchable_cache_read_weighted'])} weighted (dependent calls count too)")
     out += table('BASH by program (top 20)', [('program', -14), ('calls', 6), ('result chars', 13), ('~tokens', 11), ('category', -12)],
                  [(p, c['calls'], num(c['chars']), num(c['tokens']), BASH_CATEGORY.get(p, 'other')) for p, c in sorted(rep['bash'].items(), key=lambda kv: -kv[1]['chars'])[:20]])
     out += table('LARGEST TOOL RESULTS', [('chars', 9), ('img', 3), ('session', -8), ('tool', -22), ('input', -70)],

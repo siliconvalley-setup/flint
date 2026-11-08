@@ -48,7 +48,7 @@ claude plugin marketplace update tokeneconomizer && claude plugin uninstall toke
 python3 -I tools/tokscan.py 2026-11-06
 ```
 
-- Prints per day: totals per token kind, weighted cost (units of base input price; model ratios from pricing page) + USD, row per session, top subagents, tool use per category, Bash per program, largest tool results, files read 3+ times per session.
+- Prints per day: totals per token kind, weighted cost (units of base input price; model ratios from pricing page) + USD, row per session, top subagents, tool use per category, tool calls per request + runs of one-call read-only requests (batchable: 2nd and later of a run, with their cache read cost; dependent calls count too), Bash per program, largest tool results, files read 3+ times per session.
 - Range `A..B` (local dates). `--compare A..B C..D` = deltas. `--json` = same data. `--no-prompts` hides prompt/input previews.
 - Reads `$CLAUDE_CONFIG_DIR` (or `~/.claude`) only, sends nothing.
 - Claude Code deletes transcripts after `cleanupPeriodDays` (default 30): run baseline compare before.
