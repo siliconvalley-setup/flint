@@ -11,7 +11,7 @@ The goal is every agent ticket merged into the default branch, one at a time, wi
 
 The tickets form a **task graph** with blocking relationships between them. The **frontier** is every child ticket that is open, has all blockers closed, carries the label `ready-for-agent`, has no assignee, and has no sub-issues of its own. Every other open child waits on a human: `ready-for-human` for a human step, `needs-info` or `needs-triage` for an owner decision.
 
-Your only job is to launch **epic-ticket** agents and keep your own context clean. Each agent owns its ticket from first read to merge: it gates, implements, reviews, merges, closes out, and records the ticket on the epic thread. Diffs, ticket bodies, and build output stay with it.
+Your only job is to launch **epic-ticket** agents and keep your own context clean. Each agent owns its ticket from first read to merge: it implements, reviews, merges, closes out, and records the ticket on the epic thread. Diffs, ticket bodies, and build output stay with it.
 
 Communicate through **context pointers**: the epic number and the ticket number. The ticket, the epic thread, and the repo carry the rest.
 
