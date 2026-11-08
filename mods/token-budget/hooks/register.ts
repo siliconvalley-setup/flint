@@ -19,7 +19,7 @@ import type { EngineInterface, On, ToolCallInput } from 'claude-code'
 // Below this agents fetched the rest again: a placeholder cost a call and saved nothing (#57).
 export const TRIGGER_B = 16384
 // Claude Code's Bash window (env.sh BASH_MAX_OUTPUT_LENGTH): past it core saves the output to a file.
-const BASH_WINDOW = 10000
+const BASH_WINDOW = 16384
 // Past this the original passes: a slow tb never holds a result for long.
 const TB_TIMEOUT_MS = 5000
 

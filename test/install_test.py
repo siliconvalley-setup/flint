@@ -205,7 +205,7 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert env['AI_MEMORY_SERVER_URL'] == 'http://192.168.1.2:49374'
         assert env['DISABLE_AUTO_COMPACT'] == '1'
         assert env['CLAUDE_CODE_FORK_SUBAGENT'] == '0'
-        assert env['BASH_MAX_OUTPUT_LENGTH'] == '10000'
+        assert env['BASH_MAX_OUTPUT_LENGTH'] == '16384'
         assert env['CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS'] == '1'
         assert env['CLAUDE_CODE_SUBAGENT_EFFORT'] == 'medium'
         assert 'DISABLE_UPDATES' not in env

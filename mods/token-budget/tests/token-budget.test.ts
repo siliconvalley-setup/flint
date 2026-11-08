@@ -149,12 +149,12 @@ test('saved Bash output: a failed file read keeps core preview', async ($, on) =
 
 test('saved Bash output: a placeholder of Bash window size or more keeps core preview', async ($, on) => {
   on('tool.call', () => ({ result: saved() }))
-  let size = 9999
+  let size = 16383
   tb(on, () => ({ stdout: 'y'.repeat(size) + '\n' }))
   files(on)
-  expect((await bash($, 'make')).result, '9999 chars').toEqual(bashOut('y'.repeat(9999)))
-  size = 10000
-  expect((await bash($, 'make')).result, '10000 chars').toEqual(saved())
+  expect((await bash($, 'make')).result, '16383 chars').toEqual(bashOut('y'.repeat(16383)))
+  size = 16384
+  expect((await bash($, 'make')).result, '16384 chars').toEqual(saved())
 })
 
 test('Read of a Claude Code tool-results file passes whole, whatever command made it', async ($, on) => {
