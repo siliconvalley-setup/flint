@@ -7,7 +7,7 @@ Node 26. Global npm CLIs in `~/.npm-global/bin`:
 | `tailwindcss` | Tailwind v4 standalone, `--watch` |
 | `svgo` | SVG optimizer |
 | `culori` | library: OKLCH, ΔE, `wcagContrast`, `wcagLuminance` |
-| `tsc`, `typescript-language-server`, `pyright` | TypeScript compiler, LSP servers |
+| `tsc` | TypeScript compiler. LSP servers: rule `available_tools.md` |
 | `sg` (ast-grep) | structural code search |
 | `lighthouse` | audits |
 
