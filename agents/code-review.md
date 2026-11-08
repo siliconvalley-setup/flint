@@ -3,7 +3,6 @@ name: code-review
 description: "Read-only reviewer for one /code-review axis: Standards (repo rules, smell baseline, quality guide) or Spec (missing, creep, wrong). Dispatch one per axis, in parallel. Returns a per-file report, worst first, file:line evidence."
 model: sonnet
 effort: high
-disallowedTools: Write, Edit, NotebookEdit, Agent, Workflow, Skill
 color: red
 ---
 <important>Headless: silent until the final report. Report technical, every finding carried on a backticked `file:line` or quoted hunk.</important>
