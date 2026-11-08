@@ -21,18 +21,24 @@
 Login ready, unless line says otherwise. Skill named first: load it before first call.
 
 - `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
-- `firecrawl`: read web page or docs. Pick output by need:
-  - Every `scrape` and `batch-scrape` call: `--wait-for 5000` **required**. `crawl`, `map`, `search` have no such flag.
-  - Whole page or prose: `firecrawl scrape <url> --only-main-content --wait-for 5000`
-  - Named fields (prices, versions, lists, specs): `firecrawl scrape <url> --format json --schema '<json>' --wait-for 5000` **required**, not markdown + `rg`. Only schema fields return: whole page matters → markdown.
-  - Site: `firecrawl crawl <url> --wait --limit <n>`
-  - URL list: `firecrawl map <url>`
-  - Empty or loading output despite the wait: skill **toolchain-installed**, browser section. No retry.
-  - "Connection refused": ask human to run `fireup up` on r1 (`ssh r1`).
+- `firecrawl`: read a web page or docs. Quote the URL. Every `scrape` and `batch-scrape` carries `--wait-for 5000`; `crawl`, `map`, `search` have no such flag.
+  - Reddit URL: cut the query string (`?…`) first.
+  - Need named fields or one answer (prices, versions, lists, specs): `firecrawl scrape "<url>" --format markdown,json --schema '<json>' --wait-for 5000 -o /tmp/fc-<site>.json`, then `jq .json /tmp/fc-<site>.json`.
+    - Schema = `title` + short fields. One question = one field `answer`. No arrays of full text: output length sets the run time.
+    - Doubtful value: `jq -r .markdown /tmp/fc-<site>.json | rg -n -F '<value>'`.
+  - Need page text: `firecrawl scrape "<url>" --only-main-content --wait-for 5000 -o /tmp/fc-<site>.md`, then `rg` or `sed -n` on the file. Never print the page.
+  - Failure = `title` empty or loader text ("Loading…", "Compiling…", "Making sure you're not a bot"), every field empty, or markdown under ~200 B. Then browser steps. No retry.
+  - Site: `firecrawl crawl "<url>" --wait --limit <n>`. URL list: `firecrawl map "<url>"`.
+  - "Connection refused": browser steps; ask human to run `fireup up` on r1 (`ssh r1`). JSON gateway error: use "Need page text"; ask human for `fireup gateway start`.
 - `agent-browser`: real browser.
-  - Read page as text: `agent-browser read <url>` (HTTP fetch, no JS render). JS page: `open <url>`, `wait 5000`, `read`. Narrow: `--filter "<text>"`, `--outline`, `--llms index`.
-  - Output stops at 50,000 chars, ends `[truncated…]`. Large page: `agent-browser read <url> --max-output 1000000 | rg -n -i '<term>'`. Truncated read never proves term absent.
-  - Interact: `open <url>`, `wait 5000` **required** after every `open`, `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
+  - Browser steps, one Bash call. Own session: the default profile is locked by another process.
+    `export AGENT_BROWSER_SESSION=web AGENT_BROWSER_PROFILE=/tmp/ab-web`
+    `agent-browser open "<url>" && agent-browser wait 5000 && agent-browser read --max-output 1000000 > /tmp/fc-<site>.txt`
+    `agent-browser close`
+    Then `rg` on the file. Parallel runs: other names (`web2`, `/tmp/ab-web2`). Links are lost.
+  - `wait 5000` follows every `open`.
+  - Never `agent-browser read "<url>"`: HTTP only, no JS. SPA gives empty or loader.
+  - Interact: `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
   - Screenshot: `agent-browser screenshot [path]`.
   - Human's Chromium (logins, 2FA, cookies): skill **agent-browser** first.
 - `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
