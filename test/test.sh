@@ -144,10 +144,14 @@ ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 # and test 12 already asserts it reaches the hook output).
 "$PY" tools/resync.py --check; ck $? "14 verbatim derivado parity"
 
-# 15: mod suites, one `claude plugin test` per mods/* dir (sleep-guard included).
+# 15: mod suites, one `claude plugin validate` per mods/* dir (rejects unknown
+# key in inline lspServers) + one `claude plugin test` per dir with hooks.
 if command -v claude >/dev/null 2>&1; then
     for m in mods/*/; do
         m="${m%/}"
+        claude plugin validate "$m" > "$FX/mod.out" 2>&1; RC=$?
+        ck "$RC" "15 mod manifest ${m#mods/}"; [ "$RC" -eq 0 ] || cat "$FX/mod.out"
+        [ -f "$m/hooks/hooks.json" ] || { echo "ok  15 mod suite ${m#mods/} (skipped: no hooks)"; continue; }
         claude plugin test "$m" > "$FX/mod.out" 2>&1; RC=$?
         ck "$RC" "15 mod suite ${m#mods/}"; [ "$RC" -eq 0 ] || cat "$FX/mod.out"
     done
