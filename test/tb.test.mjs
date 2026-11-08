@@ -93,7 +93,7 @@ test('get: no section reads it all; output pages below the Bash window, the last
   const last = +lines.at(-2).split('\t')[0]
   assert.equal(lines.at(-1), `more: node ${TB} get '${ref}:${last + 1}-2000'`)
   assert.equal(get(`${ref}:${last + 1}-2000`, '10000').out.split('\n')[0], `${last + 1}\tline ${last + 1}`)
-  assert.equal(get(ref, '').out.trimEnd().split('\n').length, lines.length, 'no window set: flint default 10000')
+  assert.equal(get(ref, '').out, get(ref, '16384').out, 'no window set: flint default 16384')
   assert.ok(get(ref, '100000').out.endsWith('2000\tline 2000\n'), 'a wide window takes it all')
   // #76: core counts bytes; a page of multibyte text stays under the window in bytes.
   const wide = '— × … multibyte line here\n'.repeat(900)

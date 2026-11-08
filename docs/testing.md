@@ -28,7 +28,7 @@ CI: same matrix on ubuntu/macos/windows + shellcheck, `timeout-minutes: 10`. Win
 | tb suite | `node --test test/tb.test.mjs`; skipped when `node tools/tb.mjs doctor` fails |
 | tokscan suite | `test/tokscan_test.sh`: shell-built fixture transcripts, asserts `--json` + text |
 
-`test/replay.mjs` (offline replay) and `test/refetch.mjs` (bytes agents fetched in the 3 calls after each placeholder, per content kind) read private transcripts; stay out of matrix.
+`test/replay.mjs` (offline replay) and `test/refetch.mjs` (net tokens of each saved Bash output and tb placeholder against inline whole, by size) read private transcripts; stay out of matrix.
 
 ## Installer tests
 

@@ -344,8 +344,8 @@ function put(text, opts) {
   return bytes(ph) <= bytes(text) * GAIN ? ph : ''
 }
 
-// Claude Code saves Bash output past this many chars to a file; flint's env sets 10000 (#47).
-const BASH_WINDOW = Number(process.env.BASH_MAX_OUTPUT_LENGTH) || 10000
+// Claude Code saves Bash output past this many chars to a file; flint's env sets 16384 (ADR 0003).
+const BASH_WINDOW = Number(process.env.BASH_MAX_OUTPUT_LENGTH) || 16384
 
 // `<where>#<id>`, `<where>:<a>-<b>` or all of `<where>` as the current lines,
 // numbered. Pages below the Bash window in bytes, as core counts (#76): past it

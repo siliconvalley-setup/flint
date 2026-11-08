@@ -131,6 +131,17 @@ Output style does not reach this cost.
   parsing (whole read line gives the same one call); one threshold for Read and
   Bash (#75 option 2a: between 10 and 16 KB the placeholder costs the same one call
   as core's preview). Measure after: `test/refetch.mjs` next3 against orig per kind.
+- Amended 2026-11-07 (#79). Bash window 10,000 → 16,384 chars (`env.sh`
+  `BASH_MAX_OUTPUT_LENGTH`, set by #47 without a refetch measure); one number
+  with Read trigger. `test/refetch.mjs`, transcripts 2026-11-06..07, net per
+  output against inline whole: saved output under 16K loses, core preview
+  −14,213 tokens (n 223), tb −7,770 (n 127), about 2 follow-up calls each;
+  16–32K wins, core +3,015 (n 163), tb +5,737 (n 51); 32K and over, tb
+  +42,188, 0 of 11 lose. Cause: a follow-up turn re-reads the whole context;
+  a mid-size output kept out is fetched back. Same for any compressor
+  (context-mode, caveman, headroom): their measured gains are on outputs of
+  10 KB to 95 KB, read once. #79 range read (11,852 B) now passes inline.
+  tb keeps 16K and over, where it beats core preview.
 - Amended 2026-11-07 (#70). Context meter (warning 150k, ai-memory handoff
   order 200k) left token-budget mod. Meter part Superseded 2026-11-07 by
   [ADR 0004](./0004-handoff-catalog.md): handoff mod, 250k/300k, order runs
