@@ -41,6 +41,13 @@ Take the first option that fully works:
 
 Never cut: validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs, anything the user asked for.
 
+## Evidence
+- API behavior: Read the primary documentation first. Then, do a read-only probe. A probe must not write, spend, publish, or delete data.
+- Code behavior: Read the source code.
+- Verification: Check your answers, plans, specs, and code against project evidence and primary sources.
+- Fact-checking: Look up facts yourself. Only ask the user if a decision is missing or the next step cannot be reversed.
+- Recording: Record decisions, assumptions, and evidence on the ticket or epic thread.
+
 ## Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
