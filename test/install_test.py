@@ -373,11 +373,12 @@ def test_fetched_external_skills_are_linked_and_pruned_with_the_cache():
         assert not (cfg_dir / 'skills' / 'gapi').is_symlink()
 
 
-def test_external_skills_list_names_the_three_sources():
+def test_external_skills_list_names_the_four_sources():
     lines = [l.split() for l in (ROOT / 'external-skills.txt').read_text().splitlines()
              if l.strip() and not l.startswith('#')]
     assert lines == [['git', 'realroboto/bing-webmaster-cli'],
                      ['git', 'realroboto/google-apis-cli'],
+                     ['git', 'realroboto/dataforseo-cli'],
                      ['npm', '@reallroboto/qb']]
 
 

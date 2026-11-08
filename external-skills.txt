@@ -3,4 +3,5 @@
 # Format: <git|npm> <github owner/repo | npm package>
 git realroboto/bing-webmaster-cli
 git realroboto/google-apis-cli
+git realroboto/dataforseo-cli
 npm @reallroboto/qb
