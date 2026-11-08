@@ -22,17 +22,17 @@ Login ready, unless line says otherwise. Skill named first: load it before first
 
 - `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
 - `firecrawl`: read web page or docs. Pick output by need:
-  - Whole page or prose: `firecrawl scrape <url> --only-main-content`
-  - Named fields (prices, versions, lists, specs): `firecrawl scrape <url> --format json --schema '<json>'` **required**, not markdown + `rg`. Only schema fields return: whole page matters → markdown.
+  - Every `scrape` and `batch-scrape` call: `--wait-for 5000` **required**. `crawl`, `map`, `search` have no such flag.
+  - Whole page or prose: `firecrawl scrape <url> --only-main-content --wait-for 5000`
+  - Named fields (prices, versions, lists, specs): `firecrawl scrape <url> --format json --schema '<json>' --wait-for 5000` **required**, not markdown + `rg`. Only schema fields return: whole page matters → markdown.
   - Site: `firecrawl crawl <url> --wait --limit <n>`
   - URL list: `firecrawl map <url>`
-  - Empty or loading output: retry once with `--wait-for 5000`. Still empty: skill **toolchain-installed**, browser section.
+  - Empty or loading output despite the wait: skill **toolchain-installed**, browser section. No retry.
   - "Connection refused": ask human to run `fireup up` on r1 (`ssh r1`).
-  - Site blocks bots: stop, tell human.
 - `agent-browser`: real browser.
-  - Read page as text: `agent-browser read <url>`. Narrow: `--filter "<text>"`, `--outline`, `--llms index`.
+  - Read page as text: `agent-browser read <url>` (HTTP fetch, no JS render). JS page: `open <url>`, `wait 5000`, `read`. Narrow: `--filter "<text>"`, `--outline`, `--llms index`.
   - Output stops at 50,000 chars, ends `[truncated…]`. Large page: `agent-browser read <url> --max-output 1000000 | rg -n -i '<term>'`. Truncated read never proves term absent.
-  - Interact: `open <url>`, `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
+  - Interact: `open <url>`, `wait 5000` **required** after every `open`, `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
   - Screenshot: `agent-browser screenshot [path]`.
   - Human's Chromium (logins, 2FA, cookies): skill **agent-browser** first.
 - `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
