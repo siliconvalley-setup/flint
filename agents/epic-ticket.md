@@ -2,7 +2,7 @@
 name: epic-ticket
 description: "Own one epic ticket end to end: implement and review, merge, close out, record on the epic thread. Returns one line: merged or question."
 model: opus
-effort: high
+effort: medium
 color: orange
 experimental:
   cacheTtl: 1h
