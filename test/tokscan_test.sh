@@ -99,5 +99,28 @@ MISS=0; while IFS= read -r w; do grep -qF -- "$w" "$FX/r.txt" || { echo "  missi
 run 2026-11-06 --no-prompts > "$FX/r.txt"
 ! grep -qF -e 'fix the bug please' -e 'sed -n 1,9p' -e 'Fresh review' "$FX/r.txt"; ck $? "17p --no-prompts hides prompt and input previews"
 
+# Batching: main s2 on local 2026-11-08, one call per request. Runs of read-only
+# requests: m21-m23 and m27-m28; write redirect (with heredoc) and sed -i end a run;
+# s2's subagent request between m21 and m22 runs on its own.
+M2="$P/s2.jsonl"
+mkdir -p "$P/s2/subagents"
+R() { L "$M2" '{"type":"assistant","timestamp":"2026-11-08T12:00:'"$1"'Z","cwd":"/w/flint","message":{"id":"m'"$1"'","model":"claude-opus-5-5","content":['"$2"'],"usage":{"input_tokens":1,"cache_creation_input_tokens":0,"cache_read_input_tokens":'"$3"',"output_tokens":1}}}'; }
+B() { printf '{"type":"tool_use","id":"u%s","name":"Bash","input":{"command":"%s"}}' "$1" "$2"; }
+R 21 '{"type":"tool_use","id":"u21","name":"Read","input":{"file_path":"/w/flint/a.md"}}' 0
+L "$P/s2/subagents/agent-a2.jsonl" '{"type":"assistant","timestamp":"2026-11-08T12:00:21Z","cwd":"/w/flint","isSidechain":true,"message":{"id":"m40","model":"claude-sonnet-5-5","content":[{"type":"tool_use","id":"u40","name":"Read","input":{"file_path":"/w/flint/z.md"}}],"usage":{"input_tokens":1,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":1}}}'
+R 22 "$(B 22 'rg -n foo src | head -5')" 0
+R 23 "$(B 23 'cat a.md b.md; echo ----; sed -n 1,9p c.md')" 1000
+R 24 "$(B 24 'cat > o.txt <<EOF\nx\nEOF')" 0
+R 25 "$(B 25 'sed -i s/a/b/ f.md')" 0
+R 26 "$(B 26 'ls > list.txt')" 0
+R 27 "$(B 27 'ls 2>/dev/null; head -3 a.md 2>&1')" 0
+R 28 '{"type":"tool_use","id":"u28","name":"Read","input":{"file_path":"/w/flint/b.md"}}' 2000
+R 29 '{"type":"text","text":"done"}' 0
+run 2026-11-08 --json > "$FX/r.json"
+j 'd["batching"] == {"tools_per_request": {"0": 1, "1": 9}, "read_runs": 2, "batchable_requests": 3, "batchable_cache_read_weighted": 150}'
+ck $? "17q batching: runs of one-call read-only requests per agent; write redirect, sed -i end a run; cache read 0.05x"
+run 2026-11-08 > "$FX/r.txt"
+grep -q '^runs of one-call read-only requests: 2 runs, 3 batchable requests, cache read 150 weighted' "$FX/r.txt"; ck $? "17r batching line in text"
+
 rm -rf "$FX"
 [ "$FAILS" -eq 0 ]
