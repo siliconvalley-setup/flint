@@ -4,7 +4,11 @@
 - Claude config: global `~/.claude/`, linked from flint repo. Never create per-project config.
 
 ## Paths
-- Nix tools: Node 26, Python 3.15, uv, git, gh, rg, fd, jq, ffmpeg, imagemagick, more.
+- Runtimes: Node 26, Python 3.15 (PyYAML), uv, Java 21.
+- Data: jq, yq/xq/tomlq (jq syntax on YAML/XML/TOML), duckdb (SQL over CSV/JSON/Parquet), sqlite3, jc (CLI output → JSON), pdftotext.
+- Code: shellcheck, shfmt, sd (replace), difft, scc, hyperfine, fd, tree.
+- Git: git, git-absorb. mergiraf = git merge driver, automatic: never call it.
+- LSP servers: typescript-language-server, pyright, bash-language-server, astro-ls, nixd.
 - Node libraries: `~/.npm-global/lib/node_modules` (`NODE_PATH`). `require('<name>')` works from any project. ESM `import` fails.
 - Browser: one Chromium, `/Applications/Chromium.app` (`$CHROME_PATH`), for every tool. Playwright WebKit: `~/Library/Caches/ms-playwright`. Operator Chromium session: CDP `127.0.0.1:9222`.
 
