@@ -24,7 +24,7 @@ CI: same matrix on ubuntu/macos/windows + shellcheck, `timeout-minutes: 10`. Win
 | 12 / 12b | per-turn anchor = `flint-submit.md`; `flint-submit.md` = `flint.md` |
 | 13a–13f budgets | envelope ≤ 9,300 · profile ≤ 1,500 · project instructions ≤ 8,000 · chat style ≤ 8,000 · cowork skill ≤ 64 KB |
 | 14 parity | `desktop/cowork/SKILL.md` = header + `unwrap(flint.md)` (`tools/resync.py --check`). Chat derivados not byte-checked |
-| mod suites | `claude plugin test` per `mods/*`; skipped without `claude` |
+| mod suites | `claude plugin validate` per `mods/*` + `claude plugin test` per mod with `hooks/hooks.json`; skipped without `claude` (CI runners: local run only) |
 | tb suite | `node --test test/tb.test.mjs`; skipped when `node tools/tb.mjs doctor` fails |
 | tokscan suite | `test/tokscan_test.sh`: shell-built fixture transcripts, asserts `--json` + text |
 

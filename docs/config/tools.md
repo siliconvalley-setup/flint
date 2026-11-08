@@ -1,7 +1,7 @@
 ---
 type: Component
 title: Mods and tools
-description: token-budget mod, handoff mod, sleep-guard mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
+description: token-budget mod, handoff mod, sleep-guard mod, lsp mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
 tags: [config, mods, tools]
 status: stable
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
@@ -31,6 +31,23 @@ Context meter + handoff catalog. Decision: ADR [0004](../adr/0004-handoff-catalo
 ## sleep-guard (`mods/sleep-guard/`)
 
 Wait and stop rules on Bash calls, main conversation and every subagent. Decision lives in vmCODE `docs/adr/sleep-guard.md`.
+
+## lsp (`mods/lsp/`)
+
+Code intelligence for files no official LSP plugin covers: diagnostics after each edit + `LSP` tool (definition, references, symbols). Servers declared inline in `.claude-plugin/plugin.json` (`lspServers`), so `claude plugin validate` checks them; a `.lsp.json` file is not checked.
+
+| Server | Command | Extensions |
+|---|---|---|
+| bash | `bash-language-server start` | `.sh`, `.bash` |
+| astro | `astro-ls --stdio` | `.astro` |
+| nix | `nixd` | `.nix` |
+
+- Binaries come from silicon-valley (#32), not flint. `.ts`, `.tsx`, `.py` stay with official `typescript-lsp`, `pyright-lsp`.
+- Server starts on first edit of a matching file. Missing binary → one row in `/plugin` Errors, other servers run.
+- bash: shellcheck findings come from `shellcheck` on PATH.
+- astro: `tsdk` `node_modules/typescript/lib` resolves against session working dir. Session started outside the Astro project root → astro server fails to start. First diagnostics come one turn after the edit (cold start).
+- nix: syntax, undefined variable, unused binding only. Option names need nixd `options` config (flake expression): not in this mod.
+- Check: edit `echo $1` into a scratch `.sh` → `<new-diagnostics>` with SC2086.
 
 ## TokenEconomizer (plugin)
 

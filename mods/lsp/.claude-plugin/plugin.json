@@ -1,0 +1,40 @@
+{
+  "name": "lsp",
+  "version": "1.0.0",
+  "description": "Code intelligence for Bash, Astro and Nix files: diagnostics after edits and the LSP tool, through bash-language-server, astro-ls and nixd from PATH",
+  "author": {
+    "name": "realroboto"
+  },
+  "lspServers": {
+    "bash": {
+      "command": "bash-language-server",
+      "args": [
+        "start"
+      ],
+      "extensionToLanguage": {
+        ".sh": "shellscript",
+        ".bash": "shellscript"
+      }
+    },
+    "astro": {
+      "command": "astro-ls",
+      "args": [
+        "--stdio"
+      ],
+      "extensionToLanguage": {
+        ".astro": "astro"
+      },
+      "initializationOptions": {
+        "typescript": {
+          "tsdk": "node_modules/typescript/lib"
+        }
+      }
+    },
+    "nix": {
+      "command": "nixd",
+      "extensionToLanguage": {
+        ".nix": "nix"
+      }
+    }
+  }
+}
