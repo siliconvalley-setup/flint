@@ -20,7 +20,7 @@
 
 ## Files & code
 - Bash first: read `cat`/`head`/`sed -n`, search `rg`, edit `sed`/heredoc/short script. Read/Edit/Write tools only when Bash cannot.
-- `rg`, not `grep`. Config: `--hidden --glob=!.git --smart-case --max-columns=150 --max-columns-preview`. Single-quote pattern/globs; `-F` literal; `-e` leading `-`.
+- `rg`, not `grep`. Config: `--hidden --glob=!.git --smart-case --max-columns=150 --max-columns-preview`. `[... omitted end of long line]` = rg cut, not line end; full line needed → `-M0`, that file only. Single-quote pattern/globs; `-F` literal; `-e` leading `-`.
 - No lookaround/backrefs → `-P` (check: `rg --pcre2-version`) or reword; `-U` cross-line. Exit 1 = 0 hits; 2 = error → never "absent" on 2.
 - Scope `-t`/`-g` (`--type-list`); many hits: `-l` first, then per-file. Piped output lacks line numbers: `-n`. `-c` = lines, `--count-matches` = hits.
 - 0 hits ≠ absent: rerun `-uu -i` (ignored+hidden; `-g '!node_modules'` if huge); then `-L` (symlinks), `--binary` (NUL files), `-E utf-16le` (no BOM). `--files`/`--debug` reveal filtering. Explicit file arg bypasses ignores.
