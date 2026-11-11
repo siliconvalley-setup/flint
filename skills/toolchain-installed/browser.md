@@ -1,7 +1,10 @@
 # Browser
 
 - No GUI session: run every browser **headless**.
-- One Chromium: `/Applications/Chromium.app` (`$CHROME_PATH`). agent-browser, playwright-cli, Lighthouse, Puppeteer read it from env. Never download Chrome for Testing or Playwright Chromium.
+- One full Chromium: `/Applications/Chromium.app`. agent-browser, playwright-cli, Lighthouse find it through their own env vars. Never download Chrome for Testing or Playwright full Chromium.
+- Project headless automation (tests, scripts, build checks) = framework headless shell. A full build headless crashes under parallel load (silicon-valley#48).
+  - Playwright: `pnpm exec playwright install --only-shell chromium` (`playwright-core` package: `pnpm exec playwright-core install --only-shell chromium`). Launch without `executablePath`.
+  - Puppeteer: `pnpm exec puppeteer browsers install` (pnpm skips its postinstall; env limits the download to the headless shell). Launch with `launch({ headless: 'shell' })`; plain `launch()` fails "Could not find Chrome".
 - `playwright-cli`: Chromium above + Playwright WebKit.
 - Display: agent-browser + playwright-cli Chromium = operator Mac built-in display (screen, viewport, DPR 2, color scheme). Screenshots 2× pixels. Need other size: agent-browser `set viewport <w> <h> [scale]`, playwright-cli `resize <w> <h>`.
 - Logged-in operator session: CDP only (see Login).

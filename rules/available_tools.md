@@ -10,7 +10,7 @@
 - Git: git, git-absorb. mergiraf = git merge driver, automatic: never call it.
 - LSP servers: typescript-language-server, pyright, bash-language-server, astro-ls, nixd.
 - Node libraries: `~/.npm-global/lib/node_modules` (`NODE_PATH`). `require('<name>')` works from any project. ESM `import` fails.
-- Browser: one Chromium, `/Applications/Chromium.app` (`$CHROME_PATH`), for every tool. Playwright WebKit: `~/Library/Caches/ms-playwright`. Operator Chromium session: CDP `127.0.0.1:9222`.
+- Browser: one full Chromium, `/Applications/Chromium.app`, for agent-browser, playwright-cli, Lighthouse. Project Playwright, Puppeteer: own headless shell, never `executablePath` to Chromium.app (install: skill **toolchain-installed**). Playwright WebKit: `~/Library/Caches/ms-playwright`. Operator Chromium session: CDP `127.0.0.1:9222`.
 
 ## Installs
 - Blocked: `npx`, `npm install`, global `pnpm add`, `pip install`.
