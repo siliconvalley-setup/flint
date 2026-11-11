@@ -22,6 +22,7 @@ Login ready, unless line says otherwise. Skill named first: load it before first
 
 - `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
 - `firecrawl`: read a web page or docs. Quote the URL. Every `scrape` and `batch-scrape` carries `--wait-for 5000`; `crawl`, `map`, `search` have no such flag.
+  - Find pages: `firecrawl search "<query>" --limit <n>`. Free (r1 engine). 0 hits or off-topic hits: `bx context`.
   - Reddit URL: cut the query string (`?…`) first.
   - Need named fields or one answer (prices, versions, lists, specs): `firecrawl scrape "<url>" --format markdown,json --schema '<json>' --wait-for 5000 -o /tmp/fc-<site>.json`, then `jq .json /tmp/fc-<site>.json`.
     - Schema = `title` + short fields. One question = one field `answer`. No arrays of full text: output length sets the run time.
@@ -44,6 +45,14 @@ Login ready, unless line says otherwise. Skill named first: load it before first
 - `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
 - `gh`: wait for CI: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`; tell human usual run time.
 - `ctx7`: official docs of any library, API, vendor. Id: `ctx7 library <name>`. Ask: `ctx7 docs <id> "<question>" --json`.
+- `bx`: Brave Search API. Paid: $5 per 1,000 requests, $5 free per month. Use only after `firecrawl search` fails, or for one of: extracted text in one call, domain filter, fresh news.
+  - Order: library docs → `ctx7`; find pages → `firecrawl search` → `bx context`; read a known URL → `firecrawl scrape`.
+  - Default: `bx context "<query>" --max-tokens 4096`. Returns extracted, relevance-scored text: no `firecrawl scrape` after it.
+  - Domains: `--include-site <d>` or `--exclude-site <d>` (repeatable); ranking rules: `--goggles '<rules>'`. One of the three per call.
+  - Recent: `bx news "<query>" --freshness pd` (day) or `pm` (month).
+  - Key from env `BRAVE_SEARCH_API_KEY`. Never `--api-key`, never `bx config set-key`.
+  - Never `bx answers`: other plan, not bought.
+  - Exit 2 (usage, or `no API key configured`) or 3 (auth, plan): stop, show output to human. 4 (rate limit): retry once after 2 s. 5 (network): retry once. 1: fix query.
 - `bwt`: Bing Webmaster API. `bwt <Method> [--flags]`. Methods: `bwt schema`.
 - `gapi`: Google Ads, GTM, GA4, Search Console, Indexing API. Skill **gapi** first. `gapi <api> <resource...> <method> --params '<json>'`. Login error: `gapi auth status`, then skill Setup section.
 - `gcloud`: Google Cloud.
