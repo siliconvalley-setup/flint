@@ -22,7 +22,7 @@ Completion: one line stating detected PM + active flags.
 
 ## Phase 1 — Inventory
 
-Read `package.json`, inventory **every** dependency field: `dependencies` and `devDependencies` alike — plus `optionalDependencies`/`peerDependencies` if present. Dep is a dep regardless of declaring field; dev tooling (compilers, linters, test runners, build/deploy CLIs) ships breaking changes as readily as runtime libs, often the bulk of the manifest. Get **installed** versions — `package.json` ranges lie: `pnpm ls --depth 0` · `npm ls --depth=0` · `yarn list --depth=0` · `bun pm ls`. Build dep list: name, installed version, range. Also capture PM's own version (`<pm> --version`) and the `packageManager` field — toolchain audited by **Toolchain** section below.
+Read `package.json`, inventory **every** dependency field: `dependencies` and `devDependencies` alike — plus `optionalDependencies`/`peerDependencies` if present. Dep is a dep regardless of declaring field; dev tooling (compilers, linters, test runners, build/deploy CLIs) ships breaking changes as readily as runtime libs, often the bulk of the manifest. Get **installed** versions — `package.json` ranges lie: `pnpm ls --depth 0` · `npm ls --depth=0` · `yarn list --depth=0` · `bun pm ls`. Build dep list: name, installed version, range. Also capture the `packageManager` field (project PM version) and the global PM version (`cd ~ && <pm> --version`) — toolchain audited by **Toolchain** section below.
 
 Group for processing order: **core** (framework, renderer, integrations) → **runtime** (app-level libs) → **dev** (build, lint, test tooling — the `devDependencies` block). Within each group, order by coupling: dep with most imports first.
 
@@ -127,10 +127,10 @@ Completion: discovered tiers green, or failures reported with the specific gate 
 
 **pnpm — unpinned (tracks latest).** *Gate: detected PM is pnpm.* Treat pnpm like any tool: target latest.
 
-1. **Check** — `pnpm --version` and the `packageManager` field.
+1. **Check** — project version = `packageManager` field. Global version = `cd ~ && pnpm --version`. Never read `pnpm --version` inside a project as global: pnpm switches to the `packageManager` version there.
 2. **Latest** — `npm view pnpm version`; cross-check `https://github.com/pnpm/pnpm/releases`. `@latest` tracks the mainline pnpm 12 (Rust CLI) line.
 3. **Verdict** — below latest → update.
-4. **Apply** — set the `packageManager` field to `pnpm@<latest>` (create it if absent), then `pnpm install`. No corepack: the global pnpm comes from the machine (silicon-valley `npm-cli.txt`); global pnpm below latest → finding, the human updates the machine. Confirm with `pnpm --version`.
+4. **Apply** — project below latest → `pnpm self-update <latest>` inside the project (writes `packageManager`), then `pnpm install`. Never update the global install for a project. No corepack: the global pnpm comes from the machine (silicon-valley `npm-cli.txt`, `pnpm@12` = newest 12.x at each update); global below latest (`cd ~` check) → finding, the human runs the machine update.
 
 ## Cloudflare stack — workers-sdk lockstep
 
