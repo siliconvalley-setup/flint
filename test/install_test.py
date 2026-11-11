@@ -10,6 +10,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# Both hook sources open with this line (test.sh 12b).
+FLINT_HEAD = (ROOT / 'flint.md').read_text(encoding='utf-8').splitlines()[0]
 sys.path.insert(0, str(ROOT))
 import install  # noqa: E402
 
@@ -720,7 +722,7 @@ def test_registered_command_executes_end_to_end():
             assert out['hookSpecificOutput']['hookEventName'] == event
             ctx = out['hookSpecificOutput']['additionalContext']
             assert 'FLINT HOOK ERROR' not in ctx
-            assert ctx.lstrip().startswith('- Respond concise')
+            assert ctx.lstrip().startswith(FLINT_HEAD)
 
 
 def test_uninstall_py_wrapper_removes_entries():
