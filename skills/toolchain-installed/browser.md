@@ -15,6 +15,7 @@
 |---|---|
 | Interact, explore, dev server (HMR) | `agent-browser` |
 | Render check, Lighthouse, WebKit | `playwright-cli` |
+| Find pages | `firecrawl search`; fallback chain: `rules/available_tools.md` |
 | Read page | `firecrawl scrape <url>` |
 | Read markdown or `llms.txt` docs | `agent-browser read <url>` |
 | Library docs | `ctx7 docs` |

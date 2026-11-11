@@ -97,7 +97,7 @@ def test_install_forces_policy_and_keeps_user_choices():
         cfg = read_settings(d)
         perms = cfg['permissions']
         assert perms['defaultMode'] == 'bypassPermissions'       # forced
-        assert 'WebFetch' in perms['deny'] and 'Bash(npx *)' in perms['deny']
+        assert {'WebFetch', 'WebSearch', 'Bash(npx *)'} <= set(perms['deny'])
         assert perms['ask'] == ['Bash(pnpm dlx *)']
         assert perms['allow'] == ['Bash(make *)']               # user key in a forced dict
         assert cfg['autoUpdatesChannel'] == 'stable'
