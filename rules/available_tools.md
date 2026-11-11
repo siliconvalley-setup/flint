@@ -19,10 +19,13 @@
 
 ## CLIs
 Login ready, unless line says otherwise. Skill named first: load it before first call.
+Web (native `WebSearch`, `WebFetch` removed): docs → `ctx7`; find pages → `firecrawl search` → `bx` → browser search; known URL → `firecrawl scrape`.
 
 - `rg`: search; use instead of `grep`. Config adds `--hidden --glob=!.git`. 0 hits: rerun with `-uu -i` before you say "absent".
 - `firecrawl`: read a web page or docs. Quote the URL. Every `scrape` and `batch-scrape` carries `--wait-for 5000`; `crawl`, `map`, `search` have no such flag.
-  - Find pages: `firecrawl search "<query>" --limit <n>`. 0 or off-topic hits: `bx`.
+  - Find pages: `firecrawl search "<query>" --limit <n>`. Domain: `site:<d>` or `-site:<d>` in query. Recent: `bx news` (engine ignores `--tbs`, `--sources news`, `--country`, `--location`; `--categories` untested).
+    - Search + read: add `--scrape --json -o /tmp/fc-search.json`, then `rg`. Never print: 630 KB seen.
+    - Failure = `data.web` empty or missing (HTTP 200), or off-topic hits: `bx`.
   - Reddit URL: cut the query string (`?…`) first.
   - Need named fields or one answer (prices, versions, lists, specs): `firecrawl scrape "<url>" --format markdown,json --schema '<json>' --wait-for 5000 -o /tmp/fc-<site>.json`, then `jq .json /tmp/fc-<site>.json`.
     - Schema = `title` + short fields. One question = one field `answer`. No arrays of full text: output length sets the run time.
@@ -30,22 +33,26 @@ Login ready, unless line says otherwise. Skill named first: load it before first
   - Need page text: `firecrawl scrape "<url>" --only-main-content --wait-for 5000 -o /tmp/fc-<site>.md`, then `rg` or `sed -n` on the file. Never print the page.
   - Failure = `title` empty or loader text ("Loading…", "Compiling…", "Making sure you're not a bot"), every field empty, or markdown under ~200 B. Then browser steps. No retry.
   - Site: `firecrawl crawl "<url>" --wait --limit <n>`. URL list: `firecrawl map "<url>"`.
-  - "Connection refused": browser steps; ask human to run `fireup up` on r1 (`ssh r1`). JSON gateway error: use "Need page text"; ask human for `fireup gateway start`.
+  - "Connection refused": `search` → `bx`; other commands → browser steps. Ask human to run `fireup up` on r1 (`ssh r1`). JSON gateway error: use "Need page text"; ask human for `fireup gateway start`.
 - `agent-browser`: real browser.
   - Browser steps, one Bash call. Own session: the default profile is locked by another process.
     `export AGENT_BROWSER_SESSION=web AGENT_BROWSER_PROFILE=/tmp/ab-web`
     `agent-browser open "<url>" && agent-browser wait 5000 && agent-browser read --max-output 1000000 > /tmp/fc-<site>.txt`
     `agent-browser close`
     Then `rg` on the file. Parallel runs: other names (`web2`, `/tmp/ab-web2`). Links are lost.
-  - `wait 5000` follows every `open`.
+  - `wait 5000` follows every `open`. First `open` fails `ERR_NAME_NOT_RESOLVED`: `open` once more.
   - Never `agent-browser read "<url>"`: HTTP only, no JS. SPA gives empty or loader.
   - Interact: `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
   - Screenshot: `agent-browser screenshot [path]`.
   - Human's Chromium (logins, 2FA, cookies): skill **agent-browser** first.
+  - Search: browser steps, `<q>` = `jq -rn --arg q '<query>' '$q|@uri'`. Order: `https://www.google.com/search?q=<q>` → `https://html.duckduckgo.com/html/?q=<q>` → `https://www.bing.com/search?q=<q>` → `https://search.brave.com/search?q=<q>`. Captcha or 0 hits: next engine. Recent: Brave, add `&tf=pd|pw|pm|py`.
+    - URLs (`read` drops links): `eval` before `close`. DuckDuckGo: `a.result__a` → `uddg` param. Bing: `li.b_algo h2 a` → `u` param minus `a1`, base64url-decode. Brave: `a[href^="http"]` minus Brave hosts.
 - `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
 - `gh`: wait for CI: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`; tell human usual run time.
 - `ctx7`: official docs of any library, API, vendor. Id: `ctx7 library <name>`. Ask: `ctx7 docs <id> "<question>" --json`.
-- `bx`: Brave Search. $5 free credit per month, then prepaid credit the human buys. Use after `firecrawl search` fails. `bx context` or `bx news` only (`answers`: plan not bought). Exit 2 or 3, or credit/quota error: stop, show output to human.
+- `bx`: Brave Search API. $5 free credit per month, then prepaid credit the human buys. Prefix every call with `sv-agent-env` (loads current key). `context`, `news` only (`answers`: plan not bought). Key never in argv; never `bx config set-key`.
+  - `sv-agent-env bx context "<query>" --max-tokens <n>`. Recent: `sv-agent-env bx news "<query>" --freshness pd|pw|pm|py`. Domain: one of `--include-site`, `--exclude-site`, `--goggles`.
+  - Key, credit or plan error = exit 2 `no API key configured`, exit 3, or exit 1 naming token, subscription, quota, credit or plan: no retry; browser search; tell human in final reply. Exit 4, 5: retry once (4: after 2 s). Other exit 1: fix query.
 - `bwt`: Bing Webmaster API. `bwt <Method> [--flags]`. Methods: `bwt schema`.
 - `gapi`: Google Ads, GTM, GA4, Search Console, Indexing API. Skill **gapi** first. `gapi <api> <resource...> <method> --params '<json>'`. Login error: `gapi auth status`, then skill Setup section.
 - `gcloud`: Google Cloud.

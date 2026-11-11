@@ -15,6 +15,7 @@
       "CronDelete",
       "CronList",
       "WebFetch",
+      "WebSearch",
       "Agent(claude-code-guide)",
       "Agent(statusline-setup)",
       "ListAgents",
