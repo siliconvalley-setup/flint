@@ -45,7 +45,7 @@ Web (native `WebSearch`, `WebFetch` removed): docs → `ctx7`; find pages → `f
   - Interact: `snapshot -i` (gives `@ref`), `click @ref` or `fill @ref "text"`. After each page change: `snapshot -i` again.
   - Screenshot: `agent-browser screenshot [path]`.
   - Human's Chromium (logins, 2FA, cookies): skill **agent-browser** first.
-  - Search: browser steps, `<q>` = `jq -rn --arg q '<query>' '$q|@uri'`. Order: `https://www.google.com/search?q=<q>` → `https://html.duckduckgo.com/html/?q=<q>` → `https://www.bing.com/search?q=<q>` → `https://search.brave.com/search?q=<q>`. Captcha or 0 hits: next engine. Recent: Brave, add `&tf=pd|pw|pm|py`.
+  - Search: browser steps, `<q>` = `jq -rn --arg q '<query>' '$q|@uri'`. Order: `https://www.google.com/search?q=<q>` → `https://html.duckduckgo.com/html/?q=<q>` → `https://www.bing.com/search?q=<q>` → `https://search.brave.com/search?q=<q>`. Resolve captcha. if 0 hits: next engine. Recent: Brave, add `&tf=pd|pw|pm|py`.
     - URLs (`read` drops links): `eval` before `close`. DuckDuckGo: `a.result__a` → `uddg` param. Bing: `li.b_algo h2 a` → `u` param minus `a1`, base64url-decode. Brave: `a[href^="http"]` minus Brave hosts.
 - `playwright-cli`: render checks, WebKit, Playwright tests. Skill **playwright-cli** first.
 - `gh`: wait for CI: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`; tell human usual run time.
