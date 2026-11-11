@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-11
+- **Install guard** ([ADR 0006](adr/0006-install-guard.md), #108): new `mods/install-guard` asks the human for new stacks only. `env.sh` gains `CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1`. Bash deny/ask rules leave forced `permissions`. `rules/available_tools.md` drops its Installs section.
 - **No native web tools**: ADR 0005 added (#102). Forced deny gains `WebSearch`; install test asserts it. `rules/available_tools.md` gains search chain `firecrawl search` → `sv-agent-env bx` → browser search.
 
 ## 2026-11-08

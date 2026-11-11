@@ -99,8 +99,13 @@ def test_install_forces_policy_and_keeps_user_choices():
         cfg = read_settings(d)
         perms = cfg['permissions']
         assert perms['defaultMode'] == 'bypassPermissions'       # forced
-        assert {'WebFetch', 'WebSearch', 'Bash(npx *)'} <= set(perms['deny'])
-        assert perms['ask'] == ['Bash(pnpm dlx *)']
+        assert {'WebFetch', 'WebSearch'} <= set(perms['deny'])
+        # Each item turns off EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS (ADR 0006): installs go to mods/install-guard.
+        assert not [r for r in perms['deny'] + perms.get('ask', []) if r.split('(', 1)[0] in ('Bash', 'Edit', 'Read')]
+        assert perms.get('blockReadsOutsideWorkingDirectories') is not True
+        assert 'PermissionRequest' not in cfg.get('hooks', {})
+        mod_files = [p for p in (ROOT / 'mods').rglob('*') if p.is_file() and 'types' not in p.parts]
+        assert not [p for p in mod_files if 'PermissionRequest' in p.read_text(encoding='utf-8')]
         assert perms['allow'] == ['Bash(make *)']               # user key in a forced dict
         assert cfg['autoUpdatesChannel'] == 'stable'
         assert cfg['disableBundledSkills'] is True
@@ -210,6 +215,7 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert env['BASH_MAX_OUTPUT_LENGTH'] == '16384'
         assert env['CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS'] == '1'
         assert env['CLAUDE_CODE_SUBAGENT_EFFORT'] == 'medium'
+        assert env['CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS'] == '1'
         assert 'DISABLE_UPDATES' not in env
         assert env['MY_VAR'] == '1'
         dirs = env['CLAUDE_CODE_PLUGIN_DIRS'].split(':')

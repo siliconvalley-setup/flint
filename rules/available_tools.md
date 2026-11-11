@@ -14,10 +14,6 @@
 - Node libs: `NODE_PATH=~/.npm-global/lib/node_modules`; `require('<name>')` works from any project, ESM `import` fails.
 - Browsers: one full Chromium `/Applications/Chromium.app` for agent-browser, playwright-cli, Lighthouse. Project Playwright/Puppeteer: own headless shell, never `executablePath` to Chromium.app (install: skill **toolchain-installed**). WebKit: `~/Library/Caches/ms-playwright`. Operator Chromium session: CDP `127.0.0.1:9222`.
 
-## Installs
-- Blocked: `npx`, `npm install`, global `pnpm add`, `pip install`. Project deps: `pnpm add` inside the project.
-- `pnpm dlx`: ask human first; official CLIs only (`pnpm dlx @astrojs/upgrade`).
-
 ## Files & code
 - Bash first: read `cat`/`head`/`sed -n`, search `rg`, edit `sed`/heredoc/short script. Read/Edit/Write tools only when Bash cannot.
 - `rg`, not `grep`. Config: `--hidden --glob=!.git --smart-case --max-columns=150 --max-columns-preview`. `[... omitted end of long line]` = rg cut, not line end; full line needed → `-M0`, that file only. Single-quote pattern/globs; `-F` literal; `-e` leading `-`.
