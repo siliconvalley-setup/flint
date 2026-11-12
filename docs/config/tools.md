@@ -1,7 +1,7 @@
 ---
 type: Component
 title: Mods and tools
-description: token-budget mod, handoff mod, sleep-guard mod, lsp mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
+description: token-budget mod, handoff mod, sleep-guard mod, install-guard mod, lsp mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
 tags: [config, mods, tools]
 status: stable
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
@@ -31,6 +31,14 @@ Context meter + handoff catalog. Decision: ADR [0004](../adr/0004-handoff-catalo
 ## sleep-guard (`mods/sleep-guard/`)
 
 Wait and stop rules on Bash calls, main conversation and every subagent. Decision lives in vmCODE `docs/adr/sleep-guard.md`.
+
+## install-guard (`mods/install-guard/`)
+
+Soft gate on Bash installs, main conversation and every subagent: [ADR 0006](../adr/0006-install-guard.md).
+
+- New package, tool or stack → deny with reason; agent asks human in reply, reruns the segment with `FLINT_INSTALL_OK=1` after yes.
+- Scaffolders, system and toolchain installs, piped install scripts → always ask.
+- Install or update of what exists → runs free.
 
 ## lsp (`mods/lsp/`)
 

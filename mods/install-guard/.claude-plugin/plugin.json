@@ -1,0 +1,8 @@
+{
+  "name": "install-guard",
+  "version": "1.0.0",
+  "description": "Soft gate on Bash installs: a package, tool or stack new to the project or the machine needs the human's yes; installs and updates of what exists run free",
+  "author": {
+    "name": "realroboto"
+  }
+}
