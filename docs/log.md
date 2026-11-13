@@ -2,10 +2,16 @@
 
 ## 2026-11-13
 - **TokenEconomizer follows HEAD** (#113): every install run updates its marketplace; HEAD moved → uninstall, clean cache, install. `config/tools.md` drops manual update command.
+- **Resync**: `desktop/cowork/SKILL.md` regenerated after `flint.md` header gained "Don't be lazy. Be proactive." Chat derivados unchanged (header not in them, as #106). ADR 0005 Decision 5 heading matches captcha rule.
 
 ## 2026-11-11
 - **Install guard** ([ADR 0006](adr/0006-install-guard.md), #108): new `mods/install-guard` asks the human for new stacks only. `env.sh` gains `CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1`. Bash deny/ask rules leave forced `permissions`. `rules/available_tools.md` drops its Installs section.
 - **No native web tools**: ADR 0005 added (#102). Forced deny gains `WebSearch`; install test asserts it. `rules/available_tools.md` gains search chain `firecrawl search` → `sv-agent-env bx` → browser search.
+- **Rules, web search** (#100, #101, closes #98): `rules/available_tools.md` gains `firecrawl search`, then `bx` as paid fallback; #101 trims `bx` entry to facts `bx --help` lacks.
+- **Rules, headless browser** (#99): project headless automation uses its framework headless shell, not full Chromium (`SIGSEGV` under parallel load). Generic `CHROME_PATH` dropped. `toolchain-installed` `browser.md`, `node.md` follow.
+- **stack-sweep pnpm** (#105): global version = `cd ~ && pnpm --version`; inside a project pnpm reports `packageManager`.
+- **Cowork resync** (#106): `desktop/cowork/SKILL.md` regenerated; hook head test derives from `flint.md`.
+- **rg rule** (#107): `rules/available_tools.md` explains rg long-line cut and `-M0` escape.
 
 ## 2026-11-08
 - **dfs skill**: `external-skills.txt` gains `git realroboto/dataforseo-cli`; install links skill `dfs` (#95). `rules/available_tools.md` gains `dfs` CLI line.

@@ -42,7 +42,7 @@ or helper start: stale after rotation.
    tells operator in final reply.
 4. **`bx` through `sv-agent-env`**: sources `~/.bashrc` per call, so rotated
    key reaches running sessions with no restart.
-5. **Captcha → next engine.** Google first = operator choice.
+5. **Captcha: ≤1 checkbox click, never image/audio puzzle; still blocked → next engine.** Google first = operator choice.
 
 ## Consequences
 
