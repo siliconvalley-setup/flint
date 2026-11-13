@@ -60,10 +60,11 @@ Code intelligence for files no official LSP plugin covers: diagnostics after eac
 
 ## TokenEconomizer (plugin)
 
-- Needs `python3` >= 3.10 on PATH; below that run warns, hook does nothing.
+- Hook runs PATH `python3`; below 3.10 it does nothing. Install run warns while the entry is listed.
 - Setup from `TE_*` lines in `env.sh`.
-- Installer follows GitHub HEAD on every run: `plugin marketplace update`; HEAD ≠ record `gitCommitSha` → uninstall, delete `<config dir>/plugins/cache/tokeneconomizer`, install. Reason: version stays `0.1.0`, so `plugin update` keeps stale cached code.
-- Reinstall deletes code that open sessions run: restart every Claude session after run.
+- External plugin, target `global` (`external-plugins.txt`): loaded in place from `.cache/plugins/TokenEconomizer/plugin` as `tokeneconomizer@inline`. Every `./install.sh` pulls GitHub HEAD. Reason: manifest pins `"version": "0.1.0"`, so a marketplace copy never updates.
+- State in `~/.tokeneconomizer/`, outside every plugin dir: survives the move.
+- Old marketplace copy (`tokeneconomizer@tokeneconomizer`): not uninstalled. Prune drops flint's `enabledPlugins` entry and marketplace; same-named `@inline` replaces it.
 
 ## Cost report (`tools/tokscan.py`)
 
