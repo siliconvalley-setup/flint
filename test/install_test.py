@@ -220,7 +220,9 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert env['MY_VAR'] == '1'
         dirs = env['CLAUDE_CODE_PLUGIN_DIRS'].split(':')
         shipped = sorted(p.parent.parent.as_posix() for p in (ROOT / 'mods').glob('*/.claude-plugin/plugin.json'))
-        assert shipped and dirs == ['/mine/mod', *shipped]
+        assert shipped and dirs[:len(shipped) + 1] == ['/mine/mod', *shipped]
+        # external plugins this clone already fetched follow the mods
+        assert all(x.startswith((ROOT / '.cache' / 'plugins').as_posix()) for x in dirs[len(shipped) + 1:])
         out = subprocess.run(['sh', '-c', '. "$1" && printf %s "$FIRECRAWL_API_URL"',
                               'sh', str(ROOT / 'env.sh')],
                              capture_output=True, text=True).stdout
@@ -273,7 +275,7 @@ def fake_claude(parent, installed=(), version='1.0.0'):
 
 
 CATALOG = ['typescript-lsp@claude-plugins-official', 'pyright-lsp@claude-plugins-official',
-           'ai-memory@ai-memory', 'tokeneconomizer@tokeneconomizer']
+           'ai-memory@ai-memory']
 
 
 def test_install_adds_the_marketplace_and_installs_the_catalog():
@@ -284,7 +286,7 @@ def test_install_adds_the_marketplace_and_installs_the_catalog():
         assert run_cli(d, claude_bin=stub).returncode == 0
         calls = log.read_text().splitlines()
         assert 'plugin marketplace add https://github.com/akitaonrails/ai-memory' in calls
-        assert 'plugin marketplace add https://github.com/microsoft/TokenEconomizer' in calls
+        assert not any('okeneconomizer' in c for c in calls)   # external plugin now
         for plugin in CATALOG:
             assert 'plugin install {}'.format(plugin) in calls
         assert not any('builtin' in c for c in calls)
@@ -307,7 +309,7 @@ def test_installed_plugins_are_left_alone():
         r = run_cli(d, claude_bin=stub, path=fake_bin(d, 'ai-memory', 'ai-memory 3.2.4'))
         assert r.returncode == 0, r.stderr
         calls = log.read_text().splitlines()
-        assert [c for c in calls if 'list' not in c] == ['plugin marketplace update tokeneconomizer']
+        assert [c for c in calls if 'list' not in c] == []
 
 
 def test_ai_memory_plugin_follows_a_newer_binary():
@@ -317,50 +319,8 @@ def test_ai_memory_plugin_follows_a_newer_binary():
         stub, log = fake_claude(d, installed=CATALOG, version='3.2.4')
         run_cli(d, claude_bin=stub, path=fake_bin(d, 'ai-memory', 'ai-memory 3.3.0'))
         calls = [c for c in log.read_text().splitlines() if 'list' not in c]
-        assert calls == ['plugin marketplace update tokeneconomizer',
-                         'plugin marketplace update ai-memory',
+        assert calls == ['plugin marketplace update ai-memory',
                          'plugin update ai-memory@ai-memory']
-
-
-def te_marketplace(d, recorded_sha):
-    """A git marketplace clone for TokenEconomizer + an install record."""
-    plugins = Path(d) / 'plugins'
-    mkt = plugins / 'marketplaces' / 'tokeneconomizer'
-    mkt.mkdir(parents=True)
-    git = ['git', '-C', str(mkt), '-c', 'user.name=t', '-c', 'user.email=t@t']
-    subprocess.run(git + ['init', '-q'], check=True)
-    subprocess.run(git + ['commit', '-q', '--allow-empty', '-m', 'x'], check=True)
-    head = subprocess.run(git + ['rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
-    sha = head if recorded_sha is None else recorded_sha
-    (plugins / 'installed_plugins.json').write_text(json.dumps({'plugins': {
-        'tokeneconomizer@tokeneconomizer': [{'installPath': 'x', 'gitCommitSha': sha}]}}))
-    cache = _cache(d, 'tokeneconomizer', 'tokeneconomizer', ('0.1.0',))
-    return cache
-
-
-def test_tokeneconomizer_at_github_head_is_left_alone():
-    if skip_unless_posix():
-        return
-    with tempfile.TemporaryDirectory() as d:
-        cache = te_marketplace(d, None)
-        stub, log = fake_claude(d, installed=CATALOG)
-        run_cli(d, claude_bin=stub)
-        assert 'plugin uninstall' not in log.read_text()
-        assert cache.is_dir()
-
-
-def test_tokeneconomizer_behind_github_head_is_reinstalled_from_a_clean_cache():
-    if skip_unless_posix():
-        return
-    with tempfile.TemporaryDirectory() as d:
-        cache = te_marketplace(d, 'old')
-        stub, log = fake_claude(d, installed=CATALOG)
-        r = run_cli(d, claude_bin=stub)
-        calls = [c for c in log.read_text().splitlines() if 'tokeneconomizer@' in c]
-        assert calls == ['plugin uninstall tokeneconomizer@tokeneconomizer',
-                         'plugin install tokeneconomizer@tokeneconomizer']
-        assert not cache.parent.exists()
-        assert 'restart open Claude sessions' in r.stdout
 
 
 def test_a_missing_plugin_binary_is_named():
@@ -378,10 +338,38 @@ def test_tokeneconomizer_warns_when_python3_is_older_than_3_10():
         return
     with tempfile.TemporaryDirectory() as d:
         r = run_cli(d, path=fake_bin(d, 'python3', 'Python 3.9.6'))
-        assert 'tokeneconomizer@tokeneconomizer needs python3 >= 3.10' in r.stderr
+        assert 'microsoft/TokenEconomizer needs python3 >= 3.10' in r.stderr
     with tempfile.TemporaryDirectory() as d:
         r = run_cli(d, path=fake_bin(d, 'python3', 'Python 3.15.0'))
         assert 'python3 >= 3.10' not in r.stderr
+    with tempfile.TemporaryDirectory() as d:          # no entry, no warning
+        clone = plugin_clone(d, [], plugins=())
+        r = run_cli(Path(d) / 'cfg', root=clone, path=fake_bin(d, 'python3', 'Python 3.9.6'))
+        assert 'python3 >= 3.10' not in r.stderr
+
+
+def test_tokeneconomizer_marketplace_entries_flint_set_leave_the_config():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        clone = make_clone(d)
+        cfg_dir = Path(d) / 'cfg'
+        forced = json.loads((clone / 'settings.json').read_text())
+        forced['extraKnownMarketplaces']['tokeneconomizer'] = {
+            'source': {'source': 'github', 'repo': 'microsoft/TokenEconomizer'}}
+        (clone / 'settings.json').write_text(json.dumps(forced))
+        defaults = json.loads((clone / 'settings.defaults.json').read_text())
+        defaults['enabledPlugins']['tokeneconomizer@tokeneconomizer'] = True
+        (clone / 'settings.defaults.json').write_text(json.dumps(defaults))
+        run_cli(cfg_dir, root=clone)                    # the pre-#111 install
+        assert read_settings(cfg_dir)['enabledPlugins']['tokeneconomizer@tokeneconomizer']
+        for f in ('settings.json', 'settings.defaults.json'):
+            shutil.copy(str(ROOT / f), str(clone / f))
+        assert run_cli(cfg_dir, root=clone).returncode == 0
+        cfg = read_settings(cfg_dir)
+        assert 'tokeneconomizer' not in cfg['extraKnownMarketplaces']
+        assert 'tokeneconomizer@tokeneconomizer' not in cfg['enabledPlugins']
+        assert cfg['env']['TE_MICROSKILLS'] == 'envfacts'
 
 
 def test_a_plugin_the_user_disabled_is_not_installed():
@@ -547,6 +535,12 @@ def test_a_plugin_fetched_on_the_first_run_loads_on_that_run():
         assert (clone.resolve() / '.cache/plugins/fresh/plugin').as_posix() in dirs
         state = json.loads((cfg_dir / '.flint-state.json').read_text())
         assert state['plugin_dirs'] == dirs
+
+
+def test_external_plugins_list_loads_tokeneconomizer_globally():
+    lines = [l.split() for l in (ROOT / 'external-plugins.txt').read_text().splitlines()
+             if l.strip() and not l.startswith('#')]
+    assert lines == [['git', 'microsoft/TokenEconomizer:plugin', 'global']]
 
 
 def _token_link(home):

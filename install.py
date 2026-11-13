@@ -378,7 +378,7 @@ PLUGIN_BINARIES = {
     'ai-memory@ai-memory': 'ai-memory',
 }
 AI_MEMORY = 'ai-memory@ai-memory'
-TOKENECONOMIZER = 'tokeneconomizer@tokeneconomizer'
+TOKENECONOMIZER = 'microsoft/TokenEconomizer'   # its external-plugins.txt ref
 CLAUDE_TIMEOUT = 600
 
 
@@ -429,19 +429,13 @@ def _github_repo(markets, mkt):
 def apply_plugins(cfg, catalog):
     """Install each flint plugin the config leaves enabled and is missing.
     ai-memory is also updated while it is older than the machine's binary
-    (the plugin must not run ahead of the server client). TokenEconomizer
-    follows its GitHub HEAD on every run. Warns when
-    TokenEconomizer is wanted and PATH python3 is < 3.10. Needs `claude`:
+    (the plugin must not run ahead of the server client). Needs `claude`:
     missing -> warn, the next run retries. Returns the plugins installed."""
     wanted = [p for p in catalog if cfg.get('enabledPlugins', {}).get(p) is True]
     for plugin in wanted:
         binary = PLUGIN_BINARIES.get(plugin)
         if binary and not shutil.which(binary):
             warn('{} needs `{}` on PATH; install it on this machine'.format(plugin, binary))
-    # Its hook runs the PATH python3 and silently does nothing below 3.10.
-    if TOKENECONOMIZER in wanted and (_python3_version() or (0,)) < (3, 10):
-        warn('{} needs python3 >= 3.10 on PATH; below that it does nothing'
-             .format(TOKENECONOMIZER))
     if not wanted:
         return []
     claude = claude_bin()
@@ -452,7 +446,7 @@ def apply_plugins(cfg, catalog):
     installed = {p.get('id'): p.get('version') for p in
                  _claude_json(claude, 'plugin', 'list', '--json')}
     known = {m.get('name') for m in _claude_json(claude, 'plugin', 'marketplace', 'list', '--json')}
-    steps, done = [], []
+    steps = []
     for plugin in wanted:
         mkt = plugin.split('@', 1)[-1]
         repo = _github_repo(cfg.get('extraKnownMarketplaces'), mkt)
@@ -460,8 +454,6 @@ def apply_plugins(cfg, catalog):
             if plugin == AI_MEMORY and _ai_memory_behind(installed[plugin]):
                 steps.append([['plugin', 'marketplace', 'update', mkt],
                               ['plugin', 'update', plugin]])
-            elif plugin == TOKENECONOMIZER and _refresh_tokeneconomizer(claude, mkt):
-                done.append(plugin)
             continue
         group = []
         if mkt not in known and repo:
@@ -470,8 +462,7 @@ def apply_plugins(cfg, catalog):
             known.add(mkt)
         group.append(['plugin', 'install', plugin])
         steps.append(group)
-    done += [group[-1][-1] for group in steps if _run(claude, group)]
-    return done
+    return [group[-1][-1] for group in steps if _run(claude, group)]
 
 
 def _run(claude, group):
@@ -481,33 +472,6 @@ def _run(claude, group):
             warn('claude {} failed ({}); the next run retries'
                  .format(' '.join(step), (r.stderr or '').strip()[:200]))
             return False
-    return True
-
-
-def _refresh_tokeneconomizer(claude, mkt):
-    """Upstream version stays 0.1.0, so `plugin update` keeps the stale cache
-    dir. Marketplace HEAD moved -> uninstall, drop the cache, install."""
-    if not _run(claude, [['plugin', 'marketplace', 'update', mkt]]):
-        return False
-    plugins = config_dir() / 'plugins'
-    try:
-        head = subprocess.run(['git', '-C', str(plugins / 'marketplaces' / mkt), 'rev-parse', 'HEAD'],
-                              capture_output=True, text=True, timeout=30).stdout.strip()
-    except (OSError, subprocess.TimeoutExpired):
-        head = ''
-    if not head:
-        warn('{}: marketplace clone has no HEAD; not updated'.format(TOKENECONOMIZER))
-        return False
-    have = {e.get('gitCommitSha') for e in _plugin_records().get(TOKENECONOMIZER) or []
-            if isinstance(e, dict)}
-    if head in have:
-        return False
-    if not _run(claude, [['plugin', 'uninstall', TOKENECONOMIZER]]):
-        return False
-    shutil.rmtree(str(plugins / 'cache' / mkt), ignore_errors=True)
-    if not _run(claude, [['plugin', 'install', TOKENECONOMIZER]]):
-        return False
-    print('flint: {} -> {}; restart open Claude sessions'.format(TOKENECONOMIZER, head[:12]))
     return True
 
 
@@ -729,6 +693,11 @@ def install(cfg, state):
     dirs, plugin_links, skipped = place_plugins(plugins)   # the fetch may add or drop some
     for msg in skipped:
         warn(msg)
+    # Its hook runs the PATH python3 and silently does nothing below 3.10.
+    if any(ref == TOKENECONOMIZER for ref, _, _, _ in plugins) and \
+            (_python3_version() or (0,)) < (3, 10):
+        warn('{} needs python3 >= 3.10 on PATH; below that it does nothing'
+             .format(TOKENECONOMIZER))
     old_links = state.get('links', {})
     new_state['links'] = apply_links(
         [(config_dir() / kind / name, src) for kind, name, src in link_sources()]

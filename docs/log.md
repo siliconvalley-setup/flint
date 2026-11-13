@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-13
+- **TokenEconomizer as external plugin** (#111): `external-plugins.txt` gains `git microsoft/TokenEconomizer:plugin global`. Marketplace entry and `enabledPlugins` default leave settings; #113 reinstall path removed. `config/tools.md`, `config/installer.md` follow.
 - **External plugins** (#112): new `external-plugins.txt`; each repo fetched into `.cache/plugins/<repo>/`, loaded in place. `global` → `CLAUDE_CODE_PLUGIN_DIRS`; project path → `<project>/.claude/skills/<repo>` link in state `links`. `config/installer.md` gains rows.
 - **TokenEconomizer follows HEAD** (#113): every install run updates its marketplace; HEAD moved → uninstall, clean cache, install. `config/tools.md` drops manual update command.
 - **Resync**: `desktop/cowork/SKILL.md` regenerated after `flint.md` header gained "Don't be lazy. Be proactive." Chat derivados unchanged (header not in them, as #106). ADR 0005 Decision 5 heading matches captcha rule.

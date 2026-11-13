@@ -13,7 +13,6 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
-    "ai-memory@ai-memory": true,
-    "tokeneconomizer@tokeneconomizer": true
+    "ai-memory@ai-memory": true
   }
 }
