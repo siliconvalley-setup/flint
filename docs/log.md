@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-13
+- **marketingskills for aviato** (realroboto/aviato#87): `external-plugins.txt` gains `git coreyhaines31/marketingskills /Users/Shared/hooli/aviato`. Link `aviato/.claude/skills/marketingskills`, plugin `marketing-skills@skills-dir`, aviato only. Coupling rules live in aviato README.
 - **TokenEconomizer as external plugin** (#111): `external-plugins.txt` gains `git microsoft/TokenEconomizer:plugin global`. Marketplace entry and `enabledPlugins` default leave settings; #113 reinstall path removed. `config/tools.md`, `config/installer.md` follow.
 - **External plugins** (#112): new `external-plugins.txt`; each repo fetched into `.cache/plugins/<repo>/`, loaded in place. `global` → `CLAUDE_CODE_PLUGIN_DIRS`; project path → `<project>/.claude/skills/<repo>` link in state `links`. `config/installer.md` gains rows.
 - **TokenEconomizer follows HEAD** (#113): every install run updates its marketplace; HEAD moved → uninstall, clean cache, install. `config/tools.md` drops manual update command.
