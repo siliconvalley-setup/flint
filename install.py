@@ -246,7 +246,7 @@ def read_json(path):
         return {}
     except ValueError as e:
         sys.exit('flint install: {} is not valid JSON ({})'.format(path, e))
-    return _subst(data) if isinstance(data, dict) else {}
+    return {k: _subst(v) for k, v in data.items()} if isinstance(data, dict) else {}
 
 
 def _leaves(value):
@@ -695,7 +695,7 @@ def install(cfg, state):
         warn(msg)
     # Its hook runs the PATH python3 and silently does nothing below 3.10.
     if any(ref == TOKENECONOMIZER for ref, _, _, _ in plugins) and \
-            (_python3_version() or (0,)) < (3, 10):
+            (_python3_version() or ()) < (3, 10):
         warn('{} needs python3 >= 3.10 on PATH; below that it does nothing'
              .format(TOKENECONOMIZER))
     old_links = state.get('links', {})

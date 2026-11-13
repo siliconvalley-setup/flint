@@ -63,7 +63,7 @@ print(raw(cw.get("total_input_tokens") or 0), raw(cw.get("context_window_size") 
 ' 2>/dev/null)
 # No usage data (empty/invalid stdin): nothing to render.
 [ -z "$vals" ] && exit 0
-IFS=$'\t' read -r CTX_USED CTX_MAX CTX_PCT RL_PCT RL_RESETS W7_PCT W7_RESETS W7_LABEL EFFORT_LEVEL PC_WARM PC_EXP PC_RE CU_R CU_W MODEL_NAME WORKDIR <<EOF
+IFS=$'\t' read -r CTX_USED CTX_MAX CTX_PCT RL_PCT RL_RESETS W7_PCT _ W7_LABEL EFFORT_LEVEL PC_WARM PC_EXP PC_RE CU_R CU_W MODEL_NAME WORKDIR <<EOF
 $vals
 EOF
 

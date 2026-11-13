@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 # flint env — one file for every environment value.
 # install.sh copies each export into the `env` of ~/.claude/settings.json (Claude
 # sees it in CLI and Desktop); a shell may also source this file so tools run

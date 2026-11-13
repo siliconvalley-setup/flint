@@ -742,7 +742,7 @@ def test_a_marketplace_with_a_string_source_does_not_crash():
     with tempfile.TemporaryDirectory() as d:
         (Path(d) / 'settings.json').write_text(json.dumps(
             {'extraKnownMarketplaces': {'claude-plugins-official': {'source': 'x'}}}))
-        stub, log = fake_claude(d)
+        stub, _ = fake_claude(d)
         r = run_cli(d, claude_bin=stub)
         assert r.returncode == 0, r.stderr
 
