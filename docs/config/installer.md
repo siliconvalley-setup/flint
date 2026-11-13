@@ -27,6 +27,7 @@ Applies config + [style hook](../style-core/hook.md) to `$CLAUDE_CONFIG_DIR` (de
 Plus:
 - `claude plugin install` for each enabled plugin missing. Warning names missing machine binary (`typescript-language-server`, `pyright`, `ai-memory`).
 - ai-memory plugin updated only while older than `ai-memory` binary: plugin must not run ahead of its server client. No blanket update.
+- TokenEconomizer reinstalled from clean cache when marketplace HEAD moved; see [tools](./tools.md#tokeneconomizer-plugin).
 - One cached version per flint plugin; dedupe touches flint plugins with install record only.
 - Link `<ai-memory data dir>/auth-token` → `~/.config/ai-memory-auth-token` when secret file exists. Data dir: `AI_MEMORY_DATA_DIR`, else macOS `~/Library/Application Support/ai-memory`, Linux `${XDG_DATA_HOME:-~/.local/share}/ai-memory`.
 

@@ -384,7 +384,8 @@ def _github_repo(markets, mkt):
 def apply_plugins(cfg, catalog):
     """Install each flint plugin the config leaves enabled and is missing.
     ai-memory is also updated while it is older than the machine's binary
-    (the plugin must not run ahead of the server client). Warns when
+    (the plugin must not run ahead of the server client). TokenEconomizer
+    follows its GitHub HEAD on every run. Warns when
     TokenEconomizer is wanted and PATH python3 is < 3.10. Needs `claude`:
     missing -> warn, the next run retries. Returns the plugins installed."""
     wanted = [p for p in catalog if cfg.get('enabledPlugins', {}).get(p) is True]
@@ -406,7 +407,7 @@ def apply_plugins(cfg, catalog):
     installed = {p.get('id'): p.get('version') for p in
                  _claude_json(claude, 'plugin', 'list', '--json')}
     known = {m.get('name') for m in _claude_json(claude, 'plugin', 'marketplace', 'list', '--json')}
-    steps = []
+    steps, done = [], []
     for plugin in wanted:
         mkt = plugin.split('@', 1)[-1]
         repo = _github_repo(cfg.get('extraKnownMarketplaces'), mkt)
@@ -414,6 +415,8 @@ def apply_plugins(cfg, catalog):
             if plugin == AI_MEMORY and _ai_memory_behind(installed[plugin]):
                 steps.append([['plugin', 'marketplace', 'update', mkt],
                               ['plugin', 'update', plugin]])
+            elif plugin == TOKENECONOMIZER and _refresh_tokeneconomizer(claude, mkt):
+                done.append(plugin)
             continue
         group = []
         if mkt not in known and repo:
@@ -422,17 +425,45 @@ def apply_plugins(cfg, catalog):
             known.add(mkt)
         group.append(['plugin', 'install', plugin])
         steps.append(group)
-    done = []
-    for group in steps:
-        for step in group:
-            r = _claude(claude, *step)
-            if r.returncode != 0:
-                warn('claude {} failed ({}); the next run retries'
-                     .format(' '.join(step), (r.stderr or '').strip()[:200]))
-                break
-        else:
-            done.append(group[-1][-1])
+    done += [group[-1][-1] for group in steps if _run(claude, group)]
     return done
+
+
+def _run(claude, group):
+    for step in group:
+        r = _claude(claude, *step)
+        if r.returncode != 0:
+            warn('claude {} failed ({}); the next run retries'
+                 .format(' '.join(step), (r.stderr or '').strip()[:200]))
+            return False
+    return True
+
+
+def _refresh_tokeneconomizer(claude, mkt):
+    """Upstream version stays 0.1.0, so `plugin update` keeps the stale cache
+    dir. Marketplace HEAD moved -> uninstall, drop the cache, install."""
+    if not _run(claude, [['plugin', 'marketplace', 'update', mkt]]):
+        return False
+    plugins = config_dir() / 'plugins'
+    try:
+        head = subprocess.run(['git', '-C', str(plugins / 'marketplaces' / mkt), 'rev-parse', 'HEAD'],
+                              capture_output=True, text=True, timeout=30).stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        head = ''
+    if not head:
+        warn('{}: marketplace clone has no HEAD; not updated'.format(TOKENECONOMIZER))
+        return False
+    have = {e.get('gitCommitSha') for e in _plugin_records().get(TOKENECONOMIZER) or []
+            if isinstance(e, dict)}
+    if head in have:
+        return False
+    if not _run(claude, [['plugin', 'uninstall', TOKENECONOMIZER]]):
+        return False
+    shutil.rmtree(str(plugins / 'cache' / mkt), ignore_errors=True)
+    if not _run(claude, [['plugin', 'install', TOKENECONOMIZER]]):
+        return False
+    print('flint: {} -> {}; restart open Claude sessions'.format(TOKENECONOMIZER, head[:12]))
+    return True
 
 
 def _ai_memory_behind(plugin_version):
@@ -490,15 +521,21 @@ def link_ai_memory_token(owned, remove=False):
 # install`/`update` leave the old dir behind. For flint's own plugins only,
 # keep the dir installed_plugins.json names and drop the others. No record ->
 # nothing is deleted (never guess which version is live).
+def _plugin_records():
+    """installed_plugins.json `plugins`: id -> list of install records."""
+    try:
+        data = json.loads((config_dir() / 'plugins' / 'installed_plugins.json')
+                          .read_text(encoding='utf-8'))['plugins']
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def dedupe_plugin_cache(catalog):
     root = config_dir() / 'plugins'
-    try:
-        data = json.loads((root / 'installed_plugins.json').read_text(encoding='utf-8'))
-        records = data['plugins']
-    except (OSError, ValueError, KeyError, TypeError):
-        return
+    records = _plugin_records()
     for plugin in catalog:
-        entries = records.get(plugin) if isinstance(records, dict) else None
+        entries = records.get(plugin)
         live = {Path(e['installPath']).resolve() for e in entries or []
                 if isinstance(e, dict) and isinstance(e.get('installPath'), str)}
         name, _, mkt = plugin.partition('@')
