@@ -307,7 +307,7 @@ def test_installed_plugins_are_left_alone():
         r = run_cli(d, claude_bin=stub, path=fake_bin(d, 'ai-memory', 'ai-memory 3.2.4'))
         assert r.returncode == 0, r.stderr
         calls = log.read_text().splitlines()
-        assert [c for c in calls if 'list' not in c] == []
+        assert [c for c in calls if 'list' not in c] == ['plugin marketplace update tokeneconomizer']
 
 
 def test_ai_memory_plugin_follows_a_newer_binary():
@@ -317,8 +317,50 @@ def test_ai_memory_plugin_follows_a_newer_binary():
         stub, log = fake_claude(d, installed=CATALOG, version='3.2.4')
         run_cli(d, claude_bin=stub, path=fake_bin(d, 'ai-memory', 'ai-memory 3.3.0'))
         calls = [c for c in log.read_text().splitlines() if 'list' not in c]
-        assert calls == ['plugin marketplace update ai-memory',
+        assert calls == ['plugin marketplace update tokeneconomizer',
+                         'plugin marketplace update ai-memory',
                          'plugin update ai-memory@ai-memory']
+
+
+def te_marketplace(d, recorded_sha):
+    """A git marketplace clone for TokenEconomizer + an install record."""
+    plugins = Path(d) / 'plugins'
+    mkt = plugins / 'marketplaces' / 'tokeneconomizer'
+    mkt.mkdir(parents=True)
+    git = ['git', '-C', str(mkt), '-c', 'user.name=t', '-c', 'user.email=t@t']
+    subprocess.run(git + ['init', '-q'], check=True)
+    subprocess.run(git + ['commit', '-q', '--allow-empty', '-m', 'x'], check=True)
+    head = subprocess.run(git + ['rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+    sha = head if recorded_sha is None else recorded_sha
+    (plugins / 'installed_plugins.json').write_text(json.dumps({'plugins': {
+        'tokeneconomizer@tokeneconomizer': [{'installPath': 'x', 'gitCommitSha': sha}]}}))
+    cache = _cache(d, 'tokeneconomizer', 'tokeneconomizer', ('0.1.0',))
+    return cache
+
+
+def test_tokeneconomizer_at_github_head_is_left_alone():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        cache = te_marketplace(d, None)
+        stub, log = fake_claude(d, installed=CATALOG)
+        run_cli(d, claude_bin=stub)
+        assert 'plugin uninstall' not in log.read_text()
+        assert cache.is_dir()
+
+
+def test_tokeneconomizer_behind_github_head_is_reinstalled_from_a_clean_cache():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        cache = te_marketplace(d, 'old')
+        stub, log = fake_claude(d, installed=CATALOG)
+        r = run_cli(d, claude_bin=stub)
+        calls = [c for c in log.read_text().splitlines() if 'tokeneconomizer@' in c]
+        assert calls == ['plugin uninstall tokeneconomizer@tokeneconomizer',
+                         'plugin install tokeneconomizer@tokeneconomizer']
+        assert not cache.parent.exists()
+        assert 'restart open Claude sessions' in r.stdout
 
 
 def test_a_missing_plugin_binary_is_named():

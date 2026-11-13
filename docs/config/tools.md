@@ -62,11 +62,8 @@ Code intelligence for files no official LSP plugin covers: diagnostics after eac
 
 - Needs `python3` >= 3.10 on PATH; below that run warns, hook does nothing.
 - Setup from `TE_*` lines in `env.sh`.
-- Never self-updates. Version stays `0.1.0`, so Claude Code keeps old cached code even when `installed_plugins.json` shows new `gitCommitSha`. Update: close every Claude session, then:
-
-```sh
-claude plugin marketplace update tokeneconomizer && claude plugin uninstall tokeneconomizer@tokeneconomizer && rm -rf <config dir>/plugins/cache/tokeneconomizer && claude plugin install tokeneconomizer@tokeneconomizer
-```
+- Installer follows GitHub HEAD on every run: `plugin marketplace update`; HEAD ≠ record `gitCommitSha` → uninstall, delete `<config dir>/plugins/cache/tokeneconomizer`, install. Reason: version stays `0.1.0`, so `plugin update` keeps stale cached code.
+- Reinstall deletes code that open sessions run: restart every Claude session after run.
 
 ## Cost report (`tools/tokscan.py`)
 
