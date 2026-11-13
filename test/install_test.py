@@ -537,10 +537,11 @@ def test_a_plugin_fetched_on_the_first_run_loads_on_that_run():
         assert state['plugin_dirs'] == dirs
 
 
-def test_external_plugins_list_loads_tokeneconomizer_globally():
+def test_external_plugins_list_shipped_lines():
     lines = [l.split() for l in (ROOT / 'external-plugins.txt').read_text().splitlines()
              if l.strip() and not l.startswith('#')]
-    assert lines == [['git', 'microsoft/TokenEconomizer:plugin', 'global']]
+    assert lines == [['git', 'microsoft/TokenEconomizer:plugin', 'global'],
+                     ['git', 'coreyhaines31/marketingskills', '/Users/Shared/hooli/aviato']]
 
 
 def _token_link(home):

@@ -6,3 +6,4 @@
 #   target = /abs/project/path   -> link <project>/.claude/skills/<repo>, <name>@skills-dir,
 #                                   that project only (needs workspace trust)
 git microsoft/TokenEconomizer:plugin global
+git coreyhaines31/marketingskills /Users/Shared/hooli/aviato
