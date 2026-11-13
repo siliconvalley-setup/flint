@@ -1,0 +1,7 @@
+# Claude Code plugins that live in other repos. install.sh clones or pulls each
+# into .cache/plugins/<repo>/. Claude Code loads it in place: each run brings
+# upstream HEAD, and a manifest version pin has no effect.
+# Format: git <github owner/repo>[:<plugin dir in repo>] <target>
+#   target = global              -> env.CLAUDE_CODE_PLUGIN_DIRS, <name>@inline, every session
+#   target = /abs/project/path   -> link <project>/.claude/skills/<repo>, <name>@skills-dir,
+#                                   that project only (needs workspace trust)

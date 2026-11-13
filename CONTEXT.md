@@ -40,6 +40,9 @@ Glossary only. No implementation details.
   installer and sourceable by a shell.
 - **external skill** — a skill fetched from another repo or npm package
   (`external-skills.txt`) into `.cache/`.
+- **external plugin** — a Claude Code plugin fetched from another repo
+  (`external-plugins.txt`) into `.cache/plugins/`, loaded in place globally
+  or in one project.
 - **handoff** — a document that lets a new session continue a work line with
   no access to the old session. One per work line; open until the owner
   closes it.

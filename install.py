@@ -3,7 +3,8 @@
 
 Run from the clone. Everything points at this clone, so an edit to a skill,
 agent, rule or output style takes effect at once; settings.json, its defaults
-file and env.sh take effect on the next run. Updating = `git pull` + re-run.
+file, env.sh and external-{skills,plugins}.txt take effect on the next run,
+which also pulls each external source. Updating = `git pull` + re-run.
 
     install.py               install (or re-point after a clone move)
     install.py --uninstall   remove exactly what flint added (installed
@@ -81,6 +82,7 @@ CACHE = ROOT / '.cache'
 
 
 def external_specs(root=ROOT):
+    """(kind, ref, cache dir) per line of external-skills.txt."""
     out = []
     try:
         text = (root / 'external-skills.txt').read_text(encoding='utf-8')
@@ -89,18 +91,17 @@ def external_specs(root=ROOT):
     for line in text.splitlines():
         parts = line.split()
         if len(parts) == 2 and parts[0] in ('git', 'npm') and not line.startswith('#'):
-            out.append((parts[0], parts[1]))
+            out.append((parts[0], parts[1],
+                        root / '.cache' / parts[0] / parts[1].rsplit('/', 1)[-1]))
     return out
 
 
-def fetch_external(specs, cache=CACHE):
-    """git clone/pull or npm pack each source into the cache. A failure keeps
+def fetch_external(specs):
+    """git clone/pull or npm pack each source into its cache dir. A failure keeps
     the previous copy and warns. FLINT_OFFLINE=1 skips the network."""
     if os.environ.get('FLINT_OFFLINE'):
         return
-    for kind, ref in specs:
-        name = ref.rsplit('/', 1)[-1]
-        dst = cache / kind / name
+    for kind, ref, dst in specs:
         try:
             if kind == 'git':
                 if (dst / '.git').is_dir():
@@ -147,18 +148,59 @@ def external_skills(cache=CACHE):
     return [f.parent for f in found]
 
 
+# ── External plugins: fetched into .cache/plugins/, loaded in place ───────────
+# No plugin cache copy, so the manifest version never pins an old copy.
+def plugin_specs(root=ROOT):
+    """(ref, clone, plugin dir, target) per line `git <owner/repo>[:<subdir>]
+    <target>` of external-plugins.txt; target = `global` or an absolute
+    project path."""
+    out = []
+    try:
+        text = (root / 'external-plugins.txt').read_text(encoding='utf-8')
+    except OSError:
+        return out
+    for line in text.splitlines():
+        parts = line.strip().split(None, 2)
+        if not parts or parts[0].startswith('#'):
+            continue
+        ref, _, sub = parts[1].partition(':') if len(parts) == 3 else ('', '', '')
+        if parts[0] != 'git' or '/' not in ref or \
+                not (parts[2] == 'global' or os.path.isabs(parts[2])):
+            warn('external-plugins.txt: bad line {!r}; skipped'.format(line))
+            continue
+        clone = root / '.cache' / 'plugins' / ref.rsplit('/', 1)[-1]
+        out.append((ref, clone, clone / sub, parts[2]))
+    return out
+
+
+def place_plugins(specs):
+    """Returns (global plugin dirs, [(project link, plugin dir)], warnings).
+    A line with no manifest or no project dir is skipped with a warning:
+    flint never creates a project."""
+    dirs, links, skipped = [], [], []
+    for ref, clone, plugin, target in specs:
+        if not _is_plugin(plugin):
+            skipped.append('{}: no .claude-plugin/plugin.json in {}; skipped'.format(ref, plugin))
+        elif target == 'global':
+            dirs.append(plugin.as_posix())
+        elif not Path(target).is_dir():
+            skipped.append('{}: target {} is not a dir; skipped'.format(ref, target))
+        else:
+            links.append((Path(target) / '.claude' / 'skills' / clone.name, plugin))
+    return dirs, links, skipped
+
+
 def _points_at(link, target):
     return link.is_symlink() and os.readlink(str(link)) == str(target)
 
 
-def apply_links(sources, owned):
+def apply_links(pairs, owned):
     """Create/re-point each link. `owned` = {link: target} from the last run:
     a link still pointing there is flint's (a moved clone re-points). A real
     file, or a link the user re-pointed, is theirs: warn and leave it.
     Returns {link: target} now owned."""
     now = {}
-    for kind, name, src in sources:
-        dst = config_dir() / kind / name
+    for dst, src in pairs:
         if not _points_at(dst, src):
             if dst.is_symlink() or dst.exists():
                 if not _points_at(dst, owned.get(str(dst))):
@@ -306,14 +348,17 @@ def read_env(path):
 PLUGIN_DIRS = 'CLAUDE_CODE_PLUGIN_DIRS'
 
 
+def _is_plugin(d):
+    return (d / '.claude-plugin' / 'plugin.json').is_file()
+
+
 def mod_dirs(root=ROOT):
     mods = root / 'mods'
-    return [d.as_posix() for d in sorted(mods.iterdir())
-            if (d / '.claude-plugin' / 'plugin.json').is_file()] if mods.is_dir() else []
+    return [d.as_posix() for d in sorted(mods.iterdir()) if _is_plugin(d)] if mods.is_dir() else []
 
 
 def apply_plugin_dirs(cfg, dirs, prev):
-    """Merge flint's mod dirs into the `:` list of CLAUDE_CODE_PLUGIN_DIRS:
+    """Merge flint's mod and global plugin dirs into the `:` list of CLAUDE_CODE_PLUGIN_DIRS:
     the user's entries stay, a dir flint stopped shipping leaves."""
     env = cfg.setdefault('env', {})
     keep = [d for d in env.get(PLUGIN_DIRS, '').split(':') if d and d not in prev]
@@ -667,9 +712,11 @@ def install(cfg, state):
     forced = read_json(ROOT / 'settings.json')
     forced['env'] = dict(forced.get('env', {}), **read_env(ROOT / 'env.sh'))
     defaults = read_json(ROOT / 'settings.defaults.json')
+    plugins = plugin_specs()
     new_state = {
         'forced': apply_forced(cfg, forced, state.get('forced', {})),
-        'plugin_dirs': apply_plugin_dirs(cfg, mod_dirs(), state.get('plugin_dirs', [])),
+        'plugin_dirs': apply_plugin_dirs(cfg, mod_dirs() + place_plugins(plugins)[0],
+                                         state.get('plugin_dirs', [])),
         'defaults': apply_defaults(cfg, defaults, state.get('defaults', {})),
         'links': state.get('links', {}),
         'ai_memory_link': state.get('ai_memory_link', False),
@@ -677,11 +724,21 @@ def install(cfg, state):
     save(settings_path(), apply(cfg))
     save(state_path(), new_state)
 
-    fetch_external(external_specs())
+    fetch_external(external_specs() + list(dict.fromkeys(
+        ('git', ref, clone) for ref, clone, _, _ in plugins)))
+    dirs, plugin_links, skipped = place_plugins(plugins)   # the fetch may add or drop some
+    for msg in skipped:
+        warn(msg)
     old_links = state.get('links', {})
-    new_state['links'] = apply_links(link_sources(), old_links)
+    new_state['links'] = apply_links(
+        [(config_dir() / kind / name, src) for kind, name, src in link_sources()]
+        + plugin_links, old_links)
     remove_links({l: t for l, t in old_links.items() if l not in new_state['links']})
     new_state['ai_memory_link'] = link_ai_memory_token(state.get('ai_memory_link', False))
+    if mod_dirs() + dirs != new_state['plugin_dirs']:
+        new_state['plugin_dirs'] = apply_plugin_dirs(cfg, mod_dirs() + dirs,
+                                                     new_state['plugin_dirs'])
+        save(settings_path(), cfg)
     save(state_path(), new_state)
 
     catalog = list(defaults.get('enabledPlugins', {}))

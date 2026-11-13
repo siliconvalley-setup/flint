@@ -432,6 +432,123 @@ def test_external_skills_list_names_the_four_sources():
                      ['npm', '@reallroboto/qb']]
 
 
+def plugin_clone(d, lines, plugins=('o/repo',)):
+    """A clone whose external-plugins.txt holds `lines`; each repo in `plugins`
+    already fetched into .cache/plugins/<repo>/ with a manifest and a skill."""
+    clone = make_clone(d)
+    (clone / 'external-plugins.txt').write_text('# comment\n\n' + '\n'.join(lines) + '\n')
+    for ref in plugins:
+        repo, _, sub = ref.partition(':')
+        p = clone / '.cache' / 'plugins' / repo.rsplit('/', 1)[-1] / sub
+        (p / '.claude-plugin').mkdir(parents=True)
+        (p / '.claude-plugin' / 'plugin.json').write_text('{"name": "x"}')
+        (p / 'skills' / 'plugskill').mkdir(parents=True)
+        (p / 'skills' / 'plugskill' / 'SKILL.md').write_text('---\nname: plugskill\n---\n')
+    return clone
+
+
+def test_a_global_external_plugin_loads_in_place_from_the_cache():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        clone = plugin_clone(d, ['git o/repo:sub/dir global'], plugins=('o/repo:sub/dir',))
+        cfg_dir = Path(d) / 'cfg'
+        assert run_cli(cfg_dir, root=clone).returncode == 0
+        dirs = read_settings(cfg_dir)['env']['CLAUDE_CODE_PLUGIN_DIRS'].split(':')
+        assert (clone.resolve() / '.cache/plugins/repo/sub/dir').as_posix() in dirs
+        assert not (cfg_dir / 'skills' / 'plugskill').exists()
+        (clone / 'external-plugins.txt').write_text('')
+        run_cli(cfg_dir, root=clone)
+        assert 'repo/sub/dir' not in read_settings(cfg_dir)['env']['CLAUDE_CODE_PLUGIN_DIRS']
+
+
+def test_a_project_external_plugin_is_linked_into_that_project_only():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        project = Path(d) / 'proj'
+        project.mkdir()
+        clone = plugin_clone(d, ['git o/repo {}'.format(project)])
+        cfg_dir = Path(d) / 'cfg'
+        assert run_cli(cfg_dir, root=clone).returncode == 0
+        link = project / '.claude' / 'skills' / 'repo'
+        assert link.is_symlink() and link.resolve() == (clone / '.cache/plugins/repo').resolve()
+        assert str(link) in json.loads((cfg_dir / '.flint-state.json').read_text())['links']
+        assert 'repo' not in read_settings(cfg_dir)['env']['CLAUDE_CODE_PLUGIN_DIRS']
+        assert not (cfg_dir / 'skills' / 'plugskill').exists()
+        (clone / 'external-plugins.txt').write_text('')
+        run_cli(cfg_dir, root=clone)
+        assert not link.is_symlink() and (project / '.claude' / 'skills').is_dir()
+
+
+def test_uninstall_drops_external_plugin_links_and_dirs():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        project = Path(d) / 'proj'
+        project.mkdir()
+        clone = plugin_clone(d, ['git o/repo {}'.format(project), 'git o/glob global'],
+                             plugins=('o/repo', 'o/glob'))
+        cfg_dir = Path(d) / 'cfg'
+        run_cli(cfg_dir, root=clone)
+        assert run_cli(cfg_dir, '--uninstall', root=clone).returncode == 0
+        assert not (project / '.claude' / 'skills' / 'repo').is_symlink()
+        assert 'CLAUDE_CODE_PLUGIN_DIRS' not in read_settings(cfg_dir).get('env', {})
+
+
+def test_a_user_file_at_a_project_plugin_link_survives():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        project = Path(d) / 'proj'
+        mine = project / '.claude' / 'skills' / 'repo'
+        mine.mkdir(parents=True)
+        clone = plugin_clone(d, ['git o/repo {}'.format(project)])
+        r = run_cli(Path(d) / 'cfg', root=clone)
+        assert r.returncode == 0 and not mine.is_symlink() and mine.is_dir()
+        assert str(mine) in r.stderr
+
+
+def test_an_external_plugin_without_manifest_or_target_is_skipped():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        missing = Path(d) / 'no-such-project'
+        clone = plugin_clone(d, ['git o/bare global', 'git o/repo {}'.format(missing),
+                                 'git o/repo relative/path', 'npm o/repo global'])
+        (clone / '.cache/plugins/bare').mkdir(parents=True)
+        cfg_dir = Path(d) / 'cfg'
+        r = run_cli(cfg_dir, root=clone)
+        assert r.returncode == 0, r.stderr
+        assert 'o/bare: no .claude-plugin/plugin.json' in r.stderr
+        assert 'target {} is not a dir'.format(missing) in r.stderr
+        assert r.stderr.count('bad line') == 2
+        assert not missing.exists()
+        assert 'bare' not in read_settings(cfg_dir)['env']['CLAUDE_CODE_PLUGIN_DIRS']
+
+
+def test_a_plugin_fetched_on_the_first_run_loads_on_that_run():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        clone = make_clone(d)
+        (clone / 'external-plugins.txt').write_text('git o/fresh:plugin global\n')
+        (clone / 'external-skills.txt').write_text('')
+        bin_dir = Path(d) / 'bin'
+        bin_dir.mkdir()
+        (bin_dir / 'git').write_text(          # `git clone ... <dst>`: dst = last arg
+            '#!/bin/sh\nfor a; do dst=$a; done\n'
+            '/bin/mkdir -p "$dst/plugin/.claude-plugin" && echo {} > "$dst/plugin/.claude-plugin/plugin.json"\n')
+        (bin_dir / 'git').chmod(0o755)
+        cfg_dir = Path(d) / 'cfg'
+        r = run_cli(cfg_dir, root=clone, path=bin_dir, extra_env={'FLINT_OFFLINE': ''})
+        assert r.returncode == 0, r.stderr
+        dirs = read_settings(cfg_dir)['env']['CLAUDE_CODE_PLUGIN_DIRS'].split(':')
+        assert (clone.resolve() / '.cache/plugins/fresh/plugin').as_posix() in dirs
+        state = json.loads((cfg_dir / '.flint-state.json').read_text())
+        assert state['plugin_dirs'] == dirs
+
+
 def _token_link(home):
     """Where `ai-memory hook` reads its bearer: <data dir>/auth-token, data dir
     = Rust dirs::data_local_dir() + /ai-memory (XDG_DATA_HOME unset)."""
