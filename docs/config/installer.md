@@ -17,6 +17,7 @@ Applies config + [style hook](../style-core/hook.md) to `$CLAUDE_CONFIG_DIR` (de
 |---|---|
 | `skills/<name>/`, `agents/*.md`, `rules/*.md`, `output-styles/*.md` | one symlink each, to clone |
 | `external-skills.txt` | each source fetched into `.cache/` (git or `npm pack`), its `skills/*/` linked |
+| `external-plugins.txt` | each repo fetched into `.cache/plugins/<repo>/`, loaded in place. `global` → `env.CLAUDE_CODE_PLUGIN_DIRS` (`<name>@inline`). Project path → link `<project>/.claude/skills/<repo>` (`<name>@skills-dir`, needs workspace trust). No manifest or no project dir → warn, skip. Project and its `.gitignore` never touched |
 | `settings.json` | **forced** keys; dict merges per sub-key, other sub-keys stay |
 | `settings.defaults.json` | set only where absent (user `/model`, statusline win); `enabledPlugins` per entry |
 | `env.sh` | every `export` copied into `settings.json` `env` |
@@ -33,7 +34,7 @@ Plus:
 
 ## Ownership
 
-- `<config dir>/.flint-state.json` = only source of ownership: forced keys/sub-keys, defaults flint set (with value), env, plugin dirs, links. Prune and `--uninstall` touch nothing outside it. Never prune by guess.
+- `<config dir>/.flint-state.json` = only source of ownership: forced keys/sub-keys, defaults flint set (with value), env, plugin dirs, links (project plugin links too). Prune and `--uninstall` touch nothing outside it. Never prune by guess.
 - Next run removes what flint stopped shipping. User files, keys, hooks (e.g. herdr) and links never touched.
 - Default = flint's only while it holds flint's value. User edit → user's. Never overwrite.
 - User file where flint wants link stays; run warns.
@@ -45,7 +46,8 @@ Plus:
 | Changed | Action |
 |---|---|
 | skill, agent, rule, output style, mod, statusline | none, live at once (link) |
-| `settings.json`, `settings.defaults.json`, `env.sh`, `external-skills.txt` | `./install.sh` |
+| `settings.json`, `settings.defaults.json`, `env.sh`, `external-skills.txt`, `external-plugins.txt` | `./install.sh` |
+| external plugin upstream | `./install.sh` (pulls HEAD) |
 | other machine | `git pull && ./install.sh` |
 | shell tools outside Claude | `. ~/flint/env.sh` in shell rc |
 
