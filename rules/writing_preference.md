@@ -1,7 +1,14 @@
 ---
 paths:
-  - "**/*.md"
-  - "**/*.txt"
+  - "**/*.{md,mdx,txt}"
+  # code globs: keep equal in coding.md and writing_preference.md
+  - "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+  - "**/*.{astro,html,css}"
+  - "**/*.{py,pyi}"
+  - "**/*.{sh,bash,zsh,ps1,cmd,bat}"
+  - "**/*.{sql,nix,jq,c,h}"
+  - "**/*.{json,jsonc,yaml,yml,toml,xml}"
+  - "**/{Dockerfile,Containerfile,Makefile,_headers,_redirects}"
 ---
 <writing_preference>
 Writing documents/specifications/comments: ASD-STE100 Simplified Technical English. Concise, prioritizing clarity, and optimized to consume the minimum number of tokens and context for LLMs.

@@ -139,6 +139,10 @@ ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 [ "$(wc -c < desktop/chat/style.md)" -le 8000 ]; ck $? "13d chat style <= 8000 (sanity)"
 [ "$(wc -c < desktop/cowork/SKILL.md)" -le 65536 ]; ck $? "13f cowork skill <= 64KB (sanity)"
 
+# 13g: path-scoped rules share one code-glob list; drift loads one rule without the other
+g() { sed -n '/^---$/,/^---$/p' "$1" | grep -E '^  - "\*\*/(\*\.\{(ts|astro|py|sh|sql|json)|\{Dockerfile)'; }
+[ -n "$(g rules/coding.md)" ] && [ "$(g rules/coding.md)" = "$(g rules/writing_preference.md)" ]; ck $? "13g rules code globs in sync"
+
 # 14: verbatim derivados byte-identical to header + unwrap(flint.md) —
 # byte parity subsumes the old canary-token grep (the token is in flint.md,
 # and test 12 already asserts it reaches the hook output).
