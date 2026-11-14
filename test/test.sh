@@ -139,9 +139,14 @@ ck $? "13a emitted envelope <= 9300 chars (10k platform cap)"
 [ "$(wc -c < desktop/chat/style.md)" -le 8000 ]; ck $? "13d chat style <= 8000 (sanity)"
 [ "$(wc -c < desktop/cowork/SKILL.md)" -le 65536 ]; ck $? "13f cowork skill <= 64KB (sanity)"
 
-# 13g: path-scoped rules share one code-glob list; drift loads one rule without the other
-g() { sed -n '/^---$/,/^---$/p' "$1" | grep -E '^  - "\*\*/(\*\.\{(ts|astro|py|sh|sql|json)|\{Dockerfile)'; }
+# 13g: path-scoped rules share one code-glob block; drift loads one rule without the other
+g() { sed -n '/# code globs/,/^---$/p' "$1"; }
 [ -n "$(g rules/coding.md)" ] && [ "$(g rules/coding.md)" = "$(g rules/writing_preference.md)" ]; ck $? "13g rules code globs in sync"
+# 13h: over 1,000 brace expansions a pattern stays literal and matches nothing; over 40,000 chars (200K window) the rule body is cut
+for f in rules/coding.md rules/writing_preference.md; do
+  n=$(sed -n '2,/^---$/p' "$f" | awk -F'{' '/^  - ".*\{/ { split($2, a, ","); t += length(a) } END { print t+0 }')
+  [ "$n" -le 1000 ] && [ "$(wc -m < "$f")" -le 40000 ]; ck $? "13h $f brace budget $n <= 1000, size <= 40000"
+done
 
 # 14: verbatim derivados byte-identical to header + unwrap(flint.md) —
 # byte parity subsumes the old canary-token grep (the token is in flint.md,
