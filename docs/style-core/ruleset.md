@@ -9,7 +9,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
 
 # Ruleset (`flint.md`)
 
-Product. 8-bullet ASD-STE100 list, no heading. Last bullet defers lazy-code behavior to `<rules>` block (`rules/rules.md`). Delivery: [hook](./hook.md).
+Product. One `<important>` line: token economy. No heading. ASD-STE100 style rules: `output-styles/caveman.md`. Coding rules: `rules/coding.md`, path-scoped. Delivery: [hook](./hook.md).
 
 ## History
 
@@ -17,6 +17,7 @@ Product. 8-bullet ASD-STE100 list, no heading. Last bullet defers lazy-code beha
 - 2026-11-02 `9f5a8f4`: "full prose" escape hatch removed, by owner intent. No off path exists, not even behavioral. Do not re-add.
 - 2026-11-03: context7-first + LSP clauses removed from per-turn anchor. Anchor = `flint-submit.md`.
 - 2026-11-06 `62d90c3`, `b9a19bd`: owner cut 11 numbered rules to 8 bullets. Dropped: answer first, articles optional, one idea per sentence, bounded tool status, never perform caveman. Added: quality-over-speed.
+- 2026-11-08 `bbae140`, 2026-11-11 `0a6a041`: owner cut 8 bullets to one `<important>` token-economy line. Chat derivados not re-derived.
 
 ## Provenance (do not paraphrase)
 

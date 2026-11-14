@@ -1,7 +1,7 @@
 ---
 paths:
-  - "*.md"
-  - "*.txt"
+  - "**/*.md"
+  - "**/*.txt"
 ---
 <writing_preference>
 Writing documents/specifications/comments: ASD-STE100 Simplified Technical English. Concise, prioritizing clarity, and optimized to consume the minimum number of tokens and context for LLMs.

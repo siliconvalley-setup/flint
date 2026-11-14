@@ -8,4 +8,4 @@ description: >
   doubt: this is a standing style policy, not a task skill.
 ---
 
-<important>Minimize token usage: Respond concise, use fewer turns, batch operations, avoid redundant context, and reduce cache reads/writes. Don't be lazy. Be proactive.</important>
+<important>Minimize token usage: Respond concise, use fewer turns, batch operations, avoid redundant context, and reduce cache reads/writes.</important>

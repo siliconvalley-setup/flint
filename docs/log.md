@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-13
+- **Manual-edit drift**: `rules/coding.md`, `writing_preference.md` `paths` globs `*.ext` → `**/*.ext` (bare `*.ext` = project root only). `rules/rules.md` regains Evidence + Goal-Driven sections lost in `bf55d68` split. `desktop/cowork/SKILL.md` resynced after `a95bc8e`. `style-core/ruleset.md` describes one-line `flint.md`.
 - **marketingskills for aviato** (realroboto/aviato#87): `external-plugins.txt` gains `git coreyhaines31/marketingskills /Users/Shared/hooli/aviato`. Link `aviato/.claude/skills/marketingskills`, plugin `marketing-skills@skills-dir`, aviato only. Coupling rules live in aviato README.
 - **TokenEconomizer as external plugin** (#111): `external-plugins.txt` gains `git microsoft/TokenEconomizer:plugin global`. Marketplace entry and `enabledPlugins` default leave settings; #113 reinstall path removed. `config/tools.md`, `config/installer.md` follow.
 - **External plugins** (#112): new `external-plugins.txt`; each repo fetched into `.cache/plugins/<repo>/`, loaded in place. `global` → `CLAUDE_CODE_PLUGIN_DIRS`; project path → `<project>/.claude/skills/<repo>` link in state `links`. `config/installer.md` gains rows.
