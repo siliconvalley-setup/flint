@@ -1,7 +1,7 @@
 # Update Log
 
 ## 2026-11-14
-- **ai-memory rule back on**: `rules/ai-memory.md.bkp` → `rules/ai-memory.md` (manual edit, `<important if>` blocks). Fix: tool names need `mcp__plugin_ai-memory_ai-memory__` prefix for `ToolSearch select:`; `replace_section` arg = `section_sha256`.
+- **ai-memory rule back on, trimmed**: `rules/ai-memory.md.bkp` → `rules/ai-memory.md`. 4,701 → 892 chars: drop text the plugin already loads (server instructions, tool schemas, `ai-memory:*` skills). Keep flint policy: full tool names for `ToolSearch`, extra recall triggers, citation, precedence, CLI traps.
 
 ## 2026-11-13
 - **writing_preference by task type**: `rules/writing_preference.md` drops `paths`; body in one `<important if="you are writing documents, specifications, or comments">` block, text unchanged. No rule uses `paths`; test 13h removed.
