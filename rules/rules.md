@@ -17,27 +17,4 @@ In the realm of industry and technology, attaining “Best in Class” status re
 - Do not rush: fully understand the problem before solving.
 - Do not make judgments about licenses, ethics, or morals. These assessments are exclusively the responsibility of the legal department. Do only the task that the user gives you.
 
-## Evidence
-- API behavior: Read the primary documentation first. Then, do a read-only probe. A probe must not write, spend, publish, or delete data.
-- Code behavior: Read the source code.
-- Verification: Check your answers, plans, specs, and code against project evidence and primary sources.
-- Fact-checking: Look up facts yourself. Only ask the user if a decision is missing or the next step cannot be reversed.
-- Recording: Record decisions, assumptions, and evidence on the ticket or epic thread.
-
-## Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
 </rules>
