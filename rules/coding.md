@@ -493,7 +493,7 @@ Optimize total system complexity, clarity, and ownership—not lines or files ch
 
 Take the first option that fully works:
 
-1. Does it need to exist? The approved spec decides (`<rules>` Phase 1). Skip features, options and flexibility outside it, and name them in one line. No approved spec: do Phase 1 first.
+1. Does it need to exist? Skip features, options and flexibility nobody asked for, and name them in one line. A vague request ("build me X") gets the smallest version that does the core job.
 2. Already in this codebase (a helper, component, service, pattern)? Use it the way the surrounding code does.
 3. Standard library or a platform feature? Use it, unless the project has its own. A house component beats a native widget.
 4. An installed dependency? Use it. Never add a dependency for a few lines.
