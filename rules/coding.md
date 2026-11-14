@@ -1,6 +1,7 @@
 ---
 paths:
   # code globs: keep equal in coding.md and writing_preference.md
+  # shortcut: matches only files under the session start dir (probe 2026-11-13, Claude Code 2.1.311; ../ and absolute globs fail), drop paths when dirs above or beside must load it
   # source: GitHub Linguist languages.yml, types programming/markup/data, minus prose extensions
   # brace budget: 1,000 expanded patterns per rule; unbraced patterns do not count
   - "**/*.{1,1in,1m,1x,2,2da,3,3in,3m,3p,3pm,3qt,3x,4,4DForm,4DProject,4dm,4gl,4th,5,6,6pl,6pm,7,8,8xp,8xp.txt,9,Dsr,JSON-tmLanguage,OutJob,PcbDoc,PrjPCB,SchDoc,TextGrid,_coffee,_js,_ls,a51,abap,abnf,action,ada,adb,adml,admx,ado,adp,ads,afm,agc,agda,ah1,ah2,ahk,ahkl,aidl,aj,ak,al,aleo,alg,als,ampl,angelscript,anim,ant,antlers.html,antlers.php,antlers.xml,apacheconf,apex,apib,apl,app,app.src,applescript,arc,arpa,arr,as,asax,ascx,asd,asddls,ash,ashx,asl,asm,asmx,asn,asn1,asp,aspx,asset,astro,asy,au3,aug,auk}"
