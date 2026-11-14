@@ -42,7 +42,6 @@ paths:
   - "**/*.wiki"
   - "**/*.wikitext"
   - "**/*.workbook"
-  # code globs: keep equal in coding.md and writing_preference.md
   # shortcut: matches only files under the session start dir (probe 2026-11-13, Claude Code 2.1.311; ../ and absolute globs fail), drop paths when dirs above or beside must load it
   # source: GitHub Linguist languages.yml, types programming/markup/data, minus prose extensions
   # brace budget: 1,000 expanded patterns per rule; unbraced patterns do not count
