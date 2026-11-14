@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-14
+- **ai-memory rule back on**: `rules/ai-memory.md.bkp` → `rules/ai-memory.md` (manual edit, `<important if>` blocks). Fix: tool names need `mcp__plugin_ai-memory_ai-memory__` prefix for `ToolSearch select:`; `replace_section` arg = `section_sha256`.
+
 ## 2026-11-13
 - **writing_preference by task type**: `rules/writing_preference.md` drops `paths`; body in one `<important if="you are writing documents, specifications, or comments">` block, text unchanged. No rule uses `paths`; test 13h removed.
 - **Rules by task type** (HumanLayer `<important if>`): `rules/rules.md` = general rules bare + planning block (best in class, owner text verbatim). `rules/coding.md` drops `paths` (probe: never loads above/beside session dir), whole body in one `<important if="you are writing or changing code">` block; gains "least new code" from `rules.md`, "simpler way to build it" push-back; vague request → plan first. Test 13g removed; 13h covers `writing_preference.md` only.
