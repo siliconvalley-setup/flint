@@ -23,6 +23,7 @@ CI: same matrix on ubuntu/macos/windows + shellcheck, `timeout-minutes: 10`. Win
 | 11 installer suite (`test/install_test.py`) | registration, idempotency, re-pointing, foreign-hook preservation, no-clobber on invalid JSON, registered command run end-to-end through bash |
 | 12 / 12b | per-turn anchor = `flint-submit.md`; `flint-submit.md` = `flint.md` |
 | 13a–13f budgets | envelope ≤ 9,300 · profile ≤ 1,500 · project instructions ≤ 8,000 · chat style ≤ 8,000 · cowork skill ≤ 64 KB |
+| 13g / 13h rule paths | `rules/coding.md` + `rules/writing_preference.md` share one code-glob block; brace expansions ≤ 1,000 per rule (over budget = pattern matches nothing); file ≤ 40,000 chars (on-demand cut, 200K window) |
 | 14 parity | `desktop/cowork/SKILL.md` = header + `unwrap(flint.md)` (`tools/resync.py --check`). Chat derivados not byte-checked |
 | mod suites | `claude plugin validate` per `mods/*` + `claude plugin test` per mod with `hooks/hooks.json`; skipped without `claude` (CI runners: local run only) |
 | tb suite | `node --test test/tb.test.mjs`; skipped when `node tools/tb.mjs doctor` fails |
