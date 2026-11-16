@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-15
+- **tailwind-best-practices skill**: vendored verbatim from `evilmartians/agent-skills@14cc6a4` (MIT) into `skills/tailwind-best-practices/`; frontmatter gains `metadata` (source, commit, license). Copy, not `external-skills.txt`: that repo ships 6 skills, owner wants 1. Upstream updates: recopy by hand.
+
 ## 2026-11-14
 - **ai-memory rule back on, trimmed**: `rules/ai-memory.md.bkp` → `rules/ai-memory.md`. 4,701 → 892 chars: drop text the plugin already loads (server instructions, tool schemas, `ai-memory:*` skills). Keep flint policy: full tool names for `ToolSearch`, extra recall triggers, citation, precedence, CLI traps.
 
