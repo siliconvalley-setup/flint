@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-16
+- **stack-sweep pnpm pin**: Toolchain step Latest reads the pin from `pnpm outdated --format json` (pnpm ≥12.17 lists `packageManager`; probe 2026-11-16: pin 12.17.0 → row `pnpm`, latest 12.21.0, exit 1). Older pin: `npm view pnpm version`.
+
 ## 2026-11-15
 - **tailwind-best-practices skill**: vendored verbatim from `evilmartians/agent-skills@14cc6a4` (MIT) into `skills/tailwind-best-practices/`; frontmatter gains `metadata` (source, commit, license). Copy, not `external-skills.txt`: that repo ships 6 skills, owner wants 1. Upstream updates: recopy by hand.
 
