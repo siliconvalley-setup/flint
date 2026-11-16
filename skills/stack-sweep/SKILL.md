@@ -128,7 +128,7 @@ Completion: discovered tiers green, or failures reported with the specific gate 
 **pnpm — unpinned (tracks latest).** *Gate: detected PM is pnpm.* Treat pnpm like any tool: target latest.
 
 1. **Check** — project version = `packageManager` field. Global version = `cd ~ && pnpm --version`. Never read `pnpm --version` inside a project as global: pnpm switches to the `packageManager` version there.
-2. **Latest** — `npm view pnpm version`; cross-check `https://github.com/pnpm/pnpm/releases`. `@latest` tracks the mainline pnpm 12 (Rust CLI) line.
+2. **Latest** — pin ≥12.17: `pnpm outdated --format json` in the project lists the pin as key `pnpm` (`current`, `latest`); key absent = pin at latest; exit 1 = rows listed, not an error. Pin <12.17: `npm view pnpm version`. Cross-check `https://github.com/pnpm/pnpm/releases`. `@latest` tracks the mainline pnpm 12 (Rust CLI) line.
 3. **Verdict** — below latest → update.
 4. **Apply** — project below latest → `pnpm self-update <latest>` inside the project (writes `packageManager`), then `pnpm install`. Never update the global install for a project. No corepack: the global pnpm comes from the machine (silicon-valley `npm-cli.txt`, `pnpm@12` = newest 12.x at each update); global below latest (`cd ~` check) → finding, the human runs the machine update.
 
