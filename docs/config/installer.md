@@ -45,6 +45,7 @@ Plus:
 | Changed | Action |
 |---|---|
 | skill, agent, rule, output style, mod, statusline | none, live at once (link) |
+| new or removed skill, agent, rule, output style | `./install.sh` (one link each) |
 | `settings.json`, `settings.defaults.json`, `env.sh`, `external-skills.txt`, `external-plugins.txt` | `./install.sh` |
 | external plugin upstream | `./install.sh` (pulls HEAD) |
 | other machine | `git pull && ./install.sh` |
