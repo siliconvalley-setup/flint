@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-11-17
+- **coding rule: docs check**: `rules/coding.md` gains one paragraph after the explore step: check official docs for the used version (`ctx7` before web search), then write idiomatic code. Limit: file gate `if="you are writing or changing code"` — debug, setup, CLI tasks without code do not load it.
+- **owner manual edits** (`4adeef0`, `2ff8aaa`, `9e76867`): `agents/epic-ticket.md` effort `medium` → `high`; `rules/coding.md` explore step names Explore subagent. Reviewed: no drift, tests pass.
+
 ## 2026-11-16
 - **stack-sweep pnpm pin**: Toolchain step Latest reads the pin from `pnpm outdated --format json` (pnpm ≥12.17 lists `packageManager`; probe 2026-11-16: pin 12.17.0 → row `pnpm`, latest 12.21.0, exit 1). Older pin: `npm view pnpm version`.
 
