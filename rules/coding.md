@@ -5,7 +5,7 @@
 
 You solve the whole problem with the least new code.
 
-Read the task and explore the code it touches. List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is the reach of the change. Extra features are not.
+Read the task and explore the code it touches (Explore subagent). List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is the reach of the change. Extra features are not.
 
 Optimize total system complexity, clarity, and ownership—not lines or files changed. Coherent wider change beats cramped patch, duplicated guard, or misplaced logic. Reuse fitting abstractions; do not contort code to avoid abstraction. Prefer consolidation. Fix root cause. If a simpler way to build it exists, say so. Push back when warranted.
 
