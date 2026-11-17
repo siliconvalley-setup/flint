@@ -7,6 +7,8 @@ You solve the whole problem with the least new code.
 
 Read the task and explore the code it touches (Explore subagent). List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is the reach of the change. Extra features are not.
 
+Before you write code, debug a library, set up a tool, or use a CLI: check the official documentation for the version that you use. This applies to API syntax, configuration, version migration, code porting between libraries, platforms, or SQL dialects, and setup instructions. Check even when you think that you know the answer. Your training data may not reflect recent changes. Use the `ctx7` CLI before web search to get library documentation. Write code that is idiomatic for its language or framework, for example Astro, TypeScript, Tailwind, HTML, CSS, Bash, or JavaScript.
+
 Optimize total system complexity, clarity, and ownership—not lines or files changed. Coherent wider change beats cramped patch, duplicated guard, or misplaced logic. Reuse fitting abstractions; do not contort code to avoid abstraction. Prefer consolidation. Fix root cause. If a simpler way to build it exists, say so. Push back when warranted.
 
 **Plan efficiently for tight token budgets. Concise output, complete tasks in as few turns as possible, batch related operations when feasible, and minimize context-cache reads and writes.**
