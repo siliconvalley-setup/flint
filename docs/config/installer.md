@@ -16,7 +16,7 @@ Applies config + [style hook](../style-core/hook.md) to `$CLAUDE_CONFIG_DIR` (de
 | Repo | Config dir |
 |---|---|
 | `skills/<name>/`, `agents/*.md`, `rules/*.md`, `output-styles/*.md` | one symlink each, to clone |
-| `external-skills.txt` | each source fetched into `.cache/` (git or `npm pack`), its `skills/*/` linked |
+| `external-skills.txt` | each source fetched into `.cache/` (git or `npm pack`), its `skills/*/` linked. Cached clone `origin` follows owner in list |
 | `external-plugins.txt` | each repo fetched into `.cache/plugins/<repo>/`, loaded in place. `global` → `env.CLAUDE_CODE_PLUGIN_DIRS` (`<name>@inline`). Project path → link `<project>/.claude/skills/<repo>` (`<name>@skills-dir`, needs workspace trust). No manifest or no project dir → warn, skip. Project and its `.gitignore` never touched |
 | `settings.json` | **forced** keys; dict merges per sub-key, other sub-keys stay |
 | `settings.defaults.json` | set only where absent (user `/model`, statusline win); `enabledPlugins` per entry |

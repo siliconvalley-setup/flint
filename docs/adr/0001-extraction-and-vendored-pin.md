@@ -35,6 +35,11 @@ masters.
   clone → vmCODE vendored layout), so one script ships everywhere.
 - A consumer's local edit to a vendored copy is a bug by definition.
 
+## Amendment 2026-11-19
+
+vmCODE dropped flint 2026-08-30 (vmCODE `4bbad85`, #165): no vendored-pin consumer remains. Decision stays for any future consumer.
+Repo moved to `siliconvalley-setup` org.
+
 ## Alternatives rejected
 
 - vmCODE stays canonical, new repo mirrors: public repo lags a private build

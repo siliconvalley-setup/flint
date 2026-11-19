@@ -31,7 +31,7 @@ Never raw text: `SubagentStart` silently drops raw stdout (official `/en/hooks`:
 
 1. `/etc/claude-docs/flint.md` — baked container path, root-owned.
 2. `"$(dirname "$0")/../flint.md"` — clone geometry.
-3. `"$(dirname "$0")/../container-docs/flint.md"` — vmCODE vendored geometry. Keep: drop breaks vmCODE.
+3. `"$(dirname "$0")/../container-docs/flint.md"` — vendored geometry (former vmCODE layout; dropped flint 2026-08-30 (vmCODE `4bbad85`, #165)). Drop = own decision: test + ADR 0001.
 4. None, empty or unreadable → `FLINT HOOK ERROR: ...` as `additionalContext`, exit 0.
 
 Paths 2–3 user-writable → symlinks refused. JSON encode via `python3`, else `python` (Git Bash often ships only that name; python2 fails encode into marker).
@@ -62,5 +62,5 @@ Each = fixed upstream bug. Break one → bug returns.
 
 ## Recipes
 
-- Edit hook: read invariants, edit, `sh test/test.sh`. Live at once (settings point at clone). Tag release for vmCODE.
+- Edit hook: read invariants, edit, `sh test/test.sh`. Live at once (settings point at clone). Tag release.
 - Add/remove event: `EVENTS` in `install.py` → `case` whitelist in hook → `test/install_test.py` → Events table above.

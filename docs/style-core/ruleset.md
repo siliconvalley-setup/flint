@@ -54,4 +54,4 @@ Full checklist + paste steps: [desktop](./desktop.md).
 1. Check provenance table.
 2. Edit `flint.md`, copy to `flint-submit.md`. Live next session on every device that pulled.
 3. Run [derivado checklist](./desktop.md), then `sh test/test.sh`.
-4. Tag release. vmCODE picks it up on ref-bump + rebuild ([consumers](../config/consumers.md)).
+4. Tag release ([consumers](../config/consumers.md)).

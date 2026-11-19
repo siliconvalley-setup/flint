@@ -1,7 +1,7 @@
 ---
 type: Component
 title: Consumers
-description: Systems that use flint (vmCODE, silicon-valley), how changes reach them, release rule.
+description: Systems that use flint (silicon-valley), how changes reach them, release rule.
 tags: [config, consumers, release]
 status: stable
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
@@ -13,11 +13,12 @@ Edits here propagate. Repo private: consumer needs read access. Decision: ADR [0
 
 | Consumer | Takes | Update path |
 |---|---|---|
-| [vmCODE](https://github.com/realroboto/vmCODE) | `hooks/flint-style.sh` + `flint.md` only, byte-for-byte at pinned tag (`scripts/flint-style.sh` + `container-docs/flint.md`, pin in its `versions.yml`); baked to `/usr/local/bin/flint-style.sh` + `/etc/claude-docs/flint.md`; parity check on its side | ref-bump + rebuild |
 | silicon-valley | whole config, `main`; clone on agent account | `git pull && ./install.sh` on `update` |
+
+Former consumer: vmCODE dropped flint 2026-08-30 (vmCODE `4bbad85`, #165); it ships its own style hook. No pinned-tag consumer remains.
 
 ## Rules
 
-- Hook or ruleset changed → tag release. vmCODE never pulls `main`.
+- Hook or ruleset changed → tag release (for any pinned consumer).
 - Keep 3-geometry ruleset resolution ([hook](../style-core/hook.md#ruleset-resolution)).
 - Vendored copy edited in consumer = bug. Edit here only.

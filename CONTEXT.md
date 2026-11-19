@@ -25,7 +25,7 @@ Glossary only. No implementation details.
 - **canonical home** — this repo. Edits happen here only; a consumer never
   edits a vendored copy in place.
 - **consumer** — a repo/system that uses flint: either vendors the ruleset +
-  hook at a pinned ref (vmCODE, baked into a container), or clones flint and
+  hook at a pinned ref (none today; vmCODE until 2026-08-30), or clones flint and
   runs the installer (silicon-valley, on its agent account).
 - **config** — everything besides the style core: skills, agents, rules,
   output styles, settings policy, plugins, mods, statusline, env.
