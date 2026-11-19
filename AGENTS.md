@@ -16,7 +16,7 @@ flint = operator's Claude Code config repo + always-on style core. Every trap in
 | `hooks/flint-style.sh` | [hook](docs/style-core/hook.md): 8 invariants, no matcher, JSON on all events |
 | `desktop/` | [desktop](docs/style-core/desktop.md): verbatim derivado regenerated, others re-derived by checklist |
 | `install.py`, `settings*.json`, `env.sh` | [installer](docs/config/installer.md): ownership only from `.flint-state.json` |
-| hook or ruleset release | [consumers](docs/config/consumers.md): tag release, vmCODE pins |
+| hook or ruleset release | [consumers](docs/config/consumers.md): tag release |
 | `test/`, `.github/` | [testing](docs/testing.md): CI traps |
 | `mods/`, `tools/` | [mods and tools](docs/config/tools.md), ADR [0003](docs/adr/0003-token-budget.md) |
 
