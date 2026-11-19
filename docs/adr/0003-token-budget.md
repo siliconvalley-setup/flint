@@ -56,7 +56,7 @@ Output style does not reach this cost.
   reads, 9 of 12 fetched same lines again within 3 calls. Replay of 225
   transcripts: bytes saved 6.56 MB → 4.84 MB; refetch already gave back most
   of difference, at one more turn each. Superseded 2026-11-07 by
-  [#46](https://github.com/realroboto/flint/issues/46) (last amendment below): Bash inside window passes whole, any command; past
+  [#46](https://github.com/siliconvalley-setup/flint/issues/46) (last amendment below): Bash inside window passes whole, any command; past
   window bounded read gets placeholder too.
 - Amended 2026-11-06 (#52). `tb get <ref>` without `#<id>` or range reads
   all. `get` output stays below Bash window (`BASH_MAX_OUTPUT_LENGTH`, flint
@@ -64,9 +64,9 @@ Output style does not reach this cost.
   output to file, and Read of that file got second placeholder.
 - Read of Claude Code `tool-results/` file keeps placeholder: outline is the
   cheap way into large output (#52 option 3a rejected). Superseded in part
-  2026-11-06 by [#57](https://github.com/realroboto/flint/issues/57) (second
+  2026-11-06 by [#57](https://github.com/siliconvalley-setup/flint/issues/57) (second
   amendment below): file of bounded Bash read passes whole. Superseded
-  2026-11-06 by [#62](https://github.com/realroboto/flint/issues/62) (last
+  2026-11-06 by [#62](https://github.com/siliconvalley-setup/flint/issues/62) (last
   amendment below).
 - Amended 2026-11-06 (#57). Trigger 4096 B → 16384 B, Read and Bash. Bash
   output under Bash window (10,000 chars) already shows whole. Transcripts
@@ -75,14 +75,14 @@ Output style does not reach this cost.
   fires: output past window is persisted, and persisted output passes.
   Replay of 585 transcripts: bytes saved 12.63 MB → 6.86 MB; refetch already
   gave back most of difference, at one more turn each. Bash part superseded
-  2026-11-07 by [#46](https://github.com/realroboto/flint/issues/46) (last
+  2026-11-07 by [#46](https://github.com/siliconvalley-setup/flint/issues/46) (last
   amendment below): branch never fired.
 - Amended 2026-11-06 (#57). Read of file Claude Code persisted for bounded
   Bash read passes whole: agent asked for every line. Mod keeps those paths
   per session. Persisted output of unbounded command keeps placeholder on
   Read: 18 of 23 unranged `tool-results/` Reads, 10–60 KB each, so skip for
   every `tool-results/` Read (#57 option 1) rejected. Superseded 2026-11-06
-  by [#62](https://github.com/realroboto/flint/issues/62) (last amendment
+  by [#62](https://github.com/siliconvalley-setup/flint/issues/62) (last amendment
   below).
 - Amended 2026-11-06 (#60). Read with `allow_large: true` passes whole, like
   `offset`/`limit`: agent asked for whole file in call. #57 comment
@@ -129,7 +129,7 @@ Output style does not reach this cost.
   `get` pages by bytes, as core counts (#76). Rejected: SubagentStart instruction
   line (fixed cost per subagent, story 3); Bash code-file exemption by command
   parsing (whole read line gives the same one call; Superseded 2026-11-07 by
-  [#81](https://github.com/realroboto/flint/issues/81), last amendment below); one threshold for Read and
+  [#81](https://github.com/siliconvalley-setup/flint/issues/81), last amendment below); one threshold for Read and
   Bash (#75 option 2a: between 10 and 16 KB the placeholder costs the same one call
   as core's preview). Measure after: `test/refetch.mjs` next3 against orig per kind.
 - Amended 2026-11-07 (#79). Bash window 10,000 → 16,384 chars (`env.sh`

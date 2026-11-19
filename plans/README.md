@@ -6,7 +6,7 @@ subagent sampling). Not audited: the upstream caveman/ponytail repos and the
 vmCODE consumer side. Performance and dependency categories came back clean
 (per-turn hook path is pure `printf`; zero dependencies, stdlib only).
 
-Consolidated spec: https://github.com/realroboto/flint/issues/6 (`ready-for-agent`).
+Consolidated spec: https://github.com/siliconvalley-setup/flint/issues/6 (`ready-for-agent`).
 Tickets (serialized chain, maintainer decision): 001 → #7, 002 → #8, 003 → #9,
 004 → #10, 005 → #11 — each blocked by its predecessor.
 

@@ -1,7 +1,7 @@
 # Skills that live in other repos. install.sh fetches each into .cache/ (git
 # clone/pull, or npm pack) and links every skills/<name>/SKILL.md it finds.
 # Format: <git|npm> <github owner/repo | npm package>
-git realroboto/bing-webmaster-cli
-git realroboto/google-apis-cli
-git realroboto/dataforseo-cli
+git siliconvalley-setup/bing-webmaster-cli
+git siliconvalley-setup/google-apis-cli
+git siliconvalley-setup/dataforseo-cli
 npm @reallroboto/qb

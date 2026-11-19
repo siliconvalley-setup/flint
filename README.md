@@ -9,7 +9,7 @@ macOS/Linux: full config. Windows: style core only, Git Bash required.
 Needs Python 3 + git on PATH.
 
 ```sh
-git clone https://github.com/realroboto/flint.git ~/flint
+git clone https://github.com/siliconvalley-setup/flint.git ~/flint
 cd ~/flint
 ./install.sh          # Windows (PowerShell): .\install.ps1
 sh test/test.sh       # verify: must end ALL PASS

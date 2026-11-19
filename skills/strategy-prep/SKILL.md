@@ -4,7 +4,7 @@ description: aviato strategy prep: run a site's paid research, write sites/<site
 disable-model-invocation: true
 ---
 
-Prep session of aviato (repo `realroboto/aviato`) for one site, before its strategy session. No owner time: you run the research, write the draft, and audit it. Code picks the calls and checks the form; the audit checks the claims; the owner judges in the strategy session. `METHOD.md` rules apply to every claim: each one names its source, or it is a ⚠️ hipótese.
+Prep session of aviato (repo `siliconvalley-setup/aviato`) for one site, before its strategy session. No owner time: you run the research, write the draft, and audit it. Code picks the calls and checks the form; the audit checks the claims; the owner judges in the strategy session. `METHOD.md` rules apply to every claim: each one names its source, or it is a ⚠️ hipótese.
 
 Run from the aviato checkout (the folder with `METHOD.md` and `sites/`), on `main`. Site = the id the owner gave (`CB`, `PZ`). A `sites/<site>/strategy-draft.md` from a cut session exists → continue from it at step 3.
 

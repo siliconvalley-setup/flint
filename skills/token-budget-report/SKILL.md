@@ -29,7 +29,7 @@ You audit how the `token-budget` mod behaved in **this** session, and file **fri
 4. **Still current?** For each friction, find the rule that caused it in `$FLINT/mods/token-budget/hooks/register.ts` or `$FLINT/tools/tb.mjs`. Then run `git -C "$FLINT" fetch -q && git -C "$FLINT" log --oneline HEAD..origin/main -- mods/token-budget tools/tb.mjs` and read each listed commit. A rule `origin/main` already changed is fixed: drop that friction.
    Done when: each friction names its rule (`file:line`) on `origin/main`, or is dropped as fixed.
 
-5. **Tracked?** Run `gh issue list -R realroboto/flint --state all --search "token-budget" --limit 30`, then read the body of each title that could share a root cause.
+5. **Tracked?** Run `gh issue list -R siliconvalley-setup/flint --state all --search "token-budget" --limit 30`, then read the body of each title that could share a root cause.
    - Same root cause, issue open → add a comment with your new evidence.
    - Same root cause, issue closed → step 4 decides: still current → new issue that links it.
    Done when: each friction is new, commented on an open issue, or dropped.
@@ -57,7 +57,7 @@ By design:
 
 ## Issue form
 
-Copy the form of realroboto/flint#52. Write in English, telegraphic Simplified Technical English.
+Copy the form of siliconvalley-setup/flint#52. Write in English, telegraphic Simplified Technical English.
 
 - **Title**: `token-budget: <friction>, <friction>`, lowercase.
 - **Problem Statement**: session id, date, surface (CLI, Desktop, SSH), clone commit; one sentence on what cost extra turns.
