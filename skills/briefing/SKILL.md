@@ -4,7 +4,7 @@ description: aviato weekly session: load each site's STATE.md, work its agenda i
 disable-model-invocation: true
 ---
 
-Owner session of aviato (repo `realroboto/aviato`). Code picks the agenda; you work it in its order and record every answer. The records are the output: `METHOD.md` rules apply to every turn.
+Owner session of aviato (repo `siliconvalley-setup/aviato`). Code picks the agenda; you work it in its order and record every answer. The records are the output: `METHOD.md` rules apply to every turn.
 
 Run from the aviato checkout (the folder with `METHOD.md` and `sites/`), on branch `main`.
 

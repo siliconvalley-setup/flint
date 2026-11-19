@@ -411,12 +411,32 @@ def test_fetched_external_skills_are_linked_and_pruned_with_the_cache():
         assert not (cfg_dir / 'skills' / 'gapi').is_symlink()
 
 
+def test_a_cached_clone_follows_a_repo_moved_to_another_owner():
+    if skip_unless_posix():
+        return
+    with tempfile.TemporaryDirectory() as d:
+        dst = Path(d) / 'cli'
+        (dst / '.git').mkdir(parents=True)
+        log = Path(d) / 'git.log'
+        b = fake_bin(d, 'git', '')
+        (b / 'git').write_text('#!/bin/sh\necho "$@" >> "{}"\n'.format(log))
+        old = os.environ['PATH']
+        os.environ['PATH'] = '{}{}{}'.format(b, os.pathsep, old)
+        try:
+            install.fetch_external([('git', 'new-owner/cli', dst)])
+        finally:
+            os.environ['PATH'] = old
+        calls = log.read_text().splitlines()
+        assert calls[0] == '-C {} remote set-url origin https://github.com/new-owner/cli.git'.format(dst)
+        assert calls[1] == '-C {} pull --ff-only -q'.format(dst)
+
+
 def test_external_skills_list_names_the_four_sources():
     lines = [l.split() for l in (ROOT / 'external-skills.txt').read_text().splitlines()
              if l.strip() and not l.startswith('#')]
-    assert lines == [['git', 'realroboto/bing-webmaster-cli'],
-                     ['git', 'realroboto/google-apis-cli'],
-                     ['git', 'realroboto/dataforseo-cli'],
+    assert lines == [['git', 'siliconvalley-setup/bing-webmaster-cli'],
+                     ['git', 'siliconvalley-setup/google-apis-cli'],
+                     ['git', 'siliconvalley-setup/dataforseo-cli'],
                      ['npm', '@reallroboto/qb']]
 
 

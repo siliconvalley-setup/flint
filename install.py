@@ -104,12 +104,15 @@ def fetch_external(specs):
     for kind, ref, dst in specs:
         try:
             if kind == 'git':
+                url = 'https://github.com/{}.git'.format(ref)
                 if (dst / '.git').is_dir():
+                    # The list owns the remote: a repo moved to another owner re-points.
+                    subprocess.run(['git', '-C', str(dst), 'remote', 'set-url', 'origin', url],
+                                   capture_output=True, timeout=30)
                     cmd = ['git', '-C', str(dst), 'pull', '--ff-only', '-q']
                 else:
                     dst.parent.mkdir(parents=True, exist_ok=True)
-                    cmd = ['git', 'clone', '-q', '--depth', '1',
-                           'https://github.com/{}.git'.format(ref), str(dst)]
+                    cmd = ['git', 'clone', '-q', '--depth', '1', url, str(dst)]
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
                 if r.returncode != 0:
                     raise OSError(r.stderr.strip()[:200])

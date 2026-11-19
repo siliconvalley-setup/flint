@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-19
+- **org move**: flint, aviato, CLIs (bing-webmaster-cli, google-apis-cli, dataforseo-cli), fireup, meta-graph-cli, silicon-valley moved `realroboto` → `siliconvalley-setup`. Links and `external-skills.txt` follow; vmCODE, ai-memory-cli stay. `install.py` re-points a cached clone's `origin` to the listed owner before pull. Old log entries keep old names.
+
 ## 2026-11-17
 - **coding rule: docs check**: `rules/coding.md` gains one paragraph after the explore step: check official docs for the used version (`ctx7` before web search), then write idiomatic code. Limit: file gate `if="you are writing or changing code"` — debug, setup, CLI tasks without code do not load it.
 - **owner manual edits** (`4adeef0`, `2ff8aaa`, `9e76867`): `agents/epic-ticket.md` effort `medium` → `high`; `rules/coding.md` explore step names Explore subagent. Reviewed: no drift, tests pass.
