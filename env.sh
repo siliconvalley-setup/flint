@@ -6,7 +6,7 @@
 # Edit, then re-run ./install.sh.
 
 # Claude Code runtime flags (from vmCODE claude-flags.env; DISABLE_UPDATES
-# dropped: settings.json autoUpdatesChannel=stable keeps every machine on stable).
+# dropped: settings.json autoUpdatesChannel=latest keeps every machine on latest).
 export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 export CLAUDE_AUTO_BACKGROUND_TASKS=1
 export BASH_MAX_TIMEOUT_MS=240000
