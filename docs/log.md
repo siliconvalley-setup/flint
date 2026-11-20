@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-19
+- **Claude Code channel latest**: `settings.json` `autoUpdatesChannel` `stable` → `latest`; `install_test.py`, `env.sh` comment follow. Pair: silicon-valley `sv-agent provision` installs npm `latest`.
 - **closeout**: vmCODE no longer consumes flint (vmCODE #165): `consumers.md`, `AGENTS.md`, `hook.md`, `ruleset.md`, `CONTEXT.md` drop it; ADR 0001 amended. `installer.md` names cached-clone re-point.
 - **org move**: flint, aviato, CLIs (bing-webmaster-cli, google-apis-cli, dataforseo-cli), fireup, meta-graph-cli, silicon-valley moved `realroboto` → `siliconvalley-setup`. Links and `external-skills.txt` follow; vmCODE, ai-memory-cli stay. `install.py` re-points a cached clone's `origin` to the listed owner before pull. Old log entries keep old names.
 

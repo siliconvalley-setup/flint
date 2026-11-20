@@ -107,7 +107,7 @@ def test_install_forces_policy_and_keeps_user_choices():
         mod_files = [p for p in (ROOT / 'mods').rglob('*') if p.is_file() and 'types' not in p.parts]
         assert not [p for p in mod_files if 'PermissionRequest' in p.read_text(encoding='utf-8')]
         assert perms['allow'] == ['Bash(make *)']               # user key in a forced dict
-        assert cfg['autoUpdatesChannel'] == 'stable'
+        assert cfg['autoUpdatesChannel'] == 'latest'
         assert cfg['disableBundledSkills'] is True
         assert cfg['syncClaudeAiSkills'] is False
         assert cfg['enabledPlugins']['agents-md@builtin'] is False

@@ -31,7 +31,7 @@
   "syncClaudeAiPlugins": false,
   "disableWorkflows": true,
   "enableArtifact": false,
-  "autoUpdatesChannel": "stable",
+  "autoUpdatesChannel": "latest",
   "enabledPlugins": {
     "agents-md@builtin": false,
     "cc-plugin-agents-md@builtin": false,
