@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-20
+- **lsp astro fix**: astro server failed `initialize` ("Can't find typescript.js or tsserverlibrary.js") outside an Astro project. Cause: astro-ls resolves relative `tsdk` against cwd; flint session cwd has no `node_modules/typescript`. Wrapper `mods/lsp/bin/astro-ls-tsdk` picks cwd: project TypeScript, else global. Regression: `test/test.sh` part 15b.
+
 ## 2026-11-19
 - **Claude Code channel latest**: `settings.json` `autoUpdatesChannel` `stable` → `latest`; `install_test.py`, `env.sh` comment follow. Pair: silicon-valley `sv-agent provision` installs npm `latest`.
 - **closeout**: vmCODE no longer consumes flint (vmCODE #165): `consumers.md`, `AGENTS.md`, `hook.md`, `ruleset.md`, `CONTEXT.md` drop it; ADR 0001 amended. `installer.md` names cached-clone re-point.
