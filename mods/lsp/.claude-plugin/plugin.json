@@ -17,7 +17,7 @@
       }
     },
     "astro": {
-      "command": "astro-ls",
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/astro-ls-tsdk",
       "args": [
         "--stdio"
       ],

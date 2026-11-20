@@ -47,15 +47,16 @@ Code intelligence for files no official LSP plugin covers: diagnostics after eac
 | Server | Command | Extensions |
 |---|---|---|
 | bash | `bash-language-server start` | `.sh`, `.bash` |
-| astro | `astro-ls --stdio` | `.astro` |
+| astro | `bin/astro-ls-tsdk --stdio` | `.astro` |
 | nix | `nixd` | `.nix` |
 
 - Binaries come from silicon-valley (#32), not flint. `.ts`, `.tsx`, `.py` stay with official `typescript-lsp`, `pyright-lsp`.
 - Server starts on first edit of a matching file. Missing binary → one row in `/plugin` Errors, other servers run.
 - bash: shellcheck findings come from `shellcheck` on PATH.
-- astro: `tsdk` `node_modules/typescript/lib` resolves against session working dir. Session started outside the Astro project root → astro server fails to start. First diagnostics come one turn after the edit (cold start).
+- astro: astro-ls resolves relative `tsdk` `node_modules/typescript/lib` against its cwd. Wrapper `bin/astro-ls-tsdk` starts it in `$CLAUDE_PROJECT_DIR` when that dir has `node_modules/typescript`, else beside global TypeScript (resolved from astro-ls install). Astro project in a subdir of session root → global TypeScript, not project version. First diagnostics come one turn after the edit (cold start).
 - nix: syntax, undefined variable, unused binding only. Option names need nixd `options` config (flake expression): not in this mod.
 - TokenEconomizer never prunes `LSP` (`TE_TOOLPRUNE_PROTECT` in `env.sh`): denied `LSP` also stops diagnostics.
+- Check astro: `test/test.sh` part 15b (LSP initialize outside an Astro project).
 - Check: edit `echo $1` into a scratch `.sh` → `<new-diagnostics>` with SC2086.
 
 ## TokenEconomizer (plugin)

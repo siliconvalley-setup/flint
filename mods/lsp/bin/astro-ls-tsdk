@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# astro-ls resolves its relative tsdk (node_modules/typescript/lib) against cwd: start where that path exists.
+# Order: project TypeScript, else TypeScript that resolves from the astro-ls install (global npm).
+set -euo pipefail
+dir=${CLAUDE_PROJECT_DIR:-$PWD}
+if [[ ! -f $dir/node_modules/typescript/lib/typescript.js ]]; then
+  ls_js=$(node -p 'require("fs").realpathSync(process.argv[1])' "$(command -v astro-ls)")
+  ts_pkg=$(node -p 'require.resolve("typescript/package.json", {paths: [process.argv[1]]})' "$ls_js") ||
+    {
+      echo "astro-ls-tsdk: no typescript next to $ls_js; run: npm i -g typescript" >&2
+      exit 1
+    }
+  dir=${ts_pkg%/node_modules/typescript/package.json}
+fi
+cd "$dir"
+exec astro-ls "$@"

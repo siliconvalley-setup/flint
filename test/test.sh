@@ -159,6 +159,14 @@ else
     echo "ok  15 mod suites (skipped: claude not on PATH)"
 fi
 
+# 15b: lsp mod astro server initializes from a cwd without node_modules/typescript.
+if command -v astro-ls >/dev/null 2>&1; then
+    (cd "$FX" && env -u CLAUDE_PROJECT_DIR node "$OLDPWD/test/astro_init.mjs") > "$FX/astro.out" 2>&1; RC=$?
+    ck "$RC" "15b lsp astro initialize outside project"; [ "$RC" -eq 0 ] || cat "$FX/astro.out"
+else
+    echo "ok  15b lsp astro initialize (skipped: astro-ls not on PATH)"
+fi
+
 # 16: tb suite (node --test). Gated on tb's own doctor (node >= 26, node:sqlite +
 # FTS5, writable data dir): without them tb exits non-zero by design (the mod
 # then passes results through), so the suite cannot run.
