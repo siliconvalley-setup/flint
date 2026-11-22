@@ -29,6 +29,8 @@ export BASH_MAX_OUTPUT_LENGTH=16384
 export CLAUDE_CODE_DISABLE_EXPLORE_PLAN_AGENTS=1
 # Effort for subagents with no `effort` of their own (Claude Code v2.1.316+; older versions ignore it).
 export CLAUDE_CODE_SUBAGENT_EFFORT=medium
+# Fixed thinking budget: adaptive reasoning models (Opus 4.7+, Sonnet 5+, Haiku 5.5, Fable) ignore the number.
+export MAX_THINKING_TOKENS=32000
 # Process env only: Claude drops this key from settings env. Bypass mode also skips dangerous rm checks.
 export CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1
 

@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-21
+- **MAX_THINKING_TOKENS**: `env.sh` gains `MAX_THINKING_TOKENS=32000` → bash + `settings.json` `env` (CLI, Desktop). Limit: adaptive reasoning models (Opus 4.7+, Sonnet 5+, Haiku 5.5, Fable) ignore the number; it caps non-adaptive models only (e.g. `claude-omlx`).
+
 ## 2026-11-20
 - **lsp astro fix**: astro server failed `initialize` ("Can't find typescript.js or tsserverlibrary.js") outside an Astro project. Cause: astro-ls resolves relative `tsdk` against cwd; flint session cwd has no `node_modules/typescript`. Wrapper `mods/lsp/bin/astro-ls-tsdk` picks cwd: project TypeScript, else global. Regression: `test/test.sh` part 15b.
 
