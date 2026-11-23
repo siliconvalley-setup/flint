@@ -1,6 +1,6 @@
 # flint
 
-Operator's Claude Code config in one repo — skills, agents, rules, output style, settings policy, plugins, mods, statusline, env — laid out like `~/.claude`, applied by one idempotent `./install.sh`, plus always-on style core (ruleset [`flint.md`](flint.md) + POSIX-sh hook [`hooks/flint-style.sh`](hooks/flint-style.sh)).
+Operator's Claude Code config in one repo — skills, agents, rules, output styles, settings policy, plugins, mods, statusline, env — laid out like `~/.claude`, applied by one idempotent `./install.sh`, plus always-on style core (ruleset [`flint.md`](flint.md) + POSIX-sh hook [`hooks/flint-style.sh`](hooks/flint-style.sh)).
 
 macOS/Linux: full config. Windows: style core only, Git Bash required.
 
