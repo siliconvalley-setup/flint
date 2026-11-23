@@ -113,7 +113,7 @@ def test_install_forces_policy_and_keeps_user_choices():
         assert cfg['enabledPlugins']['agents-md@builtin'] is False
         assert cfg['model'] == 'sonnet'                          # default, user wins
         assert cfg['fallbackModel'] == ['opus', 'sonnet']        # default, absent before
-        assert cfg['outputStyle'] == 'caveman'
+        assert cfg['outputStyle'] == 'ACF'
         assert cfg['enabledPlugins']['typescript-lsp@claude-plugins-official'] is False
         assert cfg['enabledPlugins']['ai-memory@ai-memory'] is True
         assert cfg['extraKnownMarketplaces']['ai-memory']['source']['repo'] == 'akitaonrails/ai-memory'

@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-23
+- **output style ACF**: new `output-styles/acf.md` (TDAH + autismo: answer first, literal, short blocks, exact resume point). `settings.defaults.json` `outputStyle` `caveman` → `ACF`; `install_test.py` follows. `caveman.md` stays, selectable via `/output-style`.
+
 ## 2026-11-21
 - **MAX_THINKING_TOKENS**: `env.sh` gains `MAX_THINKING_TOKENS=32000` → bash + `settings.json` `env` (CLI, Desktop). Limit: adaptive reasoning models (Opus 4.7+, Sonnet 5+, Haiku 5.5, Fable) ignore the number; it caps non-adaptive models only (e.g. `claude-omlx`).
 

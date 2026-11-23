@@ -4,7 +4,7 @@
     "opus",
     "sonnet"
   ],
-  "outputStyle": "caveman",
+  "outputStyle": "ACF",
   "statusLine": {
     "type": "command",
     "command": "\"${FLINT}/statusline/statusline-usage.sh\"",
