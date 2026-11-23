@@ -25,10 +25,7 @@ CI: same matrix on ubuntu/macos/windows + shellcheck, `timeout-minutes: 10`. Win
 | 13a–13f budgets | envelope ≤ 9,300 · profile ≤ 1,500 · project instructions ≤ 8,000 · chat style ≤ 8,000 · cowork skill ≤ 64 KB |
 | 14 parity | `desktop/cowork/SKILL.md` = header + `unwrap(flint.md)` (`tools/resync.py --check`). Chat derivados not byte-checked |
 | mod suites | `claude plugin validate` per `mods/*` + `claude plugin test` per mod with `hooks/hooks.json`; skipped without `claude` (CI runners: local run only) |
-| tb suite | `node --test test/tb.test.mjs`; skipped when `node tools/tb.mjs doctor` fails |
 | tokscan suite | `test/tokscan_test.sh`: shell-built fixture transcripts, asserts `--json` + text |
-
-`test/replay.mjs` (offline replay) and `test/refetch.mjs` (net tokens of each saved Bash output and tb placeholder against inline whole, by size, Bash split file read / other) read private transcripts; stay out of matrix.
 
 ## Installer tests
 

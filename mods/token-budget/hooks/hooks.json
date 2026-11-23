@@ -1,4 +1,0 @@
-{
-  "description": "The token-budget hooks module",
-  "modules": ["./register.ts"]
-}

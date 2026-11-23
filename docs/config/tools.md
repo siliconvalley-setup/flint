@@ -1,22 +1,13 @@
 ---
 type: Component
 title: Mods and tools
-description: token-budget mod, handoff mod, sleep-guard mod, install-guard mod, lsp mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
+description: handoff mod, sleep-guard mod, install-guard mod, lsp mod, TokenEconomizer plugin, tokscan cost report — requirements and use.
 tags: [config, mods, tools]
 status: stable
 generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
 ---
 
 # Mods and tools
-
-## token-budget (`mods/token-budget/` + `tools/tb.mjs`)
-
-Section index + placeholders for large Read results and Bash output Claude Code saved past its window, fork guard. Decision + amendments: ADR [0003](../adr/0003-token-budget.md).
-
-- Needs `node` >= 26 with `node:sqlite` + FTS5 on PATH of Claude Code process. Runs `node tools/tb.mjs` from clone (not on PATH).
-- Missing → first tool result shows one `TOKEN-BUDGET ERROR` line; results pass unchanged.
-- Check: `node tools/tb.mjs doctor` prints `ok`.
-- Shape by content: diff → outline per file; markdown (strict for Bash output: headings at column 0 with blank lines around, first inside 40 lines; loose for `.md` paths) → outline per heading; else head, tail, intent hits. Every placeholder ends with one copy-ready `tb get` and one `whole: Read …` that passes the mod. Output of a `tb.mjs` command never gets a placeholder. Saved output of a file read (`cat`, `sed -n`, `head`, `tail`, … only) never gets one either: inline whole up to 30,000 B, else core preview (#81).
 
 ## handoff (`mods/handoff/` + `skills/handoff/`)
 

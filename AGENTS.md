@@ -18,7 +18,7 @@ flint = operator's Claude Code config repo + always-on style core. Every trap in
 | `install.py`, `settings*.json`, `env.sh` | [installer](docs/config/installer.md): ownership only from `.flint-state.json` |
 | hook or ruleset release | [consumers](docs/config/consumers.md): tag release |
 | `test/`, `.github/` | [testing](docs/testing.md): CI traps |
-| `mods/`, `tools/` | [mods and tools](docs/config/tools.md), ADR [0003](docs/adr/0003-token-budget.md) |
+| `mods/`, `tools/` | [mods and tools](docs/config/tools.md) |
 
 ## Hard don'ts
 
