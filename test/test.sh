@@ -1,6 +1,6 @@
 #!/bin/sh
 # flint test matrix — hook stdout contract + installer seam + character budgets
-# + mod suites + tb suite + tokscan suite.
+# + mod suites + tokscan suite.
 # Run from the repo root: sh test/test.sh   Every step must print its ok tag.
 #
 # `[ ... ]; ck $?` is deliberate throughout the budget block: ck consumes the
@@ -165,17 +165,6 @@ if command -v astro-ls >/dev/null 2>&1; then
     ck "$RC" "15b lsp astro initialize outside project"; [ "$RC" -eq 0 ] || cat "$FX/astro.out"
 else
     echo "ok  15b lsp astro initialize (skipped: astro-ls not on PATH)"
-fi
-
-# 16: tb suite (node --test). Gated on tb's own doctor (node >= 26, node:sqlite +
-# FTS5, writable data dir): without them tb exits non-zero by design (the mod
-# then passes results through), so the suite cannot run.
-if TB_DOCTOR="$(TB_DATA_DIR="$FX/tb-doctor" node tools/tb.mjs doctor 2>&1)"; then
-    node --test --test-reporter=tap test/tb.test.mjs > "$FX/tb.tap" 2>&1; RC=$?
-    ck "$RC" "16 tb suite"; [ "$RC" -eq 0 ] || cat "$FX/tb.tap"
-    grep '# SKIP' "$FX/tb.tap" | sed -e 's/^ *ok [0-9]* - /ok  16 /' -e 's/ # SKIP \(.*\)$/ (skipped: \1)/'
-else
-    echo "ok  16 tb suite (skipped: tb doctor: $(printf '%s\n' "$TB_DOCTOR" | head -n 1))"
 fi
 
 # 17: tokscan suite (stdlib python, shell-built fixture transcripts).

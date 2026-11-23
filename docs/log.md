@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-23
+- **token-budget removed** ([ADR 0007](adr/0007-remove-token-budget.md), closes #46, #110): `mods/token-budget`, `tools/tb.mjs`, `skills/token-budget-report`, tb suite (test 16), `test/replay.mjs`, `test/refetch.mjs` deleted. CI drops `setup-node`. ADR 0003 deprecated.
 - **output style ACF**: new `output-styles/acf.md` (TDAH + autismo: answer first, literal, short blocks, exact resume point). `settings.defaults.json` `outputStyle` `caveman` → `ACF`; `install_test.py` follows. `caveman.md` stays, selectable via `/output-style`.
 
 ## 2026-11-21

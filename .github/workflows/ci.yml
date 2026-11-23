@@ -17,10 +17,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      # node:sqlite with FTS5 for the tb suite (test 16); runner images ship an older Node.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 26
       # `shell: bash` = Git Bash on the Windows runner — the exact path
       # shell-form hooks take on real Windows machines (ADR 0002).
       - name: test matrix
