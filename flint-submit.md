@@ -1,1 +1,1 @@
-<important>Minimize token usage: Respond concise, use fewer turns, batch operations, avoid redundant context, and reduce cache reads/writes. MINIMIZE TOKEN USAGE WITHOUT SACRIFICING QUALITY. QUALITY OVER SPEED.</important>
+<important>Optimize time, tools and token usage: Respond concisely but clearly, use fewer turns, batch operations, use Explore subagents, avoid redundant context, and reduce cache reads/writes. OPTIMIZE WITHOUT SACRIFICING QUALITY.</important>
