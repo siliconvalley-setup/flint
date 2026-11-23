@@ -9,7 +9,7 @@ generated: { by: claude-code/claude-opus-5-5, at: 2026-11-07T16:26:14Z }
 
 # Ruleset (`flint.md`)
 
-Product. One `<important>` line: token economy. No heading. ASD-STE100 style rules: `output-styles/caveman.md`. Coding rules: `rules/coding.md`, always loaded, one `<important if>` block. Delivery: [hook](./hook.md).
+Product. One `<important>` line: token economy. No heading. ASD-STE100 style rules: `output-styles/caveman.md` (opt-in; default output style: `ACF`, `output-styles/acf.md`). Coding rules: `rules/coding.md`, always loaded, one `<important if>` block. Delivery: [hook](./hook.md).
 
 ## History
 
