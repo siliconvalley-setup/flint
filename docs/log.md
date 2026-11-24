@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-24
+- **owner manual edits** (`f868d96`, `84b7e19`, `7b2c3c9`, `3cde351`): `rules/coding.md` = Karpathy guidelines (think, simplicity, surgical, goal-driven); `rules/rules.md` = planning block only, senior-dev block dropped; `flint-submit.md` token line softened ("when it makes sense"). Drift fixed: `flint.md` copied from `flint-submit.md` (test 12b), test 3 anchor phrase `Respond concise` → `Optimize time, tools`, `desktop/cowork/SKILL.md` resynced. Chat derivados not re-derived (as 2026-11-11).
+
 ## 2026-11-23
 - **token-budget removed** ([ADR 0007](adr/0007-remove-token-budget.md), closes #46, #110): `mods/token-budget`, `tools/tb.mjs`, `skills/token-budget-report`, tb suite (test 16), `test/replay.mjs`, `test/refetch.mjs` deleted. CI drops `setup-node`. ADR 0003 deprecated.
 - **output style ACF**: new `output-styles/acf.md` (TDAH + autismo: answer first, literal, short blocks, exact resume point). `settings.defaults.json` `outputStyle` `caveman` → `ACF`; `install_test.py` follows. `caveman.md` stays, selectable via `/output-style`.
