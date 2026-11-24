@@ -37,7 +37,7 @@ Generic rules for text a hook injects.[^caveman][^ponytail] flint artifact + pro
 
 ## Upstream shape
 
-caveman/ponytail shape (flint used it until `9f5a8f4`, 2026-11-02; current `flint.md` = 8 ASD-STE100 bullets, see [ruleset](../style-core/ruleset.md#history)):
+caveman/ponytail shape (flint used it until `9f5a8f4`, 2026-11-02; current `flint.md` = one `<important>` token-economy line, see [ruleset](../style-core/ruleset.md#history)):
 
 1. One-line identity.
 2. Prose rules with inline exclusions + one Not/Yes example pair.
