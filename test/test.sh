@@ -16,7 +16,7 @@ PY="$(command -v python3 2>/dev/null || command -v python 2>/dev/null)"
 # 1-3: valid JSON, right event, anchor line on all 3 events
 sh hooks/flint-style.sh SessionStart     | "$PY" -m json.tool >/dev/null 2>&1; ck $? "1 SessionStart JSON"
 sh hooks/flint-style.sh SubagentStart    | "$PY" -m json.tool >/dev/null 2>&1; ck $? "2 SubagentStart JSON"
-sh hooks/flint-style.sh UserPromptSubmit | grep -q 'Respond concise'; ck $? "3 UserPromptSubmit anchor"
+sh hooks/flint-style.sh UserPromptSubmit | grep -q 'Optimize time, tools'; ck $? "3 UserPromptSubmit anchor"
 
 # 4: every ruleset path missing -> loud marker + exit 0 (probe on a /tmp copy)
 FX="$(mktemp -d)"
