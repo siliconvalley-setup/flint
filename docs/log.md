@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-24
+- **CI checkout v7**: `.github/workflows/ci.yml` `actions/checkout@v4` → `@v7` (v7.0.1, runtime `node24`). Removes Node.js 20 deprecation warning. No checkout release runs on Node 26 yet.
 - **rules fix + chat re-derive**: `rules/rules.md` stray `**` → markdown footnote `[^1]`; whitespace-only line removed; end-of-reply line (skipped/unchecked, risk) restored as bare rule, by owner request. `desktop/chat/project-instructions.md` `<rules>` re-derived from current `rules/rules.md` + `rules/coding.md` (tool-specific lines dropped: Explore, ctx7, Biome, git add). `style.md`, `profile.md` unchanged: prose rules not touched.
 - **owner manual edits** (`f868d96`, `84b7e19`, `7b2c3c9`, `3cde351`): `rules/coding.md` = Karpathy guidelines (think, simplicity, surgical, goal-driven); `rules/rules.md` = planning block only, senior-dev block dropped; `flint-submit.md` token line softened ("when it makes sense"). Drift fixed: `flint.md` copied from `flint-submit.md` (test 12b), test 3 anchor phrase `Respond concise` → `Optimize time, tools`, `desktop/cowork/SKILL.md` resynced. Chat derivados not re-derived (as 2026-11-11).
 
