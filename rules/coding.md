@@ -3,40 +3,81 @@
 
 # Coding
 
-You solve the whole problem with the least new code.
-
-Read the task and explore the code it touches (Explore subagent). List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is the reach of the change. Extra features are not.
+Read the task and explore the code it touches (Use Explore subagent). List every place your change must reach: callers, tests, fixtures, config, exports. Check what your change could break for users: data it would destroy or expose, callers that stop working. That is the reach of the change. Extra features are not.
 
 Before you write code, debug a library, set up a tool, or use a CLI: check the official documentation for the version that you use. This applies to API syntax, configuration, version migration, code porting between libraries, platforms, or SQL dialects, and setup instructions. Check even when you think that you know the answer. Your training data may not reflect recent changes. Use the `ctx7` CLI before web search to get library documentation. Write code that is idiomatic for its language or framework, for example Astro, TypeScript, Tailwind, HTML, CSS, Bash, or JavaScript.
 
-Optimize total system complexity, clarity, and ownership—not lines or files changed. Coherent wider change beats cramped patch, duplicated guard, or misplaced logic. Reuse fitting abstractions; do not contort code to avoid abstraction. Prefer consolidation. Fix root cause. If a simpler way to build it exists, say so. Push back when warranted.
+## Andrej Karpathy guidelines
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-**Plan efficiently for tight token budgets. Concise output, complete tasks in as few turns as possible, batch related operations when feasible, and minimize context-cache reads and writes.**
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## The smallest complete change
+### 1. Think Before Coding
 
-Take the first option that fully works:
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-1. Does it need to exist? Skip features, options and flexibility nobody asked for, and name them in one line. A vague request ("build me X"): plan it first.
-2. Already in this codebase (a helper, component, service, pattern)? Use it the way the surrounding code does.
-3. Standard library or a platform feature? Use it, unless the project has its own. A house component beats a native widget.
-4. An installed dependency? Use it. Never add a dependency for a few lines.
-5. Can it be one line a reader gets at a glance? One line.
-6. Otherwise, YAGNI: the minimum code that works.
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-- Existing structure obstructs clear ownership: make coherent refactor task needs.
-- No abstraction, wrapper, type conversion, option, config, boilerplate or "for later" code nobody asked for. Keep values in the form the platform already gives you. Deletion beats addition. Keep the structure the codebase already has: its layers, interfaces and conventions.
-- The shortest working diff wins, once you know everything it must touch. A one-liner that needs decoding is not short.
-- Comment only the why the code cannot show, in one line.
-- Bug fix: before you edit, grep every caller of the function you touch, then fix the root cause once in the shared code.
-- Code you move or merge keeps its error handling and validation.
-- Between options of equal size, take the one that is correct on edge cases.
-- Code without its check is unfinished: new non-trivial logic (a branch, a loop, a parser, money or security, or a whole new script or app) leaves one small test or an assert-based self-check. Trivial changes need none.
-- Fix the underlying code if the linter fails. Never add Biome suppressions or config exceptions.
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 - Never use git add . or git add -A.
-- A shortcut with a known limit gets a code comment in this form: `shortcut: <the limit>, <when to upgrade>`.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+Linter and bug fix:
+- Fix the underlying code if the linter fails. Never add Biome suppressions or config exceptions.
+- Bug fix: before you edit, grep every caller of the function you touch, then fix the root cause once in the shared code.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
 
 Never cut: validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs, anything the user asked for.
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 </important>
 </coding>
