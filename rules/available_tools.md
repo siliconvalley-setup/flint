@@ -24,25 +24,32 @@
 - `ast-grep` only for code shapes `rg` regex cannot match.
 
 ## Web
-Native `WebSearch`/`WebFetch` removed. Route: docs → `ctx7`; find pages → `firecrawl search` → `bx` → browser search; known URL → `firecrawl scrape`.
+Native `WebSearch`/`WebFetch` removed. Route: docs → `ctx7`; find pages → `firecrawl search` → browser search; known URL → `firecrawl scrape`.
 
 ### ctx7 — official docs (any library, API, vendor)
 One step: `ctx7 search "<query>"`. Or `ctx7 library <name>` → id (`/` prefix required: `/vercel/next.js`) → `ctx7 docs <id> "<question>" --json`.
 
-### firecrawl — web pages
-Quote URLs. `scrape`/`batch-scrape` always `--wait-for 5000` (`crawl`/`map`/`search`: no such flag).
-- Find: `firecrawl search "<query>" --limit <n>`; domains: `site:<d>` / `-site:<d>` in query. Recent → `bx news` (engine ignores `--tbs`, `--sources news`, `--country`, `--location`; `--categories` untested).
-- Search + read: add `--scrape --scrape-formats markdown --json -o /tmp/fc-search.json`.
+### firecrawl — Local web stack
+Search bridge `127.0.0.1:3002`. Search = Google AI Overview + Google + DuckDuckGo via the operator's Chromium. Walled sites (Reddit as old.reddit, Facebook, X, Glassdoor, G2, LinkedIn) read through it; other pages via the Page reader. Quote URLs.
+- Find: `firecrawl search "<query>" --limit <n> --json -o /tmp/fc-search.json` (`warning` shows only with `--json`). Domains: `site:<d>` / `-site:<d>`. Recent: `--tbs qdr:d|w|m|y`. Item 1 can be the Google AI Overview (`url` = Google search URL): answer text, not a page.
+- Pace: ≤ 20 searches per 15 min, ≤ 60 per 60 min, all users together. Same query within 1 h = cache.
+- Search + read: add `--scrape --scrape-formats markdown`.
 - Page text: `firecrawl scrape "<url>" --only-main-content --wait-for 5000 -o /tmp/fc-<site>.md`.
-- Fields / one answer (prices, versions, specs): `firecrawl scrape "<url>" --format markdown,json --schema '<json>' --wait-for 5000 -o /tmp/fc-<site>.json` → `jq .json <file>`. Schema = `title` + short fields; one question = one `answer` field; no full-text arrays (output length sets runtime). Doubtful value: `jq -r .markdown <file> | rg -n -F '<value>'`.
-- Whole site: `firecrawl crawl "<url>" --wait --limit <n>`; URL list: `firecrawl map "<url>" [--search "<term>"]`. Reddit URLs: strip `?…` first.
-- Failures (no retry): search = `data.web` empty/missing (HTTP 200) or off-topic → `bx`. Scrape = empty `title`, loader/bot text ("Loading…", "Compiling…", "Making sure you're not a bot"), all fields empty, or markdown < ~200 B → browser steps.
-- "Connection refused": search → `bx`, other commands → browser steps; ask human `fireup up` on r1 (`ssh r1`). JSON gateway error: use Page text mode; ask human `fireup gateway start`.
-
-### bx — Brave Search API
-$5 free credit/mo, then human-funded prepaid. Prefix all calls: `sv-agent-env` (loads key); key never in argv, never `bx config set-key`. `context`, `news` only (`answers`: plan not bought).
-- `sv-agent-env bx context "<query>" --max-tokens <n>`; recent: `sv-agent-env bx news "<query>" --freshness pd|pw|pm|py`. Domain: one of `--include-site`, `--exclude-site`, `--goggles`.
-- Exit 2 (no API key), 3, or 1 naming token/subscription/quota/credit/plan → no retry; browser search; tell human in final reply. Exit 4/5 → retry once (4: after 2 s). Other 1 → fix query.
+- Fields / one answer (prices, versions, specs): `firecrawl scrape "<url>" --format markdown,json --schema '<json>' --wait-for 5000 -o /tmp/fc-<site>.json` → `jq .json <file>`. Schema = `title` + short fields; one question = one `answer` field; no full-text arrays (output length sets runtime). Doubtful value: `jq -r .markdown <file> | rg -n -F '<value>'`. `json: null` = extraction failed (`warning` says why) → Page text mode.
+- Whole site: `firecrawl crawl "<url>" --wait --limit <n>`; URL list: `firecrawl map "<url>" [--search "<term>"]`. Walled site: no crawl/map/batch → one `scrape` per URL. Reddit URLs: strip `?…` first.
+- Formats: `markdown`, `html`, `links`, `json`; `rawHtml`, `screenshot` off Walled sites only.
+- Warning (`> [!WARNING]` atop markdown, or `warning`): use the content; tell the human in the final reply.
+- Failures (no retry): search `data.web` empty → reword once, then browser search. Scrape = empty `title`, loader/bot text ("Loading…", "Compiling…", "Making sure you're not a bot"), all fields empty, or markdown < ~200 B → browser steps.
+- Errors print `Error: <text>` and exit 1; the text names cause and action:
+  - cap → wait the time in the text.
+  - both Search sources in Cooldown → wait the time in the text; no browser search.
+  - Search sources failed, or "open Chromium" → browser search; tell the human.
+  - "log in to <site>", "private area" → stop; tell the human; never reach it another way.
+  - site in Cooldown → skip that site or wait; tell the human.
+  - other wall → browser steps. Queue timeout → retry once. Unsupported option → drop it.
+  - scrape timeout, or Sealed browser failed → retry once; then tell the human.
+  - "Connection refused" → browser steps; ask the human to run menu 4 Verificar.
+- Never read or search over CDP 9222 to pass a wall. CDP 9222 only for a task the human asks in their session: skill **agent-browser**.
 
 ### agent-browser — real browser
 Browser steps = one Bash call, own session (default profile locked):
@@ -57,10 +64,10 @@ Then `rg` the file. Parallel runs: `web2`, `/tmp/ab-web2`.
 - Interact: `snapshot -i` → `click @ref` / `fill @ref "text"`; refs die on page change → re-snapshot. Click fails `covered by <el>` (consent banner): dismiss el, re-snapshot, retry.
 - Screenshot: `agent-browser screenshot [path]` (`--full` = whole page).
 - Human's Chromium (logins, 2FA, cookies): skill **agent-browser**.
-- Search: `<q>` = `jq -rn --arg q '<query>' '$q|@uri'`. Order: `https://www.google.com/search?q=<q>` → `https://html.duckduckgo.com/html/?q=<q>` → `https://www.bing.com/search?q=<q>` → `https://search.brave.com/search?q=<q>`.
+- Search: `<q>` = `jq -rn --arg q '<query>' '$q|@uri'`. Order: `https://www.google.com/search?q=<q>` → `https://html.duckduckgo.com/html/?q=<q>`.
   - Captcha: ≤1 checkbox click, never image/audio puzzles. Blocked/error/0 hits → next engine; stop at first results; no retries, no revisit.
-  - Recent: Brave `&tf=pd|pw|pm|py`; Google `&tbs=qdr:d|w|m|y`; DDG `&df=d|w|m|y`; Bing `&filters=ex1:"ez1"|"ez2"|"ez3"`.
-  - Result URLs (`read` drops links): `eval` before `close`. DDG: `a.result__a` → `uddg` param, URL-decode. Bing: `li.b_algo h2 a` → `u` param minus `a1`, base64url-decode (pad `=`). Brave: `a[href^="http"]` minus Brave hosts.
+  - Recent: Google `&tbs=qdr:d|w|m|y`; DDG `&df=d|w|m|y`.
+  - Result URLs (`read` drops links): `eval` before `close`. DDG: `a.result__a` → `uddg` param, URL-decode.
 
 ### playwright-cli
 Render checks, WebKit, Playwright tests. Skill **playwright-cli**.
@@ -68,6 +75,7 @@ Render checks, WebKit, Playwright tests. Skill **playwright-cli**.
 ## Other CLIs
 - `gh` — wait for CI: `gh run watch <id> --exit-status --compact --interval 30` with `run_in_background: true`; tell human usual run time.
 - `bwt` — Bing Webmaster: `bwt <Method> [--flags]`; methods: `bwt schema`.
+- `bx` — Brave Search API: benchmark reference only, never a search step.
 - `gapi` — Google Ads, GTM, GA4, Search Console, Indexing. Skill **gapi**. `gapi <api> <resource...> <method> --params '<json>'`. Login error: `gapi auth status`, then skill Setup.
 - `gcloud` — Google Cloud.
 - `cf` — Cloudflare (DNS, zones, Workers, R2, KV, D1, Zero Trust): `cf <group> <cmd>`. Find: `cf cli search "<task>"` (action + resource type; no names/domains/IDs) → `<command> --help`. Detail: `cf schema <cmd...>`; docs: `cf docs search "<question>"`. Auth/IDs/errors: skill **cloudflare-cf**.

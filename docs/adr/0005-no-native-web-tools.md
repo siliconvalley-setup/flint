@@ -1,7 +1,7 @@
 ---
 type: Architecture Decision Record
 title: ADR 0005 — No native web tools
-description: Forced deny removes native WebSearch, WebFetch; one search chain, free first: firecrawl search → bx → agent-browser, CLI and Desktop SSH.
+description: Forced deny removes native WebSearch, WebFetch; one search chain: firecrawl search (Local web stack since 2026-11-26) → agent-browser, CLI and Desktop SSH.
 tags: [adr]
 status: stable
 ---
@@ -66,6 +66,30 @@ or helper start: stale after rotation.
   `bx` credit-exhausted status (rule matches stderr text).
 - Not covered: Claude Desktop Cowork (local VM) sessions, web search MCP
   servers.
+
+## Amendment 2026-11-26 — Local web stack (silicon-valley#150)
+
+Tier 1 moves from r1 to the silicon-valley Local web stack
+([silicon-valley ADR 0005](https://github.com/siliconvalley-setup/silicon-valley/blob/main/docs/adr/0005-local-web-stack.md)).
+
+- `firecrawl` = Search bridge `127.0.0.1:3002`. Search = Google AI Overview +
+  Google + DuckDuckGo via the operator's Chromium. Walled sites read through
+  it; other pages via the Page reader. `--tbs` works: tier 1 recency gap closed.
+- URL source = silicon-valley agent `~/.bashrc`. `env.sh` drops the r1
+  `FIRECRAWL_API_URL`; `install.sh` removes the key from settings `env`.
+- New chain: `ctx7`; `firecrawl search` → browser search (Google →
+  DuckDuckGo). Superseded: decision 2 tier 2, decisions 3–4. Tier 3 narrowed to
+  Google → DuckDuckGo: Bing and Brave steps removed. `bx` = benchmark reference
+  only, never a search step.
+- Errors name cause and action. Cap, Cooldown and login wall → wait or stop,
+  not the next tier. Never read or search over CDP 9222 to pass a wall.
+- Pace: ≤ 20 searches per 15 min, ≤ 60 per 60 min, all users together.
+- Superseded consequences: shared-IP tier 2 immunity, r1 `latest` flag drift,
+  Brave key and credit budget.
+- Rules text: `rules/available_tools.md` **Web** = silicon-valley spec #126
+  section **Client URL and agent rules**, verbatim.
+- Rollback: revert this change, then run `./install.sh`. r1 Firecrawl +
+  SearXNG stay running.
 
 ## Rollback
 

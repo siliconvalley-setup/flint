@@ -36,7 +36,7 @@
 - `read` runs no JavaScript: SPA gives loader text; anti-bot site times out. Use `firecrawl`.
 
 ## firecrawl fallbacks
-Engine: fireup on r1 (`http://192.168.1.2:3002`). Renders JavaScript, keeps links.
+Engine: silicon-valley Local web stack, Search bridge `http://127.0.0.1:3002` (`FIRECRAWL_API_URL` in agent `~/.bashrc`). Renders JavaScript, keeps links; Walled sites read through it.
 - Failure test and browser steps: `rules/available_tools.md`, blocks `firecrawl` and `agent-browser`.
 
 ## Login
