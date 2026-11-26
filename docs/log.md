@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-26
+- **Local web stack cutover** (silicon-valley#150, [ADR 0005](adr/0005-no-native-web-tools.md) amendment): `env.sh` drops the r1 `FIRECRAWL_API_URL`; agent URL = silicon-valley `~/.bashrc` (`http://127.0.0.1:3002`). `rules/available_tools.md` **Web**: Route line + `### firecrawl` block = spec text; `bx` block → one benchmark-only line; browser search Google → DuckDuckGo. `toolchain-installed/browser.md` engine note, `agent-browser` reads line follow. `install_test.py`: settings `env` has no `FIRECRAWL_API_URL`; shell and drop tests use `AI_MEMORY_SERVER_URL`.
+
 ## 2026-11-24
 - **CI checkout v7**: `.github/workflows/ci.yml` `actions/checkout@v4` → `@v7` (v7.0.1, runtime `node24`). Removes Node.js 20 deprecation warning. No checkout release runs on Node 26 yet.
 - **rules fix + chat re-derive**: `rules/rules.md` stray `**` → markdown footnote `[^1]`; whitespace-only line removed; end-of-reply line (skipped/unchecked, risk) restored as bare rule, by owner request. `desktop/chat/project-instructions.md` `<rules>` re-derived from current `rules/rules.md` + `rules/coding.md` (tool-specific lines dropped: Explore, ctx7, Biome, git add). `style.md`, `profile.md` unchanged: prose rules not touched.

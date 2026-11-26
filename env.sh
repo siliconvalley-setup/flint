@@ -34,8 +34,8 @@ export MAX_THINKING_TOKENS=32000
 # Process env only: Claude drops this key from settings env. Bypass mode also skips dangerous rm checks.
 export CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1
 
+# FIRECRAWL_API_URL: silicon-valley agent ~/.bashrc (Local web stack, ADR 0005), not here.
 # Private servers on r1 (LAN).
-export FIRECRAWL_API_URL=http://192.168.1.2:3002
 export AI_MEMORY_SERVER_URL=http://192.168.1.2:49374
 
 # TokenEconomizer plugin (env wins over its config files): never prune ai-memory

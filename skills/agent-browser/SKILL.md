@@ -22,7 +22,7 @@ Load the version-matched command reference from the CLI itself:
 | **Local** | verification, HMR, exploration — the agent works alone | `agent-browser open <url>` (`/Applications/Chromium.app`, normal Chrome UA, persistent profile; rules: **toolchain-installed** browser, Login) |
 | **Host CDP (shared)** | the task needs the human's real login state — 2FA, YubiKey, password-manager dialog, existing cookies | `agent-browser --cdp 9222 --pin-tab <cmd>` |
 
-Page and docs reads → `firecrawl scrape <url>` (renders JS, keeps links). `agent-browser read <url>` only for docs that serve markdown or `llms.txt`: `--filter "<text>"` (section), `--outline` (headings), `--llms index` (docs discovery). Library/framework docs → `ctx7 docs`. Boundary and fallback → **toolchain-installed** skill (browser).
+Page and docs reads → `firecrawl scrape <url>` (Local web stack: renders JS, keeps links; Walled sites read through it). Never read or search over host CDP to pass a wall. `agent-browser read <url>` only for docs that serve markdown or `llms.txt`: `--filter "<text>"` (section), `--outline` (headings), `--llms index` (docs discovery). Library/framework docs → `ctx7 docs`. Boundary and fallback → **toolchain-installed** skill (browser).
 
 ## Guided human session (host CDP)
 
