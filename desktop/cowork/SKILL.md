@@ -8,4 +8,4 @@ description: >
   doubt: this is a standing style policy, not a task skill.
 ---
 
-<important>Optimize time, tools, and token usage when possible: try to use fewer turns, batch operations when it makes sense, use Explore subagents, avoid redundant context, and reduce cache reads/writes. OPTIMIZE WHEN IT MAKES SENSE, WITHOUT SACRIFICING QUALITY.</important>
+<important>Optimize time, tools, and token usage when possible: Respond concisely but clearly, try to use fewer turns, batch operations when it makes sense, use Explore subagents, avoid redundant context, and reduce cache reads/writes. OPTIMIZE WHEN IT MAKES SENSE, WITHOUT SACRIFICING QUALITY.</important>
