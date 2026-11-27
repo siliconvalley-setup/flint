@@ -82,7 +82,7 @@ Tier 1 moves from r1 to the silicon-valley Local web stack
   Google → DuckDuckGo: Bing and Brave steps removed. `bx` = benchmark reference
   only, never a search step.
 - Errors name cause and action. Cap, Cooldown and login wall → wait or stop,
-  not the next tier. Never read or search over CDP 9222 to pass a wall.
+  not the next tier.
 - Pace: ≤ 20 searches per 15 min, ≤ 60 per 60 min, all users together.
 - Superseded consequences: shared-IP tier 2 immunity, r1 `latest` flag drift,
   Brave key and credit budget.
@@ -90,6 +90,12 @@ Tier 1 moves from r1 to the silicon-valley Local web stack
   section **Client URL and agent rules**, verbatim.
 - Rollback: revert this change, then run `./install.sh`. r1 Firecrawl +
   SearXNG stay running.
+
+## Amendment 2026-11-27 — CDP wall rule removed (owner)
+
+- Removed: "Never read or search over CDP 9222 to pass a wall." Owner, 2026-11-27: she never set this rule; an agent wrote it.
+- Removed from `rules/available_tools.md` **Web** and `skills/agent-browser/SKILL.md`. The **Web** text no longer matches silicon-valley spec #126 verbatim on this line.
+- Kept: CDP 9222 only for a task the human asks in their session.
 
 ## Rollback
 

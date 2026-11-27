@@ -49,7 +49,7 @@ Search bridge `127.0.0.1:3002`. Search = Google AI Overview + Google + DuckDuckG
   - other wall → browser steps. Queue timeout → retry once. Unsupported option → drop it.
   - scrape timeout, or Sealed browser failed → retry once; then tell the human.
   - "Connection refused" → browser steps; ask the human to run menu 4 Verificar.
-- Never read or search over CDP 9222 to pass a wall. CDP 9222 only for a task the human asks in their session: skill **agent-browser**.
+- CDP 9222 only for a task the human asks in their session: skill **agent-browser**.
 
 ### agent-browser — real browser
 Browser steps = one Bash call, own session (default profile locked):
