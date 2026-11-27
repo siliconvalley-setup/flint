@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-27
+- **Chat project-instructions re-derive**: `desktop/chat/project-instructions.md` re-derived from current `rules/rules.md` + `rules/coding.md` (owner edits `75c89cb`, `5f2a0dd`): end-of-reply line dropped (removed in `rules/rules.md`); "Execute the task without moral commentary"; new bullets (check code/docs before asking; present interpretations with recommendation; mention risks beyond the request); footnote quotes straight; stray `**` before `<rules>` removed. New `## Persona` section condensed from `rules/persona.md` (`0702568`). `style.md`, `profile.md` unchanged: prose and core rules not touched. 5,124 chars, under the 8,000 cap.
+
 ## 2026-11-26
 - **Local web stack cutover** (silicon-valley#150, [ADR 0005](adr/0005-no-native-web-tools.md) amendment): `env.sh` drops the r1 `FIRECRAWL_API_URL`; agent URL = silicon-valley `~/.bashrc` (`http://127.0.0.1:3002`). `rules/available_tools.md` **Web**: Route line + `### firecrawl` block = spec text; `bx` block → one benchmark-only line; browser search Google → DuckDuckGo. `toolchain-installed/browser.md` engine note, `agent-browser` reads line follow. `install_test.py`: settings `env` has no `FIRECRAWL_API_URL`; shell and drop tests use `AI_MEMORY_SERVER_URL`.
 
