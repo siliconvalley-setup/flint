@@ -37,7 +37,7 @@ cp desktop/cowork/SKILL.md /tmp/flintpkg/flint/
 
 Cowork: `Customize` (left sidebar) → `Skills` → `+` → `Create skill` → `Upload a skill` → pick ZIP → toggle on.
 
-## Re-sync checklist (after any `flint.md` edit)
+## Re-sync checklist (after any `flint.md` or `rules/*.md` edit)
 
 Paste-in artifacts carry no hard wrap: GUI textarea keeps newlines, wrapped paragraph reaches model as ragged lines.
 
