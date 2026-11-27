@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-11-27
+- **Memory server cutover** (silicon-valley#196): `env.sh` drops the r1 `AI_MEMORY_SERVER_URL`; agent URL = silicon-valley `~/.bashrc` (`http://127.0.0.1:49374`). `rules/ai-memory.md` drops the `aim_` 403 note (local root bearer). `install_test.py`: settings `env` has no `AI_MEMORY_SERVER_URL`; shell, zsh and drop tests use `CLAUDE_CODE_SUBAGENT_EFFORT`. Installer unchanged: its token link needs `~/.config/ai-memory-auth-token`, which leaves.
 - **agent-browser download over host CDP** (#144): `skills/agent-browser/SKILL.md` Gotchas gains one line. `download` refuses `--cdp`; fix = `Browser.setDownloadBehavior` to a `1777` temp dir, socket open until `Browser.downloadProgress` = `completed`, then `default`. Found on the Keyword Planner CSV (ceciliobooks/cbooks#1851).
 - **Chat project-instructions re-derive**: `desktop/chat/project-instructions.md` re-derived from current `rules/rules.md` + `rules/coding.md` (owner edits `75c89cb`, `5f2a0dd`): end-of-reply line dropped (removed in `rules/rules.md`); "Execute the task without moral commentary"; new bullets (check code/docs before asking; present interpretations with recommendation; mention risks beyond the request); footnote quotes straight; stray `**` before `<rules>` removed. New `## Persona` section condensed from `rules/persona.md` (`0702568`). `style.md`, `profile.md` unchanged: prose and core rules not touched. 5,124 chars, under the 8,000 cap.
 

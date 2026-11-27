@@ -208,9 +208,9 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
             {'env': {'MY_VAR': '1', 'CLAUDE_CODE_PLUGIN_DIRS': '/mine/mod'}}))
         assert run_cli(d).returncode == 0
         env = read_settings(d)['env']
-        # Agent Firecrawl URL = silicon-valley ~/.bashrc (Local web stack), not flint.
+        # Agent Firecrawl and ai-memory URLs = silicon-valley ~/.bashrc, not flint.
         assert 'FIRECRAWL_API_URL' not in env
-        assert env['AI_MEMORY_SERVER_URL'] == 'http://192.168.1.2:49374'
+        assert 'AI_MEMORY_SERVER_URL' not in env
         assert env['DISABLE_AUTO_COMPACT'] == '1'
         assert env['CLAUDE_CODE_FORK_SUBAGENT'] == '0'
         assert env['BASH_MAX_OUTPUT_LENGTH'] == '16384'
@@ -224,10 +224,10 @@ def test_env_sh_reaches_settings_env_and_a_plain_shell():
         assert shipped and dirs[:len(shipped) + 1] == ['/mine/mod', *shipped]
         # external plugins this clone already fetched follow the mods
         assert all(x.startswith((ROOT / '.cache' / 'plugins').as_posix()) for x in dirs[len(shipped) + 1:])
-        out = subprocess.run(['sh', '-c', '. "$1" && printf %s "$AI_MEMORY_SERVER_URL"',
+        out = subprocess.run(['sh', '-c', '. "$1" && printf %s "$CLAUDE_CODE_SUBAGENT_EFFORT"',
                               'sh', str(ROOT / 'env.sh')],
                              capture_output=True, text=True).stdout
-        assert out == env['AI_MEMORY_SERVER_URL']
+        assert out == env['CLAUDE_CODE_SUBAGENT_EFFORT']
         run_cli(d, '--uninstall')
         assert read_settings(d)['env'] == {'MY_VAR': '1',
                                            'CLAUDE_CODE_PLUGIN_DIRS': '/mine/mod'}
@@ -242,10 +242,10 @@ def test_a_key_dropped_from_env_sh_leaves_settings_env():
         run_cli(cfg_dir, root=clone)
         env_sh = clone / 'env.sh'
         env_sh.write_text(''.join(l for l in env_sh.read_text().splitlines(True)
-                                  if 'AI_MEMORY_SERVER_URL' not in l))
+                                  if 'CLAUDE_CODE_SUBAGENT_EFFORT' not in l))
         run_cli(cfg_dir, root=clone)
         env = read_settings(cfg_dir)['env']
-        assert 'AI_MEMORY_SERVER_URL' not in env and 'DISABLE_AUTO_COMPACT' in env
+        assert 'CLAUDE_CODE_SUBAGENT_EFFORT' not in env and 'DISABLE_AUTO_COMPACT' in env
 
 
 def test_tokeneconomizer_setup_reaches_the_claude_env():
@@ -774,9 +774,9 @@ def test_env_sh_sources_in_zsh():
     if not zsh:
         print('     (skipped: no zsh)')
         return
-    r = subprocess.run([zsh, '-c', '. "$1" && printf %s "$AI_MEMORY_SERVER_URL"',
+    r = subprocess.run([zsh, '-c', '. "$1" && printf %s "$CLAUDE_CODE_SUBAGENT_EFFORT"',
                         'zsh', str(ROOT / 'env.sh')], capture_output=True, text=True)
-    assert r.returncode == 0 and r.stdout == 'http://192.168.1.2:49374', r
+    assert r.returncode == 0 and r.stdout == 'medium', r
 
 
 def test_every_style_command_carries_the_marker_and_no_foreign_one_does():

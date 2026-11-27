@@ -35,8 +35,7 @@ export MAX_THINKING_TOKENS=32000
 export CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1
 
 # FIRECRAWL_API_URL: silicon-valley agent ~/.bashrc (Local web stack, ADR 0005), not here.
-# Private servers on r1 (LAN).
-export AI_MEMORY_SERVER_URL=http://192.168.1.2:49374
+# AI_MEMORY_SERVER_URL: silicon-valley agent ~/.bashrc (local Memory server), not here.
 
 # TokenEconomizer plugin (env wins over its config files): never prune ai-memory
 # tools or LSP (lsp mod diagnostics); facts only from repeated failures (no model
