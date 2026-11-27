@@ -46,6 +46,7 @@ For any login step, hand off to the human: you drive the page, they enter the cr
 - **Port target is `127.0.0.1`, never `localhost`** — macOS resolves `localhost` to `::1` first, and the CDP port listens on IPv4 only (connection reset).
 - **Dev servers / HMR:** `networkidle` never resolves (the HMR WebSocket stays open). Wait on `domcontentloaded`, `load`, `@eN`, or `--text`.
 - **A click fails when another element covers it** (consent banner, modal). Dismiss the reported blocker, re-snapshot, then retry the ref.
+- **Download over host CDP:** `download` refuses `--cdp`; the human's Chromium saves to the human's Downloads. Open the browser WebSocket (`/json/version`), send `Browser.setDownloadBehavior` `{"behavior":"allow","downloadPath":"<dir>","eventsEnabled":true}` (`<dir>` mode `1777`), click, keep the socket open until `Browser.downloadProgress` = `completed`, then send `{"behavior":"default"}`.
 
 [#1272]: https://github.com/vercel-labs/agent-browser/issues/1272
 [#1530]: https://github.com/vercel-labs/agent-browser/issues/1530
