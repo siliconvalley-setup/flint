@@ -28,7 +28,7 @@ Native `WebSearch`/`WebFetch` removed. Route: docs → `ctx7`; find pages → `f
 
 ### Query — firecrawl search and browser search
 - First try: words a human types. 3–8 words or a short question, in the target pages' language. Name brand or site in words, not `site:`. Natural queries get the AI Overview and pages on domains you did not guess.
-- Quotes only on a verbatim string: error message, model number, exact title. No `OR`: Google matches synonyms; `OR` with `site:` triggers the DuckDuckGo bot check.
+- Quotes only on a verbatim string: error message, model number, exact title. No `OR`: Google matches synonyms. DuckDuckGo returns 0 results on `site:` + quotes + `OR`, and its bot check on `site:a OR site:b`.
 - Miss (no item answers the question) → one change per retry: other words, then `site:<d>` / `-site:<d>`, then quotes.
 - 3 misses → stop searching, change route: `firecrawl map "<url>" --search "<term>"` (URL words only, no search cap), scrape a known page, or ask the human. Each search spends the shared cap.
 
