@@ -26,12 +26,18 @@
 ## Web
 Native `WebSearch`/`WebFetch` removed. Route: docs → `ctx7`; find pages → `firecrawl search` → browser search; known URL → `firecrawl scrape`.
 
+### Query — firecrawl search and browser search
+- First try: words a human types. 3–8 words or a short question, in the target pages' language. Name brand or site in words, not `site:`. Natural queries get the AI Overview and pages on domains you did not guess.
+- Quotes only on a verbatim string: error message, model number, exact title. No `OR`: Google matches synonyms; `OR` with `site:` triggers the DuckDuckGo bot check.
+- Miss (no item answers the question) → one change per retry: other words, then `site:<d>` / `-site:<d>`, then quotes.
+- 3 misses → stop searching, change route: `firecrawl map "<url>" --search "<term>"` (URL words only, no search cap), scrape a known page, or ask the human. Each search spends the shared cap.
+
 ### ctx7 — official docs (any library, API, vendor)
 One step: `ctx7 search "<query>"`. Or `ctx7 library <name>` → id (`/` prefix required: `/vercel/next.js`) → `ctx7 docs <id> "<question>" --json`.
 
 ### firecrawl — Local web stack
 Search bridge `127.0.0.1:3002`. Search = Google AI Overview + Google + DuckDuckGo via the operator's Chromium. Walled sites (Reddit as old.reddit, Facebook, X, Glassdoor, G2, LinkedIn) read through it; other pages via the Page reader. Quote URLs.
-- Find: `firecrawl search "<query>" --limit <n> --json -o /tmp/fc-search.json` (`warning` shows only with `--json`). Domains: `site:<d>` / `-site:<d>`. Recent: `--tbs qdr:d|w|m|y`. Item 1 can be the Google AI Overview (`url` = Google search URL): answer text, not a page.
+- Find: `firecrawl search "<query>" --limit <n> --json -o /tmp/fc-search.json` (`warning` shows only with `--json`). Recent: `--tbs qdr:d|w|m|y`. Item 1 can be the Google AI Overview (`url` = Google search URL): answer text, not a page.
 - Pace: ≤ 20 searches per 15 min, ≤ 60 per 60 min, all users together. Same query within 1 h = cache.
 - Search + read: add `--scrape --scrape-formats markdown`.
 - Page text: `firecrawl scrape "<url>" --only-main-content --wait-for 5000 -o /tmp/fc-<site>.md`.
