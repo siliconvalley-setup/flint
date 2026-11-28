@@ -1,5 +1,8 @@
 # Update Log
 
+## 2026-11-28
+- **Human-style search queries**: `rules/available_tools.md` **Web** gains `### Query` (firecrawl search + browser search): plain words first, quotes only on verbatim strings, no `OR`, one change per retry, 3 misses → change route. Find line drops `Domains: site:`. A/B on one real query: operator query = 4 regional PDFs, no answer; plain query = AI Overview answer + PDFs on `resource.avalonbay.com`, a domain `site:` excluded. Cause: one subagent spent the 20/15 min search cap on reworded operator queries.
+
 ## 2026-11-27
 - **Memory server cutover** (silicon-valley#196): `env.sh` drops the r1 `AI_MEMORY_SERVER_URL`; agent URL = silicon-valley `~/.bashrc` (`http://127.0.0.1:49374`). `rules/ai-memory.md` drops the `aim_` 403 note (local root bearer). `install_test.py`: settings `env` has no `AI_MEMORY_SERVER_URL`; shell, zsh and drop tests use `CLAUDE_CODE_SUBAGENT_EFFORT`. Installer unchanged: its token link needs `~/.config/ai-memory-auth-token`, which leaves.
 - **agent-browser download over host CDP** (#144): `skills/agent-browser/SKILL.md` Gotchas gains one line. `download` refuses `--cdp`; fix = `Browser.setDownloadBehavior` to a `1777` temp dir, socket open until `Browser.downloadProgress` = `completed`, then `default`. Found on the Keyword Planner CSV (ceciliobooks/cbooks#1851).
